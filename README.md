@@ -73,7 +73,18 @@ npm run dev
 
 ---
 
-## 🌐 Deployment (Render)
+## 🌐 Deployment
+
+### Frontend (Vercel)
+
+1. Import the repository into **Vercel**.
+2. Set the `Framework Preset` to **Vite**.
+3. Add the Environmental Variable:
+   - `VITE_API_BASE_URL`: Your Render backend URL (e.g., `https://blinklean-api.onrender.com/api/v1`).
+
+4. Vercel will automatically deploy the frontend.
+
+### Backend (Render)
 
 This project is configured for **Render Blueprint**. 
 
@@ -82,7 +93,6 @@ This project is configured for **Render Blueprint**.
 3. Click **"Apply"** to deploy:
    - Managed PostgreSQL Database
    - NestJS API (Web Service)
-   - React Frontend (Static Site)
 
 **Required Post-Deployment Step**:
 Go to your **blinklean-api** dashboard on Render and set your `FAST2SMS_API_KEY` in the Environment section.
