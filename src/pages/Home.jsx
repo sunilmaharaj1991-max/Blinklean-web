@@ -111,49 +111,11 @@ const Home = () => {
         <div className="container nav-container">
           <Link to="/" className="logo-wrapper">
             <div className="logo-svg">
-              <svg
-                width="50"
-                height="50"
-                viewBox="0 0 100 100"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <circle cx="50" cy="50" r="48" fill="#009EE3" />
-                <path d="M 50 13 Q 50 28 35 28 Q 50 28 50 43 Q 50 28 65 28 Q 50 28 50 13 Z" fill="white" />
-                <path d="M 5 55 Q 50 35 95 55 A 45 45 0 0 1 5 55 Z" fill="#1B9B3A" />
-                <path d="M 5 55 Q 50 35 95 55" fill="none" stroke="white" strokeWidth="5" />
-                <path d="M 25 80 Q 50 55 75 65" fill="none" stroke="white" strokeWidth="4" strokeLinecap="round" />
-              </svg>
-            </div>
-            <div
-              className="logo-content"
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                lineHeight: "1.1",
-                marginLeft: "8px",
-              }}
-            >
-              <div
-                className="logo-text"
-                style={{
-                  fontSize: "1.6rem",
-                  letterSpacing: "-0.5px",
-                  fontFamily: "var(--font-heading)",
-                  fontWeight: "800",
-                }}
-              >
-                <span style={{ color: "#009ee3" }}>Blin</span>
-                <span style={{ color: "#1b9b3a" }}>Klean</span>
-              </div>
-              <div
-                style={{
-                  fontSize: "0.95rem",
-                  color: "#009ee3",
-                  fontWeight: "500",
-                }}
-              >
-                Clean in a Blink
-              </div>
+              <img 
+                src="/assets/images/official_logo.png" 
+                alt="BlinKlean Logo" 
+                style={{ height: "45px", width: "auto" }} 
+              />
             </div>
           </Link>
           <div
@@ -1646,8 +1608,8 @@ const Home = () => {
               onMouseLeave={(e) => e.currentTarget.style.animationPlayState = 'running'}
             >
               {[
-                "community_branded_1.png", "community6.jpg", "community_branded_2.png", 
-                "community7.jpg", "community_branded_3.png", "community5.jpg",
+                "community1.jpg", "community6.jpg", "community4.jpg", 
+                "community7.jpg", "community3.jpg", "community5.jpg",
                 "community2.jpg"
               ].map((img, idx) => (
                 <div
@@ -1893,25 +1855,11 @@ const Home = () => {
           {/*  Column 1: Company  */}
           <div className="footer-col">
             <div className="footer-logo">
-              <svg
-                width="32"
-                height="32"
-                viewBox="0 0 100 100"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <circle cx="50" cy="50" r="48" fill="#009EE3" />
-                <path d="M 50 13 Q 50 28 35 28 Q 50 28 50 43 Q 50 28 65 28 Q 50 28 50 13 Z" fill="white" />
-                <path d="M 5 55 Q 50 35 95 55 A 45 45 0 0 1 5 55 Z" fill="#1B9B3A" />
-                <path d="M 5 55 Q 50 35 95 55" fill="none" stroke="white" strokeWidth="5" />
-                <path d="M 25 80 Q 50 55 75 65" fill="none" stroke="white" strokeWidth="4" strokeLinecap="round" />
-              </svg>
-              <div className="logo-content" style={{ display: "flex", flexDirection: "column", lineHeight: "1.1", marginLeft: "8px" }}>
-                <div className="logo-text" style={{ fontSize: "1.4rem", fontWeight: "800" }}>
-                  <span style={{ color: "#009ee3" }}>Blin</span>
-                  <span style={{ color: "#1b9b3a" }}>Klean</span>
-                </div>
-                <div style={{ fontSize: "0.8rem", color: "#009ee3", fontWeight: "500" }}>Clean in a Blink</div>
-              </div>
+              <img 
+                src="/assets/images/official_logo.png" 
+                alt="BlinKlean Logo" 
+                style={{ height: "50px", width: "auto", marginBottom: "15px" }} 
+              />
             </div>
             <p className="footer-desc">
               BlinKlean provides professional doorstep clean-tech services
