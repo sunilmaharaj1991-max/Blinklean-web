@@ -118,27 +118,10 @@ const Home = () => {
                 xmlns="http://www.w3.org/2000/svg"
               >
                 <circle cx="50" cy="50" r="48" fill="#009EE3" />
-                <path
-                  d="M 50 13 Q 50 28 35 28 Q 50 28 50 43 Q 50 28 65 28 Q 50 28 50 13 Z"
-                  fill="white"
-                />
-                <path
-                  d="M 2 50 Q 50 30 98 50 A 48 48 0 0 1 2 50"
-                  fill="#1B9B3A"
-                />
-                <path
-                  d="M 0 50 Q 50 30 100 50"
-                  fill="none"
-                  stroke="white"
-                  strokeWidth="5"
-                />
-                <path
-                  d="M 15 80 Q 40 50 85 55"
-                  fill="none"
-                  stroke="white"
-                  strokeWidth="4"
-                  strokeLinecap="round"
-                />
+                <path d="M 50 13 Q 50 28 35 28 Q 50 28 50 43 Q 50 28 65 28 Q 50 28 50 13 Z" fill="white" />
+                <path d="M 5 55 Q 50 35 95 55 A 45 45 0 0 1 5 55 Z" fill="#1B9B3A" />
+                <path d="M 5 55 Q 50 35 95 55" fill="none" stroke="white" strokeWidth="5" />
+                <path d="M 25 80 Q 50 55 75 65" fill="none" stroke="white" strokeWidth="4" strokeLinecap="round" />
               </svg>
             </div>
             <div
@@ -159,8 +142,8 @@ const Home = () => {
                   fontWeight: "800",
                 }}
               >
-                <span style={{ color: "#009ee3" }}>Blink</span>
-                <span style={{ color: "#1b9b3a" }}>lean</span>
+                <span style={{ color: "#009ee3" }}>Blin</span>
+                <span style={{ color: "#1b9b3a" }}>Klean</span>
               </div>
               <div
                 style={{
@@ -1918,17 +1901,20 @@ const Home = () => {
               >
                 <circle cx="50" cy="50" r="48" fill="#009EE3" />
                 <path d="M 50 13 Q 50 28 35 28 Q 50 28 50 43 Q 50 28 65 28 Q 50 28 50 13 Z" fill="white" />
-                <path d="M 2 50 Q 50 30 98 50 A 48 48 0 0 1 2 50" fill="#1B9B3A" />
-                <path d="M 0 50 Q 50 30 100 50" fill="none" stroke="white" strokeWidth="5" />
-                <path d="M 15 80 Q 40 50 85 55" fill="none" stroke="white" strokeWidth="4" strokeLinecap="round" />
+                <path d="M 5 55 Q 50 35 95 55 A 45 45 0 0 1 5 55 Z" fill="#1B9B3A" />
+                <path d="M 5 55 Q 50 35 95 55" fill="none" stroke="white" strokeWidth="5" />
+                <path d="M 25 80 Q 50 55 75 65" fill="none" stroke="white" strokeWidth="4" strokeLinecap="round" />
               </svg>
-              <div className="logo-text">
-                <span style={{ color: "#009ee3" }}>Blink</span>
-                <span style={{ color: "#1b9b3a" }}>lean</span>
+              <div className="logo-content" style={{ display: "flex", flexDirection: "column", lineHeight: "1.1", marginLeft: "8px" }}>
+                <div className="logo-text" style={{ fontSize: "1.4rem", fontWeight: "800" }}>
+                  <span style={{ color: "#009ee3" }}>Blin</span>
+                  <span style={{ color: "#1b9b3a" }}>Klean</span>
+                </div>
+                <div style={{ fontSize: "0.8rem", color: "#009ee3", fontWeight: "500" }}>Clean in a Blink</div>
               </div>
             </div>
             <p className="footer-desc">
-              Blinklean provides professional doorstep clean-tech services
+              BlinKlean provides professional doorstep clean-tech services
               including home cleaning, waterless vehicle detailing, laundry, and
               scrap recycling.
             </p>
