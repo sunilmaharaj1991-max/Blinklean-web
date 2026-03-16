@@ -15,7 +15,9 @@ async function bootstrap() {
 
   app.setGlobalPrefix('api/v1');
 
-  await app.listen(process.env.PORT || 5000);
+  const port = process.env.PORT || 5000;
+  await app.listen(port, '0.0.0.0');
+  console.log(`🚀 Blinklean API is running on: http://0.0.0.0:${port}/api/v1`);
 }
 bootstrap().catch((err) => {
   console.error('Bootstrap failed', err);
