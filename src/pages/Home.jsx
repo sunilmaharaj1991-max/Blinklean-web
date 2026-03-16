@@ -387,7 +387,7 @@ const Home = () => {
             {/*  Service Card 1: Home Cleaning  */}
             <div className="service-card">
               <div className="service-image-wrapper">
-                <img src="/assets/images/gen_home.png" alt="Professional Home Deep Cleaning Service" />
+                <img src="/assets/images/service_home_branded.png" alt="Professional Home Deep Cleaning Service" />
               </div>
               <div className="service-icon-wrapper">
                 <i data-lucide="home"></i>
@@ -407,7 +407,7 @@ const Home = () => {
             <div className="service-card">
               <div className="service-image-wrapper">
                 <img
-                  src="/assets/images/car_exterior_wash.png"
+                  src="/assets/images/service_vehicle_branded.png"
                   alt="Waterless Doorstep Vehicle Cleaning and Detailing"
                 />
               </div>
@@ -429,7 +429,7 @@ const Home = () => {
             <div className="service-card">
               <div className="service-image-wrapper">
                 <img
-                  src="/assets/images/wash_and_fold.png"
+                  src="/assets/images/service_laundry_branded.png"
                   alt="Doorstep Laundry, Wash and Fold, and Steam Ironing"
                 />
               </div>
@@ -451,7 +451,7 @@ const Home = () => {
             <div className="service-card">
               <div className="service-image-wrapper">
                 <img
-                  src="/assets/images/responsible_recycling.png"
+                  src="/assets/images/service_scrap_branded.png"
                   alt="Responsible Doorstep Scrap Collection and Recycling"
                 />
               </div>

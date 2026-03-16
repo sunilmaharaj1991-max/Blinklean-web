@@ -92,7 +92,7 @@ const Services = () => {
         title: "Waterless Polish Wash",
         price: "₹299",
         desc: "Premium waterless exterior detailing using eco-safe polymer sprays. Saves 200L of water while leaving a high-gloss protective wax coating.",
-        img: "/assets/images/car_exterior_wash.png",
+        img: "/assets/images/service_vehicle_branded.png",
       },
       {
         title: "Waterless Full Care",
@@ -138,7 +138,7 @@ const Services = () => {
         price: "₹79",
         unit: "/kg",
         desc: "Hygienic washing with premium detergents, neatly folded and ready to wear.",
-        img: "/assets/images/wash_and_fold.png",
+        img: "/assets/images/service_laundry_branded.png",
       },
       {
         title: "Wash & Iron",
@@ -165,7 +165,7 @@ const Services = () => {
       {
         title: "Residential Pickup",
         desc: "Convenient scrap collection for independent houses and villas with instant digital payment.",
-        img: "/assets/images/residential_scrap.png",
+        img: "/assets/images/service_scrap_branded.png",
       },
       {
         title: "Apartment Bulk",
