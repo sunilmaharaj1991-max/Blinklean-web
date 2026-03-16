@@ -1,0 +1,246 @@
+/* Base Styles for Services Page */
+.services-hero {
+  background: linear-gradient(
+    135deg,
+    var(--primary) 0%,
+    var(--primary-dark) 100%
+  );
+  padding: 100px 20px;
+  text-align: center;
+  color: white;
+}
+
+.services-hero h1 {
+  font-family: "Outfit", sans-serif;
+  font-size: 3.5rem;
+  font-weight: 900;
+  margin-bottom: 20px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.services-hero p {
+  font-size: 1.4rem;
+  opacity: 0.95;
+  max-width: 800px;
+  margin: 0 auto;
+  font-weight: 500;
+}
+
+.category-section {
+  padding: 100px 0;
+}
+
+.category-header {
+  text-align: center;
+  margin-bottom: 80px;
+}
+
+.category-header h2 {
+  font-family: "Plus Jakarta Sans", sans-serif;
+  font-size: 3.2rem;
+  font-weight: 800;
+  color: var(--text-main);
+  margin-bottom: 20px;
+  letter-spacing: -1px;
+}
+
+.category-header p {
+  font-size: 1.2rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.sub-category-title {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  font-size: 2rem;
+  color: var(--primary);
+  margin-bottom: 40px;
+  font-weight: 800;
+  padding-bottom: 15px;
+  border-bottom: 3px solid #f1f5f9;
+}
+
+.services-grid-premium {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 40px;
+}
+
+.service-card-premium {
+  background: white;
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.04);
+  transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+  border: 1px solid #f1f5f9;
+}
+
+.service-card-premium:hover {
+  transform: translateY(-12px);
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.12);
+}
+
+.service-img-premium {
+  height: 240px;
+  overflow: hidden;
+}
+
+.service-img-premium img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.6s;
+}
+
+.service-card-premium:hover .service-img-premium img {
+  transform: scale(1.1);
+}
+
+.service-body-premium {
+  padding: 30px;
+}
+
+.service-body-premium h3 {
+  font-size: 1.6rem;
+  font-weight: 800;
+  margin-bottom: 15px;
+  color: var(--primary-dark);
+}
+
+.service-desc-premium {
+  font-size: 1.05rem;
+  color: #475569;
+  margin-bottom: 25px;
+  line-height: 1.6;
+  font-weight: 500;
+}
+
+.price-tag-premium {
+  display: flex;
+  flex-direction: column;
+  padding-top: 20px;
+  border-top: 1px solid #f1f5f9;
+}
+
+.price-label {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 1px;
+  margin-bottom: 4px;
+}
+
+.price-value {
+  font-size: 1.8rem;
+  font-weight: 900;
+  color: var(--secondary);
+}
+
+.price-value small {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-left: 4px;
+}
+
+.whatsapp-action-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  background: #25d366;
+  color: white;
+  padding: 16px;
+  border-radius: 16px;
+  text-decoration: none;
+  font-weight: 800;
+  font-size: 1.1rem;
+  transition: all 0.3s;
+}
+
+.whatsapp-action-link:hover {
+  background: #128c7e;
+  transform: scale(1.02);
+}
+
+.badge-pickup-premium {
+  background: #f0fdf4;
+  color: #166534;
+  padding: 8px 16px;
+  border-radius: 30px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+/* Intensive Footer */
+.footer-compact {
+  background: #0f172a;
+  color: white;
+  padding: 80px 0;
+  text-align: center;
+}
+
+.footer-flex {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 40px;
+}
+
+.footer-logo-small {
+  font-size: 2.5rem;
+  font-weight: 950;
+  letter-spacing: -1px;
+}
+
+.footer-policies-row {
+  display: flex;
+  gap: 30px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.footer-policies-row a {
+  color: #94a3b8;
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 1.1rem;
+  transition: all 0.2s;
+}
+
+.footer-policies-row a:hover {
+  color: var(--primary);
+  transform: translateY(-2px);
+}
+
+.footer-flex p {
+  color: #64748b;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+@media (max-width: 768px) {
+  .services-hero h1 {
+    font-size: 2.5rem;
+  }
+
+  .category-header h2 {
+    font-size: 2.4rem;
+  }
+
+  .services-grid-premium {
+    grid-template-columns: 1fr;
+  }
+
+  .footer-policies-row {
+    flex-direction: column;
+    gap: 15px;
+  }
+}
