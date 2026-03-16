@@ -249,3 +249,39 @@ body {
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
 }
+
+/* ---- 17. FOOTER — MOBILE CLUTTER FIX ---- */
+@media (max-width: 768px) {
+  .footer-grid-premium {
+    grid-template-columns: 1fr !important;
+    text-align: center;
+    gap: 40px !important;
+  }
+
+  .footer-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .footer-logo {
+    justify-content: center;
+  }
+
+  .footer-social {
+    justify-content: center;
+    margin-top: 15px;
+  }
+
+  .footer-bottom .container {
+    padding: 20px 16px !important;
+  }
+
+  /* Target the privacy policy links container */
+  .footer-bottom div[style*="display: flex"] {
+    flex-direction: column !important;
+    gap: 12px !important;
+    margin-top: 10px;
+    align-items: center;
+  }
+}

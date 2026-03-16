@@ -220,7 +220,7 @@ const Login = () => {
             </div>
           </a>
           <h2>{formMode === "signup" ? "Create Account" : formMode === "forgot" ? "Reset Password" : "Welcome Back"}</h2>
-          <p>{formMode === "signup" ? "Join India's First QuickClean app" : formMode === "forgot" ? "Enter your email to receive a reset link" : "Login to manage your bookings"}</p>
+          <p>{formMode === "signup" ? "Join India's First AI Powered QuickClean platform" : formMode === "forgot" ? "Enter your email to receive a reset link" : "Login to manage your bookings"}</p>
         </div>
 
         {error && <div className="feedback-msg error">{error}</div>}

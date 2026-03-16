@@ -202,21 +202,21 @@ const Home = () => {
           <div className="hero-content-centered reveal">
             <div className="availability-pill">
               <i data-lucide="map-pin"></i>
-              <span>India's First QuickClean App</span>
+              <span>India's first AI Powered QuickClean Platform</span>
             </div>
             <h1
               style={{
                 fontFamily: "var(--font-serif)",
                 fontWeight: "800",
-                fontSize: "clamp(2.5rem, 6vw, 4.5rem)",
+                fontSize: "clamp(2.1rem, 5vw, 4rem)",
                 lineHeight: "1.2",
                 marginBottom: "15px",
+                textAlign: "center"
               }}
             >
-              Professional{" "}
-              <span style={{ color: "var(--primary)" }}>Clean-Tech</span>
+              India's first <span style={{ color: "var(--primary)" }}>AI Powered</span>
               <br />
-              Care for Your Home
+              QuickClean Platform
             </h1>
             <p
               className="tagline-premium"
@@ -1659,8 +1659,8 @@ const Home = () => {
               onMouseLeave={(e) => e.currentTarget.style.animationPlayState = 'running'}
             >
               {[
-                "community1.jpg", "community6.jpg", "community3.jpg", 
-                "community7.jpg", "community4.jpg", "community5.jpg",
+                "community_branded_1.png", "community6.jpg", "community_branded_2.png", 
+                "community7.jpg", "community_branded_3.png", "community5.jpg",
                 "community2.jpg"
               ].map((img, idx) => (
                 <div
@@ -1691,8 +1691,8 @@ const Home = () => {
               ))}
               {/* Duplicate for seamless loop */}
               {[
-                "community1.jpg", "community6.jpg", "community3.jpg", 
-                "community7.jpg", "community4.jpg", "community5.jpg",
+                "community_branded_1.png", "community6.jpg", "community_branded_2.png", 
+                "community7.jpg", "community_branded_3.png", "community5.jpg",
                 "community2.jpg"
               ].map((img, idx) => (
                 <div
