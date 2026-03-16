@@ -114,7 +114,7 @@ const Home = () => {
               <img 
                 src="/assets/images/official_logo.png" 
                 alt="BlinKlean Logo" 
-                style={{ height: "45px", width: "auto" }} 
+                style={{ height: "120px", width: "auto", objectFit: "contain" }} 
               />
             </div>
           </Link>
@@ -1858,7 +1858,7 @@ const Home = () => {
               <img 
                 src="/assets/images/official_logo.png" 
                 alt="BlinKlean Logo" 
-                style={{ height: "50px", width: "auto", marginBottom: "15px" }} 
+                style={{ height: "120px", width: "auto", objectFit: "contain", marginBottom: "5px" }} 
               />
             </div>
             <p className="footer-desc">

@@ -209,7 +209,7 @@ const Login = () => {
               <img 
                 src="/assets/images/official_logo.png" 
                 alt="BlinKlean Logo" 
-                style={{ height: "45px", width: "auto" }} 
+                style={{ height: "120px", width: "auto", objectFit: "contain" }} 
               />
             </div>
           </a>
