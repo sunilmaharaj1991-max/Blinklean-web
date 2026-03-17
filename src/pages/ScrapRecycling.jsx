@@ -4,7 +4,8 @@ import Header from "../components/Header";
 import Footer from "../components/Footer";
 import BottomNav from "../components/BottomNav";
 import { auth } from "../firebase";
-import { User, MapPin, Recycle, Plus, MessageCircle } from "lucide-react";
+import { User, MapPin, Recycle, Plus, MessageCircle, ArrowRight } from "lucide-react";
+import "../assets/css/scrap-recycling.css";
 
 const ScrapRecycling = () => {
   useEffect(() => {
@@ -18,9 +19,9 @@ const ScrapRecycling = () => {
       <Header />
 
       <div className="booking-hero">
-        <div className="container">
+        <div className="container animate-fade-in">
           <h1>Recycle & Earn Money</h1>
-          <p>Schedule a door-step scrap pick-up instantly.</p>
+          <p>Schedule a door-step scrap pick-up instantly. Professional collection and instant payment.</p>
         </div>
       </div>
 

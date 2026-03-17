@@ -172,11 +172,11 @@
 .premium-input-group label {
     display: block;
     font-size: 0.9rem;
-    font-weight: 700;
-    color: #475569;
+    font-weight: 800; /* Slightly bolder */
+    color: #0f172a; /* Much darker for better contrast */
     margin-bottom: 10px;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.8px;
 }
 
 .premium-input-group input, 
@@ -187,8 +187,18 @@
     border: 2px solid transparent;
     border-radius: 16px;
     font-size: 1rem;
-    font-weight: 500;
+    font-weight: 600; /* Bolder text for visibility */
+    color: #1e293b; /* Dark text color */
     transition: all 0.3s ease;
+}
+
+.premium-input-group input::placeholder {
+    color: #64748b; /* Darker placeholder text */
+    opacity: 1;
+}
+
+.premium-input-group select {
+    color: #1e293b;
 }
 
 .premium-input-group input:focus, 

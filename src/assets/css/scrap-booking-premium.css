@@ -179,27 +179,34 @@
 .sb-form-group.full { grid-column: 1 / -1; }
 
 .sb-label {
-  font-size: 0.78rem;
-  font-weight: 700;
-  color: #475569;
+  font-size: 0.8rem; /* Slightly larger */
+  font-weight: 800; /* Bolder */
+  color: #0f172a; /* Darker for accessibility */
   text-transform: uppercase;
-  letter-spacing: 0.6px;
+  letter-spacing: 0.8px;
 }
 
 .sb-input,
 .sb-textarea,
 .sb-select {
-  padding: 13px 16px;
-  border: 2px solid #e2e8f0;
+  padding: 14px 18px;
+  border: 2px solid #cbd5e1; /* Slightly darker border */
   border-radius: 14px;
-  font-size: 0.95rem;
+  font-size: 1rem;
   font-family: inherit;
-  color: #1e293b;
+  color: #0f172a; /* Darkest text */
   background: #f8fafc;
+  font-weight: 500;
   transition: all 0.2s ease;
   outline: none;
   width: 100%;
   box-sizing: border-box;
+}
+
+.sb-input::placeholder,
+.sb-textarea::placeholder {
+  color: #64748b;
+  opacity: 1;
 }
 
 .sb-input:focus,

@@ -1,0 +1,172 @@
+/* --- App Experience (New How It Works) --- */
+.how-it-works-premium {
+  padding: 100px 0;
+  background: #ffffff;
+  position: relative;
+  overflow: hidden;
+}
+
+.app-experience-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 80px;
+  align-items: center;
+  margin-top: 60px;
+}
+
+.app-feature-list {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}
+
+.app-step {
+  display: flex;
+  gap: 24px;
+  padding: 30px;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: var(--transition);
+  border: 1px solid transparent;
+}
+
+.app-step.active {
+  background: #f8fafc;
+  border-color: rgba(0, 0, 0, 0.05);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.02);
+}
+
+.app-step.active .step-num {
+  background: var(--primary);
+  color: var(--white);
+}
+
+.step-num {
+  width: 60px;
+  height: 60px;
+  background: #f1f5f9;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--text-muted);
+  flex-shrink: 0;
+  transition: var(--transition);
+}
+
+.step-txt h3 {
+  font-size: 1.5rem;
+  margin-bottom: 8px;
+  color: var(--primary);
+}
+
+/* Phone Mockup */
+.phone-mockup-wrapper {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.phone-mockup {
+  width: 320px;
+  height: 650px;
+  background: #000;
+  border-radius: 40px;
+  padding: 12px;
+  box-shadow: 0 50px 100px -20px rgba(0, 0, 0, 0.3);
+  position: relative;
+  z-index: 2;
+}
+
+.phone-frame {
+  width: 100%;
+  height: 100%;
+  background: #fff;
+  border-radius: 30px;
+  overflow: hidden;
+  position: relative;
+}
+
+.phone-screen {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+.screen-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  position: absolute;
+  top: 0;
+  left: 0;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+
+.screen-img.active {
+  opacity: 1;
+}
+
+/* Background Blobs */
+.floating-blobs {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+.blob {
+  position: absolute;
+  width: 400px;
+  height: 400px;
+  filter: blur(80px);
+  border-radius: 50%;
+  opacity: 0.15;
+  animation: blob-drift 10s infinite alternate;
+}
+
+.blob.green {
+  background: var(--primary);
+  top: -100px;
+  right: -100px;
+}
+
+.blob.lime {
+  background: var(--accent);
+  bottom: -100px;
+  left: -100px;
+  animation-delay: -5s;
+}
+
+@keyframes blob-drift {
+  from {
+    transform: translate(0, 0) scale(1);
+  }
+
+  to {
+    transform: translate(50px, 50px) scale(1.1);
+  }
+}
+
+@media (max-width: 968px) {
+  .app-experience-grid {
+    grid-template-columns: 1fr;
+    gap: 60px;
+  }
+
+  .phone-mockup {
+    width: 280px;
+    height: 580px;
+  }
+
+  .app-feature-list {
+    order: 2;
+  }
+}

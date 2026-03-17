@@ -1,0 +1,136 @@
+/* --- Our Professional Services Section --- */
+.our-services-section {
+  padding: 100px 0;
+  background-color: #ffffff;
+}
+
+.services-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 30px;
+  margin-top: 50px;
+}
+
+.service-card {
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 40px;
+  text-align: left;
+  transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+  border: 1px solid #f1f5f9;
+  box-shadow: 0 4px 6px rgba(15, 76, 63, 0.02);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.service-card:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 20px 40px rgba(15, 76, 63, 0.08);
+  border-color: var(--primary-light);
+}
+
+.service-image-wrapper {
+  width: 100%;
+  height: 200px;
+  overflow: hidden;
+  border-radius: 12px;
+  margin-bottom: 24px;
+}
+
+.service-image-wrapper img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.6s ease;
+}
+
+.service-card:hover .service-image-wrapper img {
+  transform: scale(1.1);
+}
+
+.service-icon-wrapper {
+  position: absolute;
+  top: 30px;
+  right: 30px;
+  width: 50px;
+  height: 50px;
+  background: white;
+  color: var(--primary);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.3s ease;
+}
+
+.service-card:hover .service-icon-wrapper {
+  background: var(--primary);
+  color: white;
+  transform: rotate(5deg) scale(1.1);
+}
+
+.service-icon-wrapper i {
+  width: 35px;
+  height: 35px;
+}
+
+.service-card h3 {
+  font-size: 1.6rem;
+  margin-bottom: 16px;
+  color: var(--primary);
+  font-weight: 700;
+}
+
+.service-card p {
+  font-size: 1.05rem;
+  color: var(--text-muted);
+  line-height: 1.6;
+  margin-bottom: 30px;
+  flex-grow: 1;
+}
+
+.service-card .btn {
+  align-self: flex-start;
+  padding: 12px 24px;
+  border-radius: 10px;
+  font-weight: 600;
+}
+
+/* Specific button for WhatsApp if needed */
+.btn-whatsapp {
+  background: #25d366;
+  color: white !important;
+  border: none;
+}
+
+.btn-whatsapp:hover {
+  background: #128c7e;
+  transform: translateY(-2px);
+}
+
+/* Responsive */
+@media (max-width: 991px) {
+  .services-grid {
+    grid-template-columns: 1fr;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
+@media (max-width: 480px) {
+  .our-services-section {
+    padding: 60px 0;
+  }
+
+  .service-card {
+    padding: 30px 20px;
+  }
+
+  .service-card h3 {
+    font-size: 1.4rem;
+  }
+}
