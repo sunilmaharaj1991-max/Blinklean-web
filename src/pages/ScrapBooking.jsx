@@ -138,7 +138,7 @@ const ScrapBooking = () => {
           } else {
             const errBody = await res.text();
             let errData;
-            try { errData = JSON.parse(errBody); } catch(e) { errData = errBody; }
+            try { errData = JSON.parse(errBody); } catch { errData = errBody; }
             console.error("Backend Error:", errData);
             alert(`Error from server: ${typeof errData === 'object' ? JSON.stringify(errData) : errData}`);
           }
