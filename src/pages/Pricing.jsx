@@ -1,26 +1,20 @@
-import React from "react";
+import React, { useEffect } from "react";
+import Header from "../components/Header";
+import Footer from "../components/Footer";
+import BottomNav from "../components/BottomNav";
+import FloatingWhatsApp from "../components/FloatingWhatsApp";
+import { Link } from "react-router-dom";
 
 const Pricing = () => {
+  useEffect(() => {
+    if (window.lucide) {
+      window.lucide.createIcons();
+    }
+  }, []);
+
   return (
     <>
-      {/* Generated JSX from HTML */}
-
-      <nav className="navbar">
-        <div className="container nav-container">
-          <a href="index.html" className="logo-wrapper">
-            <div className="logo-text">
-              Blink<span>lean</span>
-            </div>
-          </a>
-          <div className="nav-links" id="navLinks">
-            <a href="index.html">Home</a>
-            <a href="services.html">Services</a>
-            <a href="pricing.html" className="active">
-              Pricing
-            </a>
-          </div>
-        </div>
-      </nav>
+      <Header />
 
       <header className="pricing-hero">
         <div className="container">
@@ -29,7 +23,7 @@ const Pricing = () => {
         </div>
       </header>
 
-      {/*  Subscription Plans (Reused from logic)  */}
+      {/*  Subscription Plans  */}
       <section className="pricing-section">
         <div className="container">
           <div className="pricing-grid">
@@ -52,9 +46,9 @@ const Pricing = () => {
                   <i data-lucide="check-circle"></i> Doorstep service
                 </li>
               </ul>
-              <a href="booking.html" className="btn btn-secondary">
-                Choose Plan
-              </a>
+              <Link to="/services#vehicle-cleaning" className="btn btn-secondary">
+                Explore More
+              </Link>
             </div>
 
             {/*  Car Wash Plan (Featured)  */}
@@ -78,9 +72,9 @@ const Pricing = () => {
                   <i data-lucide="check-circle"></i> Tire dressing
                 </li>
               </ul>
-              <a href="booking.html" className="btn btn-primary">
-                Choose Plan
-              </a>
+              <Link to="/services#vehicle-cleaning" className="btn btn-primary">
+                Explore More
+              </Link>
             </div>
 
             {/*  Premium Home Care  */}
@@ -102,9 +96,9 @@ const Pricing = () => {
                   <i data-lucide="check-circle"></i> Pest control voucher
                 </li>
               </ul>
-              <a href="booking.html" className="btn btn-secondary">
-                Choose Plan
-              </a>
+              <Link to="/services#home-cleaning" className="btn btn-secondary">
+                Explore More
+              </Link>
             </div>
           </div>
         </div>
@@ -153,24 +147,9 @@ const Pricing = () => {
         </div>
       </section>
 
-      <footer className="footer">
-        <div className="container">
-          <p>&copy; 2026 Blinklean. Clean in a Blink.</p>
-        </div>
-      </footer>
-
-      {/*  Floating WhatsApp Button  */}
-      <div className="whatsapp-float-container">
-        <span className="whatsapp-tooltip">Chat with us on WhatsApp</span>
-        <a
-          href="https://wa.me/917022803582?text=Hello%20Blinklean%2C%20I%20am%20interested%20in%20your%20cleaning%20or%20scrap%20recycling%20services."
-          className="whatsapp-float-btn"
-          target="_blank"
-          aria-label="Contact us on WhatsApp"
-        >
-          <i data-lucide="message-circle"></i>
-        </a>
-      </div>
+      <Footer />
+      <BottomNav />
+      <FloatingWhatsApp />
     </>
   );
 };

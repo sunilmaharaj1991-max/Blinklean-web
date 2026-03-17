@@ -1551,9 +1551,13 @@ const Home = () => {
               onMouseLeave={(e) => e.currentTarget.style.animationPlayState = 'running'}
             >
               {[
-                "community1.jpg", "service_home_workerless.png", "community4.jpg", 
-                "service_vehicle_workerless.png", "community7.jpg", "service_scrap_workerless.png",
-                "community2.jpg"
+                "service_home_branded.png", 
+                "service_vehicle_branded.png", 
+                "service_laundry_branded.png", 
+                "service_scrap_branded.png",
+                "gen_kitchen.png", 
+                "gen_sofa.png", 
+                "gen_bathroom.png"
               ].map((img, idx) => (
                 <div
                   key={idx}
@@ -1570,8 +1574,8 @@ const Home = () => {
                   className="initiative-card"
                 >
                   <img
-                    src={`assets/images/${img}`}
-                    alt={`Green Initiative ${idx + 1}`}
+                    src={`/assets/images/${img}`}
+                    alt={`Impact Service ${idx + 1}`}
                     style={{
                       width: "100%",
                       height: "100%",
@@ -1583,9 +1587,13 @@ const Home = () => {
               ))}
               {/* Duplicate for seamless loop */}
               {[
-                "community1.jpg", "service_home_workerless.png", "community4.jpg", 
-                "service_vehicle_workerless.png", "community7.jpg", "service_scrap_workerless.png",
-                "community2.jpg"
+                "service_home_branded.png", 
+                "service_vehicle_branded.png", 
+                "service_laundry_branded.png", 
+                "service_scrap_branded.png",
+                "gen_kitchen.png", 
+                "gen_sofa.png", 
+                "gen_bathroom.png"
               ].map((img, idx) => (
                 <div
                   key={`dup-${idx}`}
@@ -1600,8 +1608,8 @@ const Home = () => {
                   className="initiative-card"
                 >
                   <img
-                    src={`assets/images/${img}`}
-                    alt={`Green Initiative ${idx + 1}`}
+                    src={`/assets/images/${img}`}
+                    alt={`Impact Service ${idx + 1}`}
                     style={{
                       width: "100%",
                       height: "100%",

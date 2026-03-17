@@ -1,24 +1,12 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
 import { Link } from "react-router-dom";
-import Logo from "../components/Logo";
-import { auth } from "../firebase";
+import Header from "../components/Header";
+import Footer from "../components/Footer";
+import BottomNav from "../components/BottomNav";
+import FloatingWhatsApp from "../components/FloatingWhatsApp";
 import "../assets/css/services-premium.css";
 
 const Services = () => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [user, setUser] = useState(null);
-
-  useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged((currentUser) => {
-      setUser(currentUser);
-    });
-    return () => unsubscribe();
-  }, []);
-
-  const toggleMenu = () => {
-    setIsMenuOpen(!isMenuOpen);
-  };
-
   useEffect(() => {
     if (window.location.hash) {
       const id = window.location.hash.substring(1);
@@ -30,18 +18,10 @@ const Services = () => {
       }
     }
   }, []);
+
   useEffect(() => {
     if (window.lucide) {
       window.lucide.createIcons();
-    }
-
-    // Handle hash scrolling
-    if (window.location.hash) {
-      const id = window.location.hash.substring(1);
-      const element = document.getElementById(id);
-      if (element) {
-        element.scrollIntoView({ behavior: "smooth" });
-      }
     }
   }, []);
 
@@ -93,333 +73,82 @@ const Services = () => {
         title: "Waterless Polish Wash",
         price: "₹299",
         desc: "Premium waterless exterior detailing using eco-safe polymer sprays. Saves 200L of water while leaving a high-gloss protective wax coating.",
-        img: "/assets/images/service_vehicle_branded.png",
+        img: "/assets/images/service_vehicle_workerless.png",
       },
       {
         title: "Waterless Full Care",
         price: "₹499",
-        desc: "Comprehensive eco-detailing including waterless body wash, deep interior vacuuming, dashboard sanitization, and tire nourishment.",
-        img: "/assets/images/car_interior_cleaning.png",
-      },
-      {
-        title: "Ceramic Waterless Shine",
-        price: "₹699",
-        desc: "Advanced clay-bar treatment followed by a ceramic-infused waterless polish for long-lasting mirror shine and paint protection.",
-        img: "/assets/images/premium_polish.png",
-      },
-      {
-        title: "Bike Care Plan",
-        price: "₹299",
-        unit: "/month",
-        desc: "Comprehensive monthly waterless detailing for motorbikes. Includes eco-wash, chain lubrication, and paint protection.",
-        img: "/assets/images/motorbike_wash.png",
+        desc: "Comprehensive waterless treatment including exterior wax wash, interior vacuuming, and dashboard conditioning.",
+        img: "/assets/images/car_cleaning.png",
       },
       {
         title: "Two-Wheeler Detail",
         price: "₹149",
-        desc: "Professional waterless exterior clean and polish for scooters and motorcycles. Restores showroom shine.",
-        img: "/assets/images/bike_detailing_kit.png",
-      },
-      {
-        title: "Auto Waterless Care",
-        price: "₹199",
-        desc: "Specialized deep cleaning for auto-rickshaws using waterless technology. Includes seat sanitization and exterior shine.",
-        img: "/assets/images/waterless_auto.png",
-      },
-      {
-        title: "Bicycle Eco-Shine",
-        price: "₹99",
-        desc: "Precision waterless cleaning for bicycles. Chain degreasing and frame protection without any water wastage.",
-        img: "/assets/images/waterless_bicycle.png",
+        desc: "Expert detailing for motorcycles and scooters. Includes chain lubrication and high-gloss paint protection.",
+        img: "/assets/images/bike_cleaning.png",
       },
     ],
     laundry: [
       {
         title: "Wash & Fold",
+        price: "₹49",
+        unit: "/kg",
+        desc: "Daily wear laundry cleaned with premium detergents, neatly folded and packed. Minimum 3kg.",
+        img: "/assets/images/wash_and_fold.png",
+      },
+      {
+        title: "Wash & Steam Iron",
         price: "₹79",
         unit: "/kg",
-        desc: "Hygienic washing with premium detergents, neatly folded and ready to wear.",
-        img: "/assets/images/service_laundry_branded.png",
+        desc: "Complete garment care including washing and professional steam ironing for a crisp look.",
+        img: "/assets/images/wash_steam_iron.png",
       },
       {
-        title: "Wash & Iron",
-        price: "₹99",
-        unit: "/kg",
-        desc: "Full laundry cycle with crisp electrical ironing. Perfect for office and daily wear.",
-        img: "/assets/images/wash_and_iron.png",
-      },
-      {
-        title: "Steam Iron",
-        price: "₹10",
-        unit: "/cloth",
-        desc: "Wrinkle-free vertical steam pressing for delicate fabrics and formals.",
-        img: "/assets/images/steam_iron.png",
-      },
-      {
-        title: "Dry Cleaning",
-        price: "Starts ₹149",
-        desc: "Specialized solvent-based cleaning for woolens, silks, and wedding wear.",
-        img: "/assets/images/dry_cleaning.png",
-      },
-    ],
-    recycling: [
-      {
-        title: "Residential Pickup",
-        desc: "Convenient scrap collection for independent houses and villas with instant digital payment.",
-        img: "/assets/images/service_scrap_branded.png",
-      },
-      {
-        title: "Apartment Bulk",
-        desc: "Optimized bulk recycling drives for gated communities and housing societies.",
-        img: "/assets/images/apartment_scrap.png",
-      },
-      {
-        title: "Office Disposal",
-        desc: "Certified e-waste and paper shredding services for IT parks and commercial offices.",
-        img: "/assets/images/office_scrap.png",
+        title: "Premium Dry Cleaning",
+        price: "₹199",
+        unit: "/item",
+        desc: "Gentle chemical cleaning for silks, woolens, and designer wear. Preserves fabric life and color.",
+        img: "/assets/images/service_laundry_workerless.png",
       },
     ],
   };
 
   return (
-    <div className="services-page">
-      <nav className="navbar">
-        <div className="container nav-container">
-          <Link to="/" className="logo-wrapper">
-            <Logo type="navbar" />
-          </Link>
-          <div className={`nav-links ${isMenuOpen ? "active" : ""}`}>
-            <Link to="/services#home-cleaning">Home Cleaning</Link>
-            <Link to="/services#vehicle-cleaning">Vehicle Cleaning</Link>
-            <Link to="/services#laundry">Laundry</Link>
-            <Link to="/services#recycling">Scrap & Recycling</Link>
-            {user ? (
-              <Link to="/profile" className="nav-login-btn">Profile</Link>
-            ) : (
-              <Link to="/login" className="nav-login-btn">Login</Link>
-            )}
-          </div>
-          <button className="mobile-menu-btn" onClick={toggleMenu}>
-            <i data-lucide={isMenuOpen ? "x" : "menu"}></i>
-          </button>
-        </div>
-      </nav>
+    <>
+      <Header />
 
       <header className="services-hero">
         <div className="container">
-          <h1 style={{ textTransform: "uppercase", letterSpacing: "2px" }}>
-            Professional Clean-Tech Catalog
-          </h1>
-          <p style={{ fontSize: "1.4rem", fontWeight: "500" }}>
-            Precision care for your home, vehicles, and lifestyle.
+          <h1 className="reveal">Professional Services at Your Doorstep</h1>
+          <p className="reveal">
+            Choose from our range of tech-enabled services designed for the
+            modern urban lifestyle.
           </p>
         </div>
       </header>
 
-      <section id="home-cleaning" className="category-section">
+      {/*  Residential Cleaning Section  */}
+      <section id="home-cleaning" className="service-category reveal">
         <div className="container">
           <div className="category-header">
-            <h2>1. House Cleaning</h2>
-            <p>Smart residential solutions for modern urban living.</p>
+            <div className="cat-icon">
+              <i data-lucide="home"></i>
+            </div>
+            <h2>Full House Deep Cleaning</h2>
+            <p>Complete restoration of your living spaces by experts.</p>
           </div>
-
-          <h3 className="sub-category-title">
-            <i data-lucide="home"></i> Residential Cleaning
-          </h3>
           <div className="services-grid-premium">
             {serviceData.residential.map((s, i) => (
               <div key={i} className="service-card-premium">
-                <div className="service-img-premium">
+                <div className="service-img">
                   <img src={s.img} alt={s.title} />
+                  <div className="price-tag">{s.price}</div>
                 </div>
-                <div className="service-body-premium">
+                <div className="service-details">
                   <h3>{s.title}</h3>
-                  <p className="service-desc-premium">{s.desc}</p>
-                  <div
-                    className="price-tag-premium"
-                    style={{
-                      display: "flex",
-                      flexDirection: "column",
-                      gap: "5px",
-                    }}
-                  >
-                    <span className="price-label">Starting at</span>
-                    <span
-                      className="price-value"
-                      style={{ color: "#1b9b3a", display: "block" }}
-                    >
-                      {s.price}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <h3 className="sub-category-title" style={{ marginTop: "60px" }}>
-            <i data-lucide="sparkles"></i> Deep Cleaning Specialists
-          </h3>
-          <div className="services-grid-premium">
-            {serviceData.deepCleaning.map((s, i) => (
-              <div key={i} className="service-card-premium">
-                <div className="service-img-premium">
-                  <img src={s.img} alt={s.title} />
-                </div>
-                <div className="service-body-premium">
-                  <h3>{s.title}</h3>
-                  <p className="service-desc-premium">{s.desc}</p>
-                  <div
-                    className="price-tag-premium"
-                    style={{
-                      display: "flex",
-                      flexDirection: "column",
-                      gap: "5px",
-                    }}
-                  >
-                    <span className="price-label">Starting at</span>
-                    <span
-                      className="price-value"
-                      style={{ color: "#1b9b3a", display: "block" }}
-                    >
-                      {s.price}
-                      <small
-                        style={{
-                          fontSize: "0.9rem",
-                          color: "#64748b",
-                          marginLeft: "2px",
-                        }}
-                      >
-                        {s.unit}
-                      </small>
-                    </span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section
-        id="vehicle-cleaning"
-        className="category-section"
-        style={{ background: "#f8fafc" }}
-      >
-        <div className="container">
-          <div className="category-header">
-            <h2>2. Vehicle Detailing</h2>
-            <p>Eco-friendly waterless care delivered at your doorstep.</p>
-          </div>
-
-          <h3 className="sub-category-title">
-            <i data-lucide="car"></i> Car Detailing
-          </h3>
-          <div className="services-grid-premium">
-            {serviceData.vehicle.map((s, i) => (
-              <div key={i} className="service-card-premium">
-                <div className="service-img-premium">
-                  <img src={s.img} alt={s.title} />
-                </div>
-                <div className="service-body-premium">
-                  <h3>{s.title}</h3>
-                  <p className="service-desc-premium">{s.desc}</p>
-                  <div
-                    className="price-tag-premium"
-                    style={{
-                      display: "flex",
-                      flexDirection: "column",
-                      gap: "5px",
-                    }}
-                  >
-                    <span className="price-label">Starting at</span>
-                    <span
-                      className="price-value"
-                      style={{ color: "#1b9b3a", display: "block" }}
-                    >
-                      {s.price}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section id="laundry" className="category-section">
-        <div className="container">
-          <div className="category-header">
-            <h2>3. Laundry & Fabric Care</h2>
-            <div className="badge-pickup-premium">
-              <i data-lucide="truck"></i> Doorstep Pickup & Return
-            </div>
-          </div>
-          <div className="services-grid-premium">
-            {serviceData.laundry.map((s, i) => (
-              <div key={i} className="service-card-premium">
-                <div className="service-img-premium">
-                  <img src={s.img} alt={s.title} />
-                </div>
-                <div className="service-body-premium">
-                  <h3>{s.title}</h3>
-                  <p className="service-desc-premium">{s.desc}</p>
-                  <div
-                    className="price-tag-premium"
-                    style={{
-                      display: "flex",
-                      flexDirection: "column",
-                      gap: "5px",
-                    }}
-                  >
-                    <span className="price-label">Starting at</span>
-                    <span
-                      className="price-value"
-                      style={{ color: "#1b9b3a", display: "block" }}
-                    >
-                      {s.price}{" "}
-                      <small
-                        style={{
-                          fontSize: "0.9rem",
-                          color: "#64748b",
-                          marginLeft: "2px",
-                        }}
-                      >
-                        {s.unit}
-                      </small>
-                    </span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section
-        id="recycling"
-        className="category-section"
-        style={{ background: "#f0fdf4" }}
-      >
-        <div className="container">
-          <div className="category-header">
-            <h2>4. Scrap & Recycling</h2>
-            <p>Turn your waste into wealth with AI-powered doorstep pickups.</p>
-          </div>
-          <div className="services-grid-premium">
-            {serviceData.recycling.map((s, i) => (
-              <div key={i} className="service-card-premium">
-                <div className="service-img-premium">
-                  <img src={s.img} alt={s.title} />
-                </div>
-                <div className="service-body-premium">
-                  <h3>{s.title}</h3>
-                  <p className="service-desc-premium">{s.desc}</p>
-                  <Link
-                    to="/scrap-booking"
-                    className="whatsapp-action-link"
-                    style={{ background: "var(--primary)", color: "white", padding: "10px 20px", borderRadius: "8px", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "8px" }}
-                  >
-                    <i data-lucide="calendar"></i> Book Pickup On-Site
+                  <p>{s.desc}</p>
+                  <Link to="/contact" className="btn btn-primary">
+                    Book Now
                   </Link>
                 </div>
               </div>
@@ -427,189 +156,122 @@ const Services = () => {
           </div>
         </div>
       </section>
-      <footer className="footer-premium">
-        <div className="container footer-grid-premium">
-          {/*  Column 1: Company  */}
-          <div className="footer-col">
-            <div className="footer-logo">
-              <Logo type="footer" />
-            </div>
-            <p className="footer-desc">
-              Blinklean provides professional doorstep clean-tech services
-              including home cleaning, waterless vehicle detailing, laundry, and
-              scrap recycling.
-            </p>
-            <div className="footer-social">
-              <a
-                href="https://www.instagram.com/p/DU7uAgDE5U5/?utm_source=ig_web_copy_link&igsh=NTc4MTIwNjQ2YQ=="
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <i data-lucide="instagram"></i>
-              </a>
-              <a
-                href="https://www.linkedin.com/company/malnad-manju-cafe/posts/?feedView=all"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <i data-lucide="linkedin"></i>
-              </a>
-              <a
-                href="https://x.com/blinklean"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <svg
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  fill="currentColor"
-                >
-                  <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path>
-                </svg>
-              </a>
-              <a
-                href="https://wa.me/917022803582"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <i data-lucide="message-circle"></i>
-              </a>
-            </div>
-          </div>
 
-          {/*  Column 2: Services  */}
-          <div className="footer-col">
-            <h4>Our Services</h4>
-            <ul className="footer-links-list">
-              <li>
-                <Link to="/services#home-cleaning">Home Cleaning</Link>
-              </li>
-              <li>
-                <Link to="/services#vehicle-cleaning">Vehicle Care</Link>
-              </li>
-              <li>
-                <Link to="/services#laundry">Laundry Services</Link>
-              </li>
-              <li>
-                <Link to="/scrap-recycling">Scrap Recycling</Link>
-              </li>
-            </ul>
-          </div>
-
-          {/*  Column Quick Links  */}
-          <div className="footer-col">
-            <h4>Quick Links</h4>
-            <ul className="footer-links-list">
-              <li>
-                <Link to="/about">About Us</Link>
-              </li>
-              <li>
-                <Link to="/contact">Contact Us</Link>
-              </li>
-              <li>
-                <Link to="/faq">FAQ</Link>
-              </li>
-              <li>
-                <Link to="/services">Join as Partner</Link>
-              </li>
-            </ul>
-          </div>
-
-          {/*  Column 4: Contact Information  */}
-          <div className="footer-col">
-            <h4>Contact Us</h4>
-            <div className="footer-contact-info">
-              <div className="contact-item">
-                <i data-lucide="map-pin"></i>
-                <span>Vijayanagar, Bangalore</span>
-              </div>
-              <div className="contact-item">
-                <i data-lucide="mail"></i>
-                <a href="mailto:support@blinklean.com">support@blinklean.com</a>
-              </div>
-              <div className="contact-item">
-                <i data-lucide="phone"></i>
-                <span>+91 70228 03582</span>
-              </div>
+      {/*  Deep Cleaning Focus Section  */}
+      <section className="service-category bg-light reveal">
+        <div className="container">
+          <div className="category-header">
+            <div className="cat-icon">
+              <i data-lucide="sparkles"></i>
             </div>
+            <h2>Kitchen & Bathroom Deep Cleaning</h2>
+            <p>Targeted cleaning for high-utility hygiene areas.</p>
+          </div>
+          <div className="services-grid-premium">
+            {serviceData.deepCleaning.map((s, i) => (
+              <div key={i} className="service-card-premium">
+                <div className="service-img">
+                  <img src={s.img} alt={s.title} />
+                  <div className="price-tag">
+                    {s.price}
+                    {s.unit && <small>{s.unit}</small>}
+                  </div>
+                </div>
+                <div className="service-details">
+                  <h3>{s.title}</h3>
+                  <p>{s.desc}</p>
+                  <Link to="/contact" className="btn btn-primary">
+                    Book Now
+                  </Link>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
+      </section>
 
-        <div className="footer-bottom">
-          <div
-            className="container"
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              gap: "10px",
-            }}
-          >
-            <div
-              className="footer-policy-links"
-              style={{
-                display: "flex",
-                gap: "15px",
-                flexWrap: "wrap",
-                justifyContent: "center",
-                fontSize: "0.85rem",
-                marginBottom: "5px",
-              }}
-            >
-              <Link
-                to="/privacy-policy"
-                style={{ color: "var(--text-muted)", textDecoration: "none" }}
-              >
-                Privacy Policy
-              </Link>
-              <Link
-                to="/terms-and-conditions"
-                style={{ color: "var(--text-muted)", textDecoration: "none" }}
-              >
-                Terms & Conditions
-              </Link>
-              <Link
-                to="/refund-and-cancellation-policy"
-                style={{ color: "var(--text-muted)", textDecoration: "none" }}
-              >
-                Refund Policy
-              </Link>
-              <Link
-                to="/equal-opportunity-policy"
-                style={{ color: "var(--text-muted)", textDecoration: "none" }}
-              >
-                Equal Opportunity
-              </Link>
+      {/*  Vehicle Care Section  */}
+      <section id="vehicle-cleaning" className="service-category reveal">
+        <div className="container">
+          <div className="category-header">
+            <div className="cat-icon">
+              <i data-lucide="car"></i>
             </div>
-            <p>&copy; 2026 Blinklean. All rights reserved.</p>
+            <h2>Waterless Vehicle Care</h2>
+            <p>Eco-friendly detailing that saves water and adds shine.</p>
+          </div>
+          <div className="services-grid-premium">
+            {serviceData.vehicle.map((s, i) => (
+              <div key={i} className="service-card-premium">
+                <div className="service-img">
+                  <img src={s.img} alt={s.title} />
+                  <div className="price-tag">{s.price}</div>
+                </div>
+                <div className="service-details">
+                  <h3>{s.title}</h3>
+                  <p>{s.desc}</p>
+                  <Link to="/contact" className="btn btn-primary">
+                    Book Now
+                  </Link>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
-      </footer>
+      </section>
 
-      {/*  Mobile Bottom Navigation  */}
-      <div className="bottom-nav">
-        <Link to="/" className="bottom-nav-item">
-          <i data-lucide="home"></i>
-          <span>Home</span>
-        </Link>
-        <Link to="/services" className="bottom-nav-item active">
-          <i data-lucide="layout-grid"></i>
-          <span>Services</span>
-        </Link>
-        {user ? (
-          <Link to="/profile" className="bottom-nav-item">
-            <i data-lucide="user"></i>
-            <span>Profile</span>
-          </Link>
-        ) : (
-          <Link to="/login" className="bottom-nav-item">
-            <i data-lucide="log-in"></i>
-            <span>Login</span>
-          </Link>
-        )}
-      </div>
-    </div>
+      {/*  Laundry Section  */}
+      <section id="laundry" className="service-category bg-light reveal">
+        <div className="container">
+          <div className="category-header">
+            <div className="cat-icon">
+              <i data-lucide="shirt"></i>
+            </div>
+            <h2>Fabric Care & Laundry</h2>
+            <p>Professional garment care delivered to your door.</p>
+          </div>
+          <div className="services-grid-premium">
+            {serviceData.laundry.map((s, i) => (
+              <div key={i} className="service-card-premium">
+                <div className="service-img">
+                  <img src={s.img} alt={s.title} />
+                  <div className="price-tag">
+                    {s.price}
+                    {s.unit && <small>{s.unit}</small>}
+                  </div>
+                </div>
+                <div className="service-details">
+                  <h3>{s.title}</h3>
+                  <p>{s.desc}</p>
+                  <Link to="/contact" className="btn btn-primary">
+                    Book Now
+                  </Link>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/*  Recycling CTA  */}
+      <section id="recycling" className="recycling-banner reveal">
+        <div className="container">
+          <div className="banner-content">
+            <div className="banner-text">
+              <h2>Turn Your Scrap into Cash!</h2>
+              <p>Book a doorstep pickup for your recyclable materials today.</p>
+            </div>
+            <Link to="/scrap-booking" className="btn btn-secondary btn-lg">
+              <i data-lucide="recycle"></i> Sell Scrap Now
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      <Footer />
+      <BottomNav />
+      <FloatingWhatsApp />
+    </>
   );
 };
 

@@ -12,8 +12,10 @@ import {
   updateProfile
 } from "firebase/auth";
 import { auth, db } from "../firebase";
-import { doc, setDoc, getDoc, serverTimestamp } from "firebase/firestore";
+import { doc, setDoc, getDoc } from "firebase/firestore";
 import "../assets/css/login-premium.css";
+
+const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api/v1";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -37,25 +39,41 @@ const Login = () => {
     }
   }, [formMode, authTab, showPassword]);
 
-  const trackUserLogin = async (user, isNew = false) => {
+  const trackUserLogin = async (user) => {
     try {
+      // 1. Sync to Firestore (Backup)
       const userRef = doc(db, "users", user.uid);
-      const userSnap = await getDoc(userRef);
-      
-      if (!userSnap.exists() || isNew) {
-        await setDoc(userRef, {
-          uid: user.uid,
-          email: user.email || "",
-          phone: user.phoneNumber || phone || "",
-          displayName: user.displayName || fullName || "",
-          lastLogin: serverTimestamp(),
-          role: "user",
-          createdAt: serverTimestamp()
-        }, { merge: true });
-      } else {
-        await setDoc(userRef, {
-          lastLogin: serverTimestamp()
-        }, { merge: true });
+      const userData = {
+        uid: user.uid,
+        email: user.email || "",
+        phone: user.phoneNumber || phone || "",
+        displayName: user.displayName || fullName || "",
+        lastLogin: new Date().toISOString(),
+        role: "user",
+        photoURL: user.photoURL || ""
+      };
+
+      await setDoc(userRef, userData, { merge: true });
+
+      // 2. Sync to PostgreSQL (Primary for Admin Panel)
+      if (API_BASE) {
+        try {
+          await fetch(`${API_BASE}/users/upsert`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              firebase_uid: userData.uid,
+              email: userData.email,
+              phone_number: userData.phone,
+              name: userData.displayName,
+              photo_url: userData.photoURL,
+              role: userData.role
+            })
+          });
+          console.log("✅ User synced to PostgreSQL");
+        } catch (apiErr) {
+          console.warn("⚠️ PostgreSQL sync failed:", apiErr.message);
+        }
       }
     } catch (err) {
       console.error("Error tracking user:", err);
@@ -79,7 +97,9 @@ const Login = () => {
       
       if (formMode === "signup" && fullName) {
         await updateProfile(result.user, { displayName: fullName });
-        await trackUserLogin(result.user, true);
+        await trackUserLogin(result.user);
+      } else if (formMode === "login") {
+        await trackUserLogin(result.user);
       }
 
       // SNIPPET IMPLEMENTATION: Role based redirection
@@ -96,8 +116,6 @@ const Login = () => {
           navigate("/");
         }
       } else {
-        // Fallback for new users
-        if (formMode === "login") await trackUserLogin(result.user);
         navigate("/");
       }
     } catch (err) {
@@ -129,6 +147,9 @@ const Login = () => {
       provider.setCustomParameters({ prompt: 'select_account' });
       const result = await signInWithPopup(auth, provider);
       
+      // Update data in Firestore & PostgreSQL
+      await trackUserLogin(result.user);
+
       // SNIPPET IMPLEMENTATION: Role based redirection
       const userDocRef = doc(db, "users", result.user.uid);
       const userDoc = await getDoc(userDocRef);
@@ -143,7 +164,6 @@ const Login = () => {
           navigate("/");
         }
       } else {
-        await trackUserLogin(result.user, true);
         navigate("/");
       }
     } catch (err) {
