@@ -136,18 +136,20 @@ const ScrapBooking = () => {
             pgSaved = true;
             console.log("✅ Saved to PostgreSQL");
           } else {
-            const errData = await res.json();
+            const errBody = await res.text();
+            let errData;
+            try { errData = JSON.parse(errBody); } catch(e) { errData = errBody; }
             console.error("Backend Error:", errData);
+            alert(`Error from server: ${typeof errData === 'object' ? JSON.stringify(errData) : errData}`);
           }
         } catch (apiErr) {
           console.error("API Connection Error:", apiErr.message);
+          alert(`Connection failed: ${apiErr.message}`);
         }
       }
 
       if (pgSaved) {
         setShowSuccess(true);
-      } else {
-        alert("Booking Failed: We're having trouble reaching the database. Please check your internet or try again in a moment.");
       }
     } catch (err) {
       console.error("Critical Submit Error:", err);

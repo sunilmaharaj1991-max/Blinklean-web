@@ -23,7 +23,7 @@ export class Booking {
   @Column()
   pincode: string;
 
-  @Column('json', { nullable: true })
+  @Column('simple-json', { nullable: true })
   selected_materials: any; // Storing array of items
 
   @Column('decimal', { precision: 10, scale: 2, nullable: true })

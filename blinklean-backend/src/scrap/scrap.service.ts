@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import axios, { AxiosError } from 'axios';
 import { ScrapRate } from './scrap-rate.entity';
-import { ScrapBooking } from './scrap-booking.entity';
+import { ScrapBooking, ScrapBookingStatus } from './scrap-booking.entity';
 import { CalculateScrapDto } from './dto/calculate-scrap.dto';
 import { CreateScrapBookingDto } from './dto/create-scrap-booking.dto';
 
@@ -47,8 +47,7 @@ export class ScrapService {
     } catch (error) {
       const axiosError = error as AxiosError;
       const errorMessage = axiosError.message;
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      const responseData = axiosError.response?.data as any;
+      const responseData = axiosError.response?.data;
 
       console.error(
         '❌ Fast2SMS Delivery Failed:',
@@ -108,7 +107,7 @@ export class ScrapService {
 
     for (const item of dto.items) {
       const rate = await this.scrapRateRepository.findOne({
-        where: { material_name: item.material_name, is_active: true },
+        where: { material_name: item.material_name.toLowerCase(), is_active: true },
       });
 
       if (!rate) {
@@ -141,7 +140,7 @@ export class ScrapService {
   async createBooking(dto: CreateScrapBookingDto): Promise<ScrapBooking> {
     const booking = this.scrapBookingRepository.create({
       ...dto,
-      status: dto.status ?? 'PENDING_APPROVAL',
+      status: dto.status ?? ScrapBookingStatus.PENDING_APPROVAL,
     });
     return this.scrapBookingRepository.save(booking);
   }
@@ -176,7 +175,7 @@ export class ScrapService {
     });
     if (!booking) throw new NotFoundException('Booking not found');
 
-    booking.status = 'CONFIRMED';
+    booking.status = ScrapBookingStatus.CONFIRMED;
     booking.pickup_timing = pickupTiming;
 
     const saved = await this.scrapBookingRepository.save(booking);
