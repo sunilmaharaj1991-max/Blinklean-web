@@ -141,7 +141,7 @@ const Home = () => {
                 Explore Services
               </Link>
               <Link
-                to="/scrap-booking"
+                to="/scrap-recycling"
                 className="btn btn-secondary btn-lg"
               >
                 <i data-lucide="shopping-basket"></i>
@@ -352,7 +352,7 @@ const Home = () => {
                 payment.
               </p>
               <Link
-                to="/scrap-booking"
+                to="/scrap-recycling"
                 className="btn btn-secondary"
               >
                 <i data-lucide="calendar"></i>

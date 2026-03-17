@@ -261,7 +261,7 @@ const Services = () => {
               <h2>Turn Your Scrap into Cash!</h2>
               <p>Book a doorstep pickup for your recyclable materials today.</p>
             </div>
-            <Link to="/scrap-booking" className="btn btn-secondary btn-lg">
+            <Link to="/scrap-recycling" className="btn btn-secondary btn-lg">
               <i data-lucide="recycle"></i> Sell Scrap Now
             </Link>
           </div>
