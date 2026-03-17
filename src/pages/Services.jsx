@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import Logo from "../components/Logo";
 import { auth } from "../firebase";
 import "../assets/css/services-premium.css";
 
@@ -185,13 +186,7 @@ const Services = () => {
       <nav className="navbar">
         <div className="container nav-container">
           <Link to="/" className="logo-wrapper">
-            <div style={{ display: "flex", alignItems: "center" }}>
-              <img 
-                src="/assets/images/official_logo.png" 
-                alt="BlinKlean Logo" 
-                style={{ height: "120px", width: "auto", objectFit: "contain" }} 
-              />
-            </div>
+            <Logo type="navbar" />
           </Link>
           <div className={`nav-links ${isMenuOpen ? "active" : ""}`}>
             <Link to="/services#home-cleaning">Home Cleaning</Link>
@@ -437,11 +432,7 @@ const Services = () => {
           {/*  Column 1: Company  */}
           <div className="footer-col">
             <div className="footer-logo">
-              <img 
-                src="/assets/images/official_logo.png" 
-                alt="BlinKlean Logo" 
-                style={{ height: "120px", width: "auto", objectFit: "contain", marginBottom: "15px" }} 
-              />
+              <Logo type="footer" />
             </div>
             <p className="footer-desc">
               Blinklean provides professional doorstep clean-tech services

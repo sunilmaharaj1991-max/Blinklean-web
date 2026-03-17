@@ -1,9 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { auth } from "../firebase";
+import { auth, db } from "../firebase";
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import Header from "../components/Header";
+import Footer from "../components/Footer";
+import BottomNav from "../components/BottomNav";
 import "../assets/css/scrap-booking-premium.css";
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api/v1";
+const API_BASE = import.meta.env.VITE_API_BASE_URL || "";
 
 const ALLOWED_ZONES = [
   { name: "Vijayanagar",         pincodes: ["560040", "560079"] },
@@ -116,15 +120,26 @@ const ScrapBooking = () => {
         status:       "PENDING_APPROVAL",
         userId:       auth.currentUser.uid,
         email:        auth.currentUser.email,
+        created_at:   serverTimestamp(),
       };
 
-      const res = await fetch(`${API_BASE}/scrap/booking`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      });
+      // Primary: Save directly to Firebase Firestore (works on Vercel/production)
+      await addDoc(collection(db, "scrap_bookings"), payload);
+      console.log("✅ Booking saved to Firestore");
 
-      if (!res.ok) throw new Error(`Server error: ${res.status}`);
+      // Optional: Also try to save to backend API if available
+      if (API_BASE) {
+        try {
+          const res = await fetch(`${API_BASE}/scrap/booking`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ ...payload, created_at: new Date().toISOString() })
+          });
+          if (res.ok) console.log("✅ Booking also saved to backend");
+        } catch (backendErr) {
+          console.warn("Backend not available, booking saved to Firestore only:", backendErr.message);
+        }
+      }
 
       setShowSuccess(true);
     } catch (err) {
@@ -175,34 +190,7 @@ const ScrapBooking = () => {
   /* ===================== MAIN FORM ===================== */
   return (
     <>
-      {/* ---- Navbar ---- */}
-      <nav className="navbar">
-        <div className="container nav-container">
-          <Link to="/" className="logo-wrapper">
-            <div className="logo-svg">
-              <svg width="50" height="50" viewBox="0 0 100 100">
-                <circle cx="50" cy="50" r="48" fill="#009EE3" />
-                <path d="M 50 13 Q 50 28 35 28 Q 50 28 50 43 Q 50 28 65 28 Q 50 28 50 13 Z" fill="white" />
-                <path d="M 2 50 Q 50 30 98 50 A 48 48 0 0 1 2 50" fill="#1B9B3A" />
-                <path d="M 0 50 Q 50 30 100 50" fill="none" stroke="white" strokeWidth="5" />
-                <path d="M 15 80 Q 40 50 85 55" fill="none" stroke="white" strokeWidth="4" strokeLinecap="round" />
-              </svg>
-            </div>
-            <div className="logo-content" style={{ display:"flex", flexDirection:"column", lineHeight:"1.1", marginLeft:"8px" }}>
-              <div className="logo-text" style={{ fontSize:"1.6rem", letterSpacing:"-0.5px" }}>
-                <span style={{ color:"#009ee3" }}>Blink</span>
-                <span style={{ color:"#1b9b3a" }}>lean</span>
-              </div>
-              <div style={{ fontSize:"0.95rem", color:"#009ee3", fontWeight:"500" }}>Clean in a Blink</div>
-            </div>
-          </Link>
-          <div className="nav-links" id="navLinks">
-            <Link to="/services">Services</Link>
-            <Link to="/profile">My Profile</Link>
-            <Link to="/about">About</Link>
-          </div>
-        </div>
-      </nav>
+      <Header />
 
       {/* ---- Hero ---- */}
       <div className="sb-hero">
@@ -434,13 +422,8 @@ const ScrapBooking = () => {
         </div>
       )}
 
-      {/* Floating WhatsApp */}
-      <div className="whatsapp-float-container">
-        <span className="whatsapp-tooltip">Chat with us on WhatsApp</span>
-        <a href="https://wa.me/917022803582" className="whatsapp-float-btn" target="_blank" aria-label="WhatsApp">
-          <i data-lucide="message-circle"></i>
-        </a>
-      </div>
+      <Footer />
+      <BottomNav />
     </>
   );
 };

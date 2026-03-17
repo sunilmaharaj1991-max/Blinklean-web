@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import Logo from "../components/Logo";
 import { auth } from "../firebase";
 
 const HomeCleaning = () => {
@@ -17,55 +18,9 @@ const HomeCleaning = () => {
 
       <nav className="navbar">
         <div className="container nav-container">
-          <a href="index.html" className="logo-wrapper">
-            <div style={{ display: "flex", alignItems: "center" }}>
-              <svg
-                width="40"
-                height="40"
-                viewBox="0 0 100 100"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <circle cx="50" cy="50" r="48" fill="#009EE3" />
-                <path
-                  d="M 50 13 Q 50 28 35 28 Q 50 28 50 43 Q 50 28 65 28 Q 50 28 50 13 Z"
-                  fill="white"
-                />
-                <path
-                  d="M 2 50 Q 50 30 98 50 A 48 48 0 0 1 2 50"
-                  fill="#1B9B3A"
-                />
-                <path
-                  d="M 0 50 Q 50 30 100 50"
-                  fill="none"
-                  stroke="white"
-                  strokeWidth="5"
-                />
-                <path
-                  d="M 15 80 Q 40 50 85 55"
-                  fill="none"
-                  stroke="white"
-                  strokeWidth="4"
-                  strokeLinecap="round"
-                />
-              </svg>
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  lineHeight: "1.1",
-                  marginLeft: "8px",
-                }}
-              >
-                <div
-                  className="logo-text"
-                  style={{ fontSize: "1.4rem", letterSpacing: "-0.5px" }}
-                >
-                  <span style={{ color: "#009ee3" }}>Blink</span>
-                  <span style={{ color: "#1b9b3a" }}>lean</span>
-                </div>
-              </div>
-            </div>
-          </a>
+          <Link to="/" className="logo-wrapper">
+            <Logo type="navbar" />
+          </Link>
           <div className="nav-links" id="navLinks">
             <Link to="/services#home-cleaning">Home Cleaning</Link>
             <Link to="/services#vehicle-cleaning">Vehicle Cleaning</Link>

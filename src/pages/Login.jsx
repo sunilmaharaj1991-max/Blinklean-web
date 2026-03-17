@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import Logo from "../components/Logo";
 import { 
   signInWithEmailAndPassword, 
   createUserWithEmailAndPassword,
@@ -206,11 +207,7 @@ const Login = () => {
         <div className="login-header-premium">
           <a href="/" style={{ textDecoration: "none" }}>
             <div className="logo-box">
-              <img 
-                src="/assets/images/official_logo.png" 
-                alt="BlinKlean Logo" 
-                style={{ height: "120px", width: "auto", objectFit: "contain" }} 
-              />
+              <Logo type="navbar" style={{ height: "85px" }} />
             </div>
           </a>
           <h2>{formMode === "signup" ? "Create Account" : formMode === "forgot" ? "Reset Password" : "Welcome Back"}</h2>
