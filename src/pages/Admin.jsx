@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { Users, Package, Handshake, Clock, RefreshCw, LogOut, AlertCircle, MapPin, Phone, Mail } from "lucide-react";
 import "../assets/css/style.css";
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api/v1";
+const API_BASE = import.meta.env.VITE_API_BASE_URL || "https://blinklean-api.onrender.com/api/v1";
 
 const STATUS_COLORS = {
   PENDING_APPROVAL: { bg: "#fef3c7", color: "#f59e0b", label: "Pending Approval" },

@@ -15,7 +15,7 @@ import { auth, db } from "../firebase";
 import { doc, setDoc, getDoc } from "firebase/firestore";
 import "../assets/css/login-premium.css";
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api/v1";
+const API_BASE = import.meta.env.VITE_API_BASE_URL || "https://blinklean-api.onrender.com/api/v1";
 
 const Login = () => {
   const navigate = useNavigate();

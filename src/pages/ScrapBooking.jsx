@@ -8,7 +8,7 @@ import BottomNav from "../components/BottomNav";
 import FloatingWhatsApp from "../components/FloatingWhatsApp";
 import "../assets/css/scrap-booking-premium.css";
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api/v1";
+const API_BASE = import.meta.env.VITE_API_BASE_URL || "https://blinklean-api.onrender.com/api/v1";
 
 const ALLOWED_ZONES = [
   { name: "Vijayanagar",         pincodes: ["560040", "560079"] },
@@ -160,8 +160,9 @@ const ScrapBooking = () => {
 
       if (pgSaved || fsSaved) {
         setShowSuccess(true);
+        if (!pgSaved) console.warn("PG Sync skipped, but Firestore capture successful.");
       } else {
-        alert("Booking Failed: Connection issue. Please try again or contact support at +91 70228 03582");
+        alert("Booking Failed: We're having trouble reaching the database. Please check your internet or try again in a moment.");
       }
     } catch (err) {
       console.error("Critical Submit Error:", err);
