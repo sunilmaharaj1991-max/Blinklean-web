@@ -17,8 +17,9 @@ const Header = () => {
 
   // Close menu on route change
   useEffect(() => {
-    if (isMenuOpen) setIsMenuOpen(false);
-  }, [location, isMenuOpen]);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setIsMenuOpen(false);
+  }, [location]);
 
   return (
     <nav className="navbar">
@@ -31,7 +32,7 @@ const Header = () => {
           <Link to="/services#home-cleaning">Home Cleaning</Link>
           <Link to="/services#vehicle-cleaning">Vehicle Care</Link>
           <Link to="/services#laundry">Laundry</Link>
-          <Link to="/scrap-recycling">Scrap & Recycling</Link>
+          <Link to="/scrap-booking">Scrap & Recycling</Link>
           <Link to="/partner">Partner With Us</Link>
           
           {user ? (

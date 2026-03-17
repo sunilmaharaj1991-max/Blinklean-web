@@ -141,7 +141,7 @@ const Home = () => {
                 Explore Services
               </Link>
               <Link
-                to="/scrap-recycling"
+                to="/scrap-booking"
                 className="btn btn-secondary btn-lg"
               >
                 <i data-lucide="shopping-basket"></i>

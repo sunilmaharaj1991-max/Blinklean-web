@@ -7,8 +7,6 @@ import {
   sendPasswordResetEmail,
   GoogleAuthProvider, 
   signInWithPopup,
-  RecaptchaVerifier,
-  signInWithPhoneNumber,
   updateProfile
 } from "firebase/auth";
 import { auth } from "../firebase";
@@ -18,16 +16,12 @@ const API_BASE = import.meta.env.VITE_API_BASE_URL || "https://blinklean-api.onr
 
 const Login = () => {
   const navigate = useNavigate();
-  const [authTab, setAuthTab] = useState("email"); // email or phone
   const [formMode, setFormMode] = useState("login"); // login, signup, forgot
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
-  const [phone, setPhone] = useState("");
-  const [otp, setOtp] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
-  const [confirmationResult, setConfirmationResult] = useState(null);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
@@ -36,7 +30,7 @@ const Login = () => {
     if (window.lucide) {
       window.lucide.createIcons();
     }
-  }, [formMode, authTab, showPassword]);
+  }, [formMode, showPassword]);
 
   const trackUserLogin = async (user) => {
     if (!API_BASE) return;
@@ -44,7 +38,6 @@ const Login = () => {
       const userData = {
         firebase_uid: user.uid,
         email: user.email || "",
-        phone_number: user.phoneNumber || phone || "",
         name: user.displayName || fullName || "",
         photo_url: user.photoURL || "",
         role: "user"
@@ -155,55 +148,8 @@ const Login = () => {
     }
   };
 
-  const setupRecaptcha = () => {
-    if (!window.recaptchaVerifier) {
-      window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-        'size': 'invisible',
-        'callback': () => {
-          // reCAPTCHA solved
-        }
-      });
-    }
-  };
-
-  const handleSendOtp = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError("");
-    try {
-      setupRecaptcha();
-      const appVerifier = window.recaptchaVerifier;
-      const formattedPhone = phone.startsWith("+") ? phone : `+91${phone}`;
-      const result = await signInWithPhoneNumber(auth, formattedPhone, appVerifier);
-      setConfirmationResult(result);
-      setMessage("OTP sent to " + formattedPhone);
-    } catch (err) {
-      console.error("OTP send error:", err);
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleVerifyOtp = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError("");
-    try {
-      const result = await confirmationResult.confirm(otp);
-      await trackUserLogin(result.user);
-      navigate("/");
-    } catch (err) {
-      console.error("OTP verify error:", err);
-      setError("Invalid OTP. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return (
     <div className="login-page-container">
-      <div id="recaptcha-container"></div>
       <div className="login-card-premium">
         <div className="login-header-premium">
           <a href="/" style={{ textDecoration: "none" }}>
@@ -218,88 +164,50 @@ const Login = () => {
         {error && <div className="feedback-msg error">{error}</div>}
         {message && <div className="feedback-msg success">{message}</div>}
 
-        <div className="auth-tabs-premium">
-          <button
-            className={`tab-btn-premium ${authTab === "email" ? "active" : ""}`}
-            onClick={() => { setAuthTab("email"); setFormMode("login"); setError(""); setMessage(""); }}
-          >
-            Email
-          </button>
-          <button
-            className={`tab-btn-premium ${authTab === "phone" ? "active" : ""}`}
-            onClick={() => { setAuthTab("phone"); setFormMode("login"); setError(""); setMessage(""); }}
-          >
-            Phone (OTP)
-          </button>
-        </div>
-
-        <form className="auth-form-premium" onSubmit={authTab === "phone" ? (confirmationResult ? handleVerifyOtp : handleSendOtp) : handleEmailAction}>
-          {authTab === "email" && (
-            <>
-              {formMode === "signup" && (
-                <div className="form-group-premium">
-                  <label>Full Name</label>
-                  <i data-lucide="user"></i>
-                  <input type="text" placeholder="John Doe" required value={fullName} onChange={(e) => setFullName(e.target.value)} />
-                </div>
-              )}
-              <div className="form-group-premium">
-                <label>Email Address</label>
-                <i data-lucide="mail"></i>
-                <input type="email" placeholder="name@example.com" required value={email} onChange={(e) => setEmail(e.target.value)} />
-              </div>
-              {formMode !== "forgot" && (
-                <div className="form-group-premium">
-                  <label>Password</label>
-                  <i data-lucide="lock"></i>
-                  <input 
-                    type={showPassword ? "text" : "password"} 
-                    placeholder="••••••••" 
-                    required 
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                  />
-                  <button className="password-toggle" type="button" onClick={() => setShowPassword(!showPassword)}>
-                    <i data-lucide={showPassword ? "eye-off" : "eye"}></i>
-                  </button>
-                </div>
-              )}
-              
-              {formMode === "login" && (
-                <div className="form-options">
-                  <label className="checkbox-container">
-                    <input type="checkbox" checked={rememberMe} onChange={() => setRememberMe(!rememberMe)} />
-                    <span className="checkmark"></span>
-                    Remember Me
-                  </label>
-                  <button type="button" className="link-btn" onClick={() => setFormMode("forgot")}>Forgot Password?</button>
-                </div>
-              )}
-            </>
+        <form className="auth-form-premium" onSubmit={handleEmailAction}>
+          {formMode === "signup" && (
+            <div className="form-group-premium">
+              <label>Full Name</label>
+              <i data-lucide="user"></i>
+              <input type="text" placeholder="John Doe" required value={fullName} onChange={(e) => setFullName(e.target.value)} />
+            </div>
           )}
-
-          {authTab === "phone" && (
-            <>
-              {!confirmationResult ? (
-                <div className="form-group-premium">
-                  <label>Phone Number</label>
-                  <i data-lucide="phone"></i>
-                  <input type="tel" placeholder="7022803582" pattern="[0-9]{10}" required value={phone} onChange={(e) => setPhone(e.target.value)} />
-                </div>
-              ) : (
-                <div className="form-group-premium">
-                  <label>OTP Code</label>
-                  <i data-lucide="key"></i>
-                  <input type="text" placeholder="Enter 6-digit OTP" required value={otp} onChange={(e) => setOtp(e.target.value)} />
-                </div>
-              )}
-            </>
+          <div className="form-group-premium">
+            <label>Email Address</label>
+            <i data-lucide="mail"></i>
+            <input type="email" placeholder="name@example.com" required value={email} onChange={(e) => setEmail(e.target.value)} />
+          </div>
+          {formMode !== "forgot" && (
+            <div className="form-group-premium">
+              <label>Password</label>
+              <i data-lucide="lock"></i>
+              <input 
+                type={showPassword ? "text" : "password"} 
+                placeholder="••••••••" 
+                required 
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+              <button className="password-toggle" type="button" onClick={() => setShowPassword(!showPassword)}>
+                <i data-lucide={showPassword ? "eye-off" : "eye"}></i>
+              </button>
+            </div>
+          )}
+          
+          {formMode === "login" && (
+            <div className="form-options">
+              <label className="checkbox-container">
+                <input type="checkbox" checked={rememberMe} onChange={() => setRememberMe(!rememberMe)} />
+                <span className="checkmark"></span>
+                Remember Me
+              </label>
+              <button type="button" className="link-btn" onClick={() => setFormMode("forgot")}>Forgot Password?</button>
+            </div>
           )}
 
           <button type="submit" className="btn-login-premium" disabled={loading}>
             {loading ? <span className="loader-dots"><span>.</span><span>.</span><span>.</span></span> : 
-              (authTab === "phone" ? (confirmationResult ? "Verify OTP" : "Get OTP") : 
-              (formMode === "signup" ? "Sign Up" : formMode === "forgot" ? "Send Link" : "Sign In"))
+              (formMode === "signup" ? "Sign Up" : formMode === "forgot" ? "Send Link" : "Sign In")
             }
           </button>
         </form>

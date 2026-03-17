@@ -2,12 +2,14 @@
 .services-hero {
   background: linear-gradient(
     135deg,
-    var(--primary) 0%,
-    var(--primary-dark) 100%
+    #0f172a 0%,
+    #1e293b 100%
   );
-  padding: 100px 20px;
+  padding: 120px 20px;
   text-align: center;
   color: white;
+  position: relative;
+  overflow: hidden;
 }
 
 .services-hero h1 {
@@ -27,8 +29,8 @@
   font-weight: 500;
 }
 
-.category-section {
-  padding: 100px 0;
+.service-category {
+  padding: 120px 0;
 }
 
 .category-header {
@@ -46,9 +48,11 @@
 }
 
 .category-header p {
-  font-size: 1.2rem;
-  color: var(--text-muted);
+  font-size: 1.25rem;
+  color: #64748b;
   font-weight: 500;
+  max-width: 600px;
+  margin: 0 auto;
 }
 
 .sub-category-title {
@@ -65,8 +69,9 @@
 
 .services-grid-premium {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 40px;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 50px;
+  margin-top: 60px;
 }
 
 .service-card-premium {
