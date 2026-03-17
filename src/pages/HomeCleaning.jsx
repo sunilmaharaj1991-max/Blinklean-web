@@ -62,7 +62,7 @@ const HomeCleaning = () => {
             <div className="service-card">
               <div className="service-img">
                 <img
-                  src="/assets/images/1bhk_cleaning.png"
+                  src="/assets/images/gen_home.png"
                   alt="1BHK Cleaning"
                 />
               </div>
@@ -74,7 +74,7 @@ const HomeCleaning = () => {
             <div className="service-card">
               <div className="service-img">
                 <img
-                  src="/assets/images/2bhk_cleaning.png"
+                  src="/assets/images/gen_kitchen.png"
                   alt="2BHK Cleaning"
                 />
               </div>
@@ -86,7 +86,7 @@ const HomeCleaning = () => {
             <div className="service-card">
               <div className="service-img">
                 <img
-                  src="/assets/images/3bhk_cleaning.png"
+                  src="/assets/images/gen_bathroom.png"
                   alt="3BHK Cleaning"
                 />
               </div>
@@ -104,7 +104,7 @@ const HomeCleaning = () => {
             <div className="service-card">
               <div className="service-img">
                 <img
-                  src="/assets/images/kitchen_deep_cleaning.png"
+                  src="/assets/images/gen_kitchen.png"
                   alt="Kitchen Cleaning"
                 />
               </div>
@@ -116,7 +116,7 @@ const HomeCleaning = () => {
             <div className="service-card">
               <div className="service-img">
                 <img
-                  src="/assets/images/bathroom_cleaning.png"
+                  src="/assets/images/gen_bathroom.png"
                   alt="Bathroom Cleaning"
                 />
               </div>
@@ -130,7 +130,7 @@ const HomeCleaning = () => {
             <div className="service-card">
               <div className="service-img">
                 <img
-                  src="/assets/images/sofa_cleaning.png"
+                  src="/assets/images/gen_sofa.png"
                   alt="Sofa Cleaning"
                 />
               </div>
@@ -144,7 +144,7 @@ const HomeCleaning = () => {
             <div className="service-card">
               <div className="service-img">
                 <img
-                  src="/assets/images/carpet_cleaning.png"
+                  src="/assets/images/gen_home.png"
                   alt="Carpet Cleaning"
                 />
               </div>
@@ -165,7 +165,7 @@ const HomeCleaning = () => {
             <div className="service-card">
               <div className="service-img">
                 <img
-                  src="/assets/images/office_cleaning.png"
+                  src="/assets/images/gen_home.png"
                   alt="Office Cleaning"
                 />
               </div>
@@ -225,7 +225,7 @@ const HomeCleaning = () => {
             <div className="service-card">
               <div className="service-img">
                 <img
-                  src="/assets/images/car_exterior_wash.png"
+                  src="/assets/images/gen_car.png"
                   alt="Waterless Exterior Clean"
                 />
               </div>
@@ -238,7 +238,7 @@ const HomeCleaning = () => {
             <div className="service-card">
               <div className="service-img">
                 <img
-                  src="/assets/images/car_interior_cleaning.png"
+                  src="/assets/images/gen_car.png"
                   alt="Interior + Exterior"
                 />
               </div>
@@ -251,7 +251,7 @@ const HomeCleaning = () => {
             <div className="service-card">
               <div className="service-img">
                 <img
-                  src="/assets/images/premium_polish.png"
+                  src="/assets/images/gen_car.png"
                   alt="Premium Polish"
                 />
               </div>
@@ -270,7 +270,7 @@ const HomeCleaning = () => {
             <div className="service-card">
               <div className="service-img">
                 <img
-                  src="/assets/images/bike_detailing_kit.png"
+                  src="/assets/images/gen_car.png"
                   alt="Bike Waterless Wash"
                 />
               </div>
@@ -282,7 +282,7 @@ const HomeCleaning = () => {
             <div className="service-card">
               <div className="service-img">
                 <img
-                  src="/assets/images/premium_polish.png"
+                  src="/assets/images/gen_car.png"
                   alt="Bike Premium Polish"
                 />
               </div>
@@ -294,7 +294,7 @@ const HomeCleaning = () => {
             <div className="service-card">
               <div className="service-img">
                 <img
-                  src="/assets/images/auto_full_cleaning.png"
+                  src="/assets/images/gen_car.png"
                   alt="Auto Full Cleaning"
                 />
               </div>
@@ -306,7 +306,7 @@ const HomeCleaning = () => {
             <div className="service-card">
               <div className="service-img">
                 <img
-                  src="/assets/images/auto_wash.png"
+                  src="/assets/images/gen_car.png"
                   alt="Cycle Basic Wash"
                 />
               </div>
@@ -342,7 +342,7 @@ const HomeCleaning = () => {
           <div className="services-grid">
             <div className="service-card">
               <div className="service-img" style={{ height: "180px" }}>
-                <img src="/assets/images/wash_and_fold.png" alt="Wash & Fold" />
+                <img src="/assets/images/gen_laundry.png" alt="Wash & Fold" />
               </div>
               <div className="service-body">
                 <h3>Wash & Fold</h3>
@@ -354,7 +354,7 @@ const HomeCleaning = () => {
             </div>
             <div className="service-card">
               <div className="service-img" style={{ height: "180px" }}>
-                <img src="/assets/images/wash_and_iron.png" alt="Wash & Iron" />
+                <img src="/assets/images/gen_laundry.png" alt="Wash & Iron" />
               </div>
               <div className="service-body">
                 <h3>Wash & Iron</h3>
@@ -366,7 +366,7 @@ const HomeCleaning = () => {
             </div>
             <div className="service-card">
               <div className="service-img" style={{ height: "180px" }}>
-                <img src="/assets/images/steam_iron.png" alt="Steam Iron" />
+                <img src="/assets/images/gen_laundry.png" alt="Steam Iron" />
               </div>
               <div className="service-body">
                 <h3>Steam Iron</h3>
@@ -378,7 +378,7 @@ const HomeCleaning = () => {
             </div>
             <div className="service-card">
               <div className="service-img" style={{ height: "180px" }}>
-                <img src="/assets/images/dry_cleaning.png" alt="Dry Cleaning" />
+                <img src="/assets/images/gen_laundry.png" alt="Dry Cleaning" />
               </div>
               <div className="service-body">
                 <h3>Dry Cleaning</h3>
@@ -607,7 +607,7 @@ const HomeCleaning = () => {
       <div className="chat-widget" id="chatWidget">
         <div className="chat-header">
           <div className="chat-brand">
-            <img src="/assets/images/customer_support.png" alt="AI Agent" />
+            <img src="/assets/images/gen_home.png" alt="AI Agent" />
             <div>
               <strong>Blinklean AI</strong>
               <span>Online</span>

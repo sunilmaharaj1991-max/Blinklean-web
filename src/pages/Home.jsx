@@ -275,7 +275,7 @@ const Home = () => {
             {/*  Service Card 1: Home Cleaning  */}
             <div className="service-card">
               <div className="service-image-wrapper">
-                <img src="/assets/images/service_home_workerless.png" alt="Professional Home Deep Cleaning Service" />
+                <img src="/assets/images/gen_home.png" alt="Professional Home Deep Cleaning Service" />
               </div>
               <div className="service-icon-wrapper">
                 <i data-lucide="home"></i>
@@ -295,7 +295,7 @@ const Home = () => {
             <div className="service-card">
               <div className="service-image-wrapper">
                 <img
-                  src="/assets/images/service_vehicle_workerless.png"
+                  src="/assets/images/gen_car.png"
                   alt="Waterless Doorstep Vehicle Cleaning and Detailing"
                 />
               </div>
@@ -317,7 +317,7 @@ const Home = () => {
             <div className="service-card">
               <div className="service-image-wrapper">
                 <img
-                  src="/assets/images/service_laundry_workerless.png"
+                  src="/assets/images/gen_laundry.png"
                   alt="Doorstep Laundry, Wash and Fold, and Steam Ironing"
                 />
               </div>
@@ -339,7 +339,7 @@ const Home = () => {
             <div className="service-card">
               <div className="service-image-wrapper">
                 <img
-                  src="/assets/images/service_scrap_workerless.png"
+                  src="/assets/images/service_scrap_branded.png"
                   alt="Responsible Doorstep Scrap Collection and Recycling"
                 />
               </div>
@@ -444,7 +444,7 @@ const Home = () => {
             <div className="process-step">
               <div className="step-icon-box">
                 <img
-                  src="assets/images/hero_collage.png"
+                  src="assets/images/service_scrap_branded.png"
                   alt="Choose a Service"
                 />
                 <i data-lucide="layout-grid"></i>
@@ -460,7 +460,7 @@ const Home = () => {
             {/*  Step 2  */}
             <div className="process-step" style={{ transitionDelay: "100ms" }}>
               <div className="step-icon-box">
-                <img src="assets/images/contact_us.jpg" alt="Contact Us" />
+                <img src="assets/images/service_home_branded.png" alt="Contact Us" />
                 <i data-lucide="message-circle"></i>
                 <div className="step-number-badge">2</div>
               </div>
@@ -474,7 +474,7 @@ const Home = () => {
             {/*  Step 3  */}
             <div className="process-step" style={{ transitionDelay: "200ms" }}>
               <div className="step-icon-box">
-                <img src="assets/images/schedule_service.jpg" alt="Schedule" />
+                <img src="assets/images/service_home_branded.png" alt="Schedule" />
                 <i data-lucide="calendar"></i>
                 <div className="step-number-badge">3</div>
               </div>
@@ -489,7 +489,7 @@ const Home = () => {
             <div className="process-step" style={{ transitionDelay: "300ms" }}>
               <div className="step-icon-box">
                 <img
-                  src="assets/images/office_cleaning.png"
+                  src="assets/images/gen_home.png"
                   alt="Professional Service"
                 />
                 <i data-lucide="sparkles"></i>
@@ -520,7 +520,7 @@ const Home = () => {
             <div className="trust-card">
               <div className="trust-image-wrapper">
                 <img
-                  src="/assets/images/verified_pros.png"
+                  src="/assets/images/gen_kitchen.png"
                   alt="Verified Professionals"
                 />
               </div>
@@ -610,7 +610,7 @@ const Home = () => {
             <div className="trust-card">
               <div className="trust-image-wrapper">
                 <img
-                  src="/assets/images/customer_support.png"
+                  src="/assets/images/gen_bathroom.png"
                   alt="Customer Support"
                 />
               </div>
@@ -795,7 +795,7 @@ const Home = () => {
             <div className="trending-card">
               <div className="card-banner">
                 <img
-                  src="/assets/images/bathroom_cleaning.png"
+                  src="/assets/images/gen_bathroom.png"
                   alt="Bathroom Deep Cleaning"
                 />
                 <div className="trust-badge-container">
@@ -840,7 +840,7 @@ const Home = () => {
             <div className="trending-card">
               <div className="card-banner">
                 <img
-                  src="/assets/images/kitchen_deep_cleaning.png"
+                  src="/assets/images/gen_kitchen.png"
                   alt="Kitchen Cleaning"
                 />
                 <div className="trust-badge-container">
@@ -876,7 +876,7 @@ const Home = () => {
             <div className="trending-card">
               <div className="card-banner">
                 <img
-                  src="/assets/images/sofa_cleaning.png"
+                  src="/assets/images/gen_sofa.png"
                   alt="Sofa Spa Cleaning"
                 />
                 <div className="trust-badge-container">
@@ -912,7 +912,7 @@ const Home = () => {
             <div className="trending-card">
               <div className="card-banner">
                 <img
-                  src="/assets/images/dry_cleaning.png"
+                  src="/assets/images/gen_laundry.png"
                   alt="Premium Dry Cleaning"
                 />
                 <div className="trust-badge-container">
@@ -948,7 +948,7 @@ const Home = () => {
             <div className="trending-card">
               <div className="card-banner">
                 <img
-                  src="/assets/images/premium_polish.png"
+                  src="/assets/images/gen_car.png"
                   alt="Premium Car Polish"
                 />
                 <div className="trust-badge-container">
@@ -1039,7 +1039,7 @@ const Home = () => {
             {/*  ₹₹ BIKE CARE PLAN  */}
             <div className="care-card" id="plan-bike">
               <div className="card-image-wrapper">
-                <img src="/assets/images/motorbike_wash.png" alt="Bike Care" />
+                <img src="/assets/images/gen_car.png" alt="Bike Care" />
                 <span className="card-badge">Essential</span>
               </div>
               <div className="card-content">
@@ -1065,7 +1065,7 @@ const Home = () => {
             <div className="care-card featured" id="plan-car">
               <div className="card-image-wrapper">
                 <img
-                  src="/assets/images/car_exterior_wash.png"
+                  src="/assets/images/gen_car.png"
                   alt="Car Care"
                 />
                 <span className="card-badge popular">Most Popular</span>
@@ -1355,7 +1355,7 @@ const Home = () => {
               <div className="user-profile">
                 <div className="user-photo-wrapper">
                   <img
-                    src="assets/images/verified_pros.png"
+                    src="assets/images/gen_home.png"
                     alt="Mahesh Gowda"
                     className="user-photo"
                   />
@@ -1400,7 +1400,7 @@ const Home = () => {
               <div className="user-profile">
                 <div className="user-photo-wrapper">
                   <img
-                    src="assets/images/customer_support.png"
+                    src="assets/images/gen_kitchen.png"
                     alt="Sowmya Reddy"
                     className="user-photo"
                   />
@@ -1446,7 +1446,7 @@ const Home = () => {
               <div className="user-profile">
                 <div className="user-photo-wrapper">
                   <img
-                    src="assets/images/verified_pros.png"
+                    src="assets/images/gen_bathroom.png"
                     alt="Ananth Kumar"
                     className="user-photo"
                   />
@@ -1551,9 +1551,9 @@ const Home = () => {
               onMouseLeave={(e) => e.currentTarget.style.animationPlayState = 'running'}
             >
               {[
-                "service_home_branded.png", 
-                "service_vehicle_branded.png", 
-                "service_laundry_branded.png", 
+                "gen_home.png", 
+                "gen_car.png", 
+                "gen_laundry.png", 
                 "service_scrap_branded.png",
                 "gen_kitchen.png", 
                 "gen_sofa.png", 
@@ -1587,9 +1587,9 @@ const Home = () => {
               ))}
               {/* Duplicate for seamless loop */}
               {[
-                "service_home_branded.png", 
-                "service_vehicle_branded.png", 
-                "service_laundry_branded.png", 
+                "gen_home.png", 
+                "gen_car.png", 
+                "gen_laundry.png", 
                 "service_scrap_branded.png",
                 "gen_kitchen.png", 
                 "gen_sofa.png", 

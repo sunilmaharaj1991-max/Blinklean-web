@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { auth, db } from "../firebase";
-import { doc, getDoc } from "firebase/firestore";
+import { auth } from "../firebase";
 import { useNavigate } from "react-router-dom";
 import { Users, Package, Handshake, Clock, RefreshCw, LogOut, AlertCircle, MapPin, Phone, Mail } from "lucide-react";
 import "../assets/css/style.css";
@@ -43,11 +42,12 @@ const Admin = () => {
         setUsers(data || []);
       }
 
-      // 3. Fetch Partners from Firestore
-      const { collection, query, getDocs, orderBy } = await import("firebase/firestore");
-      const q = query(collection(db, "partners"), orderBy("created_at", "desc"));
-      const snap = await getDocs(q);
-      setPartners(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+      // 3. Fetch Partners from PostgreSQL
+      const partRes = await fetch(`${API_BASE}/partners/all`);
+      if (partRes.ok) {
+        const data = await partRes.json();
+        setPartners(data || []);
+      }
     } catch (err) {
       console.error("Dashboard fetch error:", err);
     } finally {
@@ -59,16 +59,22 @@ const Admin = () => {
     const unsub = auth.onAuthStateChanged(async (user) => {
       if (!user) { navigate("/login"); return; }
       try {
-        const userDoc = await getDoc(doc(db, "users", user.uid));
-        if (userDoc.exists() && userDoc.data().role === "admin") {
-          setIsAuthorized(true);
-          fetchData();
+        const res = await fetch(`${API_BASE}/users/${user.uid}`);
+        if (res.ok) {
+          const pgUser = await res.json();
+          if (pgUser.role === "admin") {
+            setIsAuthorized(true);
+            fetchData();
+          } else {
+            setIsAuthorized(false);
+            setLoading(false);
+          }
         } else {
           setIsAuthorized(false);
           setLoading(false);
         }
       } catch (err) {
-        console.error(err);
+        console.error("Admin check error:", err);
         navigate("/login");
       }
     });

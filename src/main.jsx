@@ -26,6 +26,7 @@ import "./assets/css/testimonials-premium.css";
 import "./assets/css/trending-services.css";
 import "./assets/css/trust-section.css";
 import "./assets/css/whatsapp-float.css";
+import "./assets/css/policies-premium.css";
 import "./assets/css/why-choose-us.css";
 import "./assets/css/mobile-responsive.css"; /* ← Global mobile fixes — must be last */
 import App from "./App.jsx";

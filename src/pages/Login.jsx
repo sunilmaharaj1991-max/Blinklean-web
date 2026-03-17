@@ -11,8 +11,7 @@ import {
   signInWithPhoneNumber,
   updateProfile
 } from "firebase/auth";
-import { auth, db } from "../firebase";
-import { doc, setDoc, getDoc } from "firebase/firestore";
+import { auth } from "../firebase";
 import "../assets/css/login-premium.css";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "https://blinklean-api.onrender.com/api/v1";
@@ -40,41 +39,23 @@ const Login = () => {
   }, [formMode, authTab, showPassword]);
 
   const trackUserLogin = async (user) => {
+    if (!API_BASE) return;
     try {
-      // 1. Sync to Firestore (Backup)
-      const userRef = doc(db, "users", user.uid);
       const userData = {
-        uid: user.uid,
+        firebase_uid: user.uid,
         email: user.email || "",
-        phone: user.phoneNumber || phone || "",
-        displayName: user.displayName || fullName || "",
-        lastLogin: new Date().toISOString(),
-        role: "user",
-        photoURL: user.photoURL || ""
+        phone_number: user.phoneNumber || phone || "",
+        name: user.displayName || fullName || "",
+        photo_url: user.photoURL || "",
+        role: "user"
       };
 
-      await setDoc(userRef, userData, { merge: true });
-
-      // 2. Sync to PostgreSQL (Primary for Admin Panel)
-      if (API_BASE) {
-        try {
-          await fetch(`${API_BASE}/users/upsert`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              firebase_uid: userData.uid,
-              email: userData.email,
-              phone_number: userData.phone,
-              name: userData.displayName,
-              photo_url: userData.photoURL,
-              role: userData.role
-            })
-          });
-          console.log("✅ User synced to PostgreSQL");
-        } catch (apiErr) {
-          console.warn("⚠️ PostgreSQL sync failed:", apiErr.message);
-        }
-      }
+      await fetch(`${API_BASE}/users/upsert`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(userData)
+      });
+      console.log("✅ User synced to PostgreSQL");
     } catch (err) {
       console.error("Error tracking user:", err);
     }
@@ -102,22 +83,22 @@ const Login = () => {
         await trackUserLogin(result.user);
       }
 
-      // SNIPPET IMPLEMENTATION: Role based redirection
-      const userDocRef = doc(db, "users", result.user.uid);
-      const userDoc = await getDoc(userDocRef);
-      
-      if (userDoc.exists()) {
-        const userData = userDoc.data();
-        if (userData.role === "admin") {
-          console.log("Welcome, Admin!");
-          navigate("/admin"); // Redirect to admin portal
-        } else {
-          console.log("Regular user logged in.");
-          navigate("/");
+      // Fetch role from PostgreSQL
+      try {
+        const roleRes = await fetch(`${API_BASE}/users/${result.user.uid}`);
+        if (roleRes.ok) {
+          const pgUser = await roleRes.json();
+          if (pgUser.role === "admin") {
+            console.log("Welcome, Admin!");
+            navigate("/admin");
+            return;
+          }
         }
-      } else {
-        navigate("/");
+      } catch (roleErr) {
+        console.warn("Role check failed:", roleErr);
       }
+      
+      navigate("/");
     } catch (err) {
       console.error("Login Error:", err);
       let friendlyMsg = "Authentication failed. Please check your credentials.";
@@ -150,22 +131,22 @@ const Login = () => {
       // Update data in Firestore & PostgreSQL
       await trackUserLogin(result.user);
 
-      // SNIPPET IMPLEMENTATION: Role based redirection
-      const userDocRef = doc(db, "users", result.user.uid);
-      const userDoc = await getDoc(userDocRef);
-      
-      if (userDoc.exists()) {
-        const userData = userDoc.data();
-        if (userData.role === "admin") {
-          console.log("Welcome, Admin!");
-          navigate("/admin");
-        } else {
-          console.log("Regular user logged in.");
-          navigate("/");
+      // Fetch role from PostgreSQL
+      try {
+        const roleRes = await fetch(`${API_BASE}/users/${result.user.uid}`);
+        if (roleRes.ok) {
+          const pgUser = await roleRes.json();
+          if (pgUser.role === "admin") {
+            console.log("Welcome, Admin!");
+            navigate("/admin");
+            return;
+          }
         }
-      } else {
-        navigate("/");
+      } catch (roleErr) {
+        console.warn("Role check failed:", roleErr);
       }
+      
+      navigate("/");
     } catch (err) {
       console.error("Google login error:", err);
       setError("Failed to sign in with Google.");

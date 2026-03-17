@@ -2,8 +2,7 @@ import React, { useState } from "react";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import BottomNav from "../components/BottomNav";
-import { db } from "../firebase";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+const API_BASE = import.meta.env.VITE_API_BASE_URL || "https://blinklean-api.onrender.com/api/v1";
 import { TrendingUp, Wallet, Award, Home, Car, Shirt, Recycle, MessageCircle } from "lucide-react";
 import "../assets/css/partner.css";
 
@@ -20,12 +19,14 @@ const Partner = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+    if (!API_BASE) return;
     try {
-      await addDoc(collection(db, "partners"), {
-        ...formData,
-        status: "PENDING",
-        created_at: serverTimestamp()
+      const res = await fetch(`${API_BASE}/partners/enroll`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData)
       });
+      if (!res.ok) throw new Error("Enrollment failed");
       alert("Registration Successful! Our team will contact you shortly.");
       setFormData({ fullName: "", phone: "", serviceType: "", location: "", experience: "" });
     } catch (err) {

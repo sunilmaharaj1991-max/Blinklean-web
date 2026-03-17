@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { auth, db } from "../firebase";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { auth } from "../firebase";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import BottomNav from "../components/BottomNav";
@@ -110,7 +109,6 @@ const ScrapBooking = () => {
 
     setLoading(true);
     let pgSaved = false;
-    let fsSaved = false;
 
     const payload = {
       user_name:    formData.user_name,
@@ -146,21 +144,8 @@ const ScrapBooking = () => {
         }
       }
 
-      // 2. Backup Save: Firestore
-      try {
-        await addDoc(collection(db, "scrap_bookings"), {
-          ...payload,
-          created_at: serverTimestamp()
-        });
-        fsSaved = true;
-        console.log("✅ Saved to Firestore");
-      } catch (fsErr) {
-        console.error("Firestore Error:", fsErr.message);
-      }
-
-      if (pgSaved || fsSaved) {
+      if (pgSaved) {
         setShowSuccess(true);
-        if (!pgSaved) console.warn("PG Sync skipped, but Firestore capture successful.");
       } else {
         alert("Booking Failed: We're having trouble reaching the database. Please check your internet or try again in a moment.");
       }

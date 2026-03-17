@@ -13,6 +13,7 @@ import { BookingsModule } from './bookings/bookings.module';
 import { AvailabilityModule } from './availability/availability.module';
 import { PaymentsModule } from './payments/payments.module';
 import { ScrapModule } from './scrap/scrap.module';
+import { PartnersModule } from './partners/partners.module';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { ScrapModule } from './scrap/scrap.module';
     AvailabilityModule,
     PaymentsModule,
     ScrapModule,
+    PartnersModule,
   ],
   controllers: [HealthController],
   providers: [],
