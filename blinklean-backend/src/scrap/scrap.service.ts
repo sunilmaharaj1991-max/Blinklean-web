@@ -107,7 +107,10 @@ export class ScrapService {
 
     for (const item of dto.items) {
       const rate = await this.scrapRateRepository.findOne({
-        where: { material_name: item.material_name.toLowerCase(), is_active: true },
+        where: {
+          material_name: item.material_name.toLowerCase(),
+          is_active: true,
+        },
       });
 
       if (!rate) {
