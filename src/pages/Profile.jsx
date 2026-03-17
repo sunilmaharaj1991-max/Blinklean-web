@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { auth } from "../firebase";
 import { useNavigate, Link } from "react-router-dom";
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api/v1";
+const API_BASE = import.meta.env.VITE_API_BASE_URL || "https://blinklean-api.onrender.com/api/v1";
 
 const statusConfig = {
   PENDING_APPROVAL: { color: "#f59e0b", bg: "#fef3c7", label: "Pending Approval" },
