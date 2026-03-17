@@ -232,20 +232,20 @@
 }
 
 @media (max-width: 768px) {
+  .services-hero {
+    padding: 80px 20px;
+  }
   .services-hero h1 {
-    font-size: 2.5rem;
+    font-size: 2.2rem;
   }
-
   .category-header h2 {
-    font-size: 2.4rem;
+    font-size: 2.2rem;
   }
-
   .services-grid-premium {
     grid-template-columns: 1fr;
+    gap: 30px;
   }
-
-  .footer-policies-row {
-    flex-direction: column;
-    gap: 15px;
+  .service-body-premium {
+    padding: 24px;
   }
 }
