@@ -118,33 +118,58 @@ const ScrapBooking = () => {
         pickup_point: formData.pickup_point,
         items:        cleanedItems,
         status:       "PENDING_APPROVAL",
-        userId:       auth.currentUser.uid,
-        email:        auth.currentUser.email,
-        created_at:   serverTimestamp(),
+        userId:       auth.currentUser ? auth.currentUser.uid : "GUEST",
+        email:        auth.currentUser ? auth.currentUser.email : "",
+        created_at:   new Date().toISOString(),
       };
 
-      // Primary: Save directly to Firebase Firestore (works on Vercel/production)
-      await addDoc(collection(db, "scrap_bookings"), payload);
-      console.log("✅ Booking saved to Firestore");
+      console.log("Attempting booking save...", payload);
 
-      // Optional: Also try to save to backend API if available
+      let savedToFirestore = false;
+      try {
+        // Primary: Save directly to Firebase Firestore
+        await addDoc(collection(db, "scrap_bookings"), {
+          ...payload,
+          created_at: serverTimestamp() // Use real Firebase server timestamp for Firestore
+        });
+        savedToFirestore = true;
+        console.log("✅ Booking saved to Firestore");
+      } catch (fsErr) {
+        console.error("Firestore Save Failed:", fsErr.message);
+      }
+
+      // Optional: Backend API
       if (API_BASE) {
         try {
           const res = await fetch(`${API_BASE}/scrap/booking`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ ...payload, created_at: new Date().toISOString() })
+            body: JSON.stringify(payload)
           });
           if (res.ok) console.log("✅ Booking also saved to backend");
         } catch (backendErr) {
-          console.warn("Backend not available, booking saved to Firestore only:", backendErr.message);
+          console.warn("Backend not available:", backendErr.message);
         }
       }
 
-      setShowSuccess(true);
+      if (savedToFirestore) {
+        setShowSuccess(true);
+      } else {
+        // If Firestore failed, offer WhatsApp fallback
+        const itemsText = cleanedItems.map(it => `${it.material_name} (${it.estimated_weight}kg)`).join(", ");
+        const waMsg = `Hello Blinklean, I want to book a scrap pickup.\n\nName: ${payload.user_name}\nPhone: ${payload.phone_number}\nAddress: ${payload.address}\nPincode: ${payload.pincode}\nItems: ${itemsText}`;
+        const waUrl = `https://wa.me/917022803582?text=${encodeURIComponent(waMsg)}`;
+        
+        if (window.confirm("Our database is currently syncing. To ensure your booking is placed immediately, would you like to send it via WhatsApp?")) {
+          window.open(waUrl, "_blank");
+          setShowSuccess(true); // Treat as success if they used the fallback
+        } else {
+          throw new Error("Database and fallback both declined.");
+        }
+      }
     } catch (err) {
-      console.error(err);
-      alert("Failed to place booking. Please try again.");
+      console.error("Critical Booking Error:", err);
+      alert(`Failed to place booking: ${err.message}. Please try again or contact us on WhatsApp.`);
     } finally {
       setLoading(false);
     }
