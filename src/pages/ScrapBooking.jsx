@@ -123,22 +123,11 @@ const ScrapBooking = () => {
         created_at:   new Date().toISOString(),
       };
 
-      console.log("Attempting booking save...", payload);
+      console.log("Processing booking...", payload);
 
-      let savedToFirestore = false;
-      try {
-        // Primary: Save directly to Firebase Firestore
-        await addDoc(collection(db, "scrap_bookings"), {
-          ...payload,
-          created_at: serverTimestamp() // Use real Firebase server timestamp for Firestore
-        });
-        savedToFirestore = true;
-        console.log("✅ Booking saved to Firestore");
-      } catch (fsErr) {
-        console.error("Firestore Save Failed:", fsErr.message);
-      }
+      let savedOk = false;
 
-      // Optional: Backend API
+      // Primary: Save to PostgreSQL via Backend API
       if (API_BASE) {
         try {
           const res = await fetch(`${API_BASE}/scrap/booking`, {
@@ -146,30 +135,35 @@ const ScrapBooking = () => {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload)
           });
-          if (res.ok) console.log("✅ Booking also saved to backend");
+          if (res.ok) {
+            savedOk = true;
+            console.log("✅ Booking saved to PostgreSQL");
+          }
         } catch (backendErr) {
-          console.warn("Backend not available:", backendErr.message);
+          console.warn("PostgreSQL save failed:", backendErr.message);
         }
       }
 
-      if (savedToFirestore) {
+      // Secondary: Backup / Fallback to Firestore
+      try {
+        await addDoc(collection(db, "scrap_bookings"), {
+          ...payload,
+          created_at: serverTimestamp()
+        });
+        if (!savedOk) savedOk = true; // Use Firestore as success if API failed
+        console.log("✅ Booking saved to Firestore (Backup)");
+      } catch (fsErr) {
+        console.error("Firestore Save Failed:", fsErr.message);
+      }
+
+      if (savedOk) {
         setShowSuccess(true);
       } else {
-        // If Firestore failed, offer WhatsApp fallback
-        const itemsText = cleanedItems.map(it => `${it.material_name} (${it.estimated_weight}kg)`).join(", ");
-        const waMsg = `Hello Blinklean, I want to book a scrap pickup.\n\nName: ${payload.user_name}\nPhone: ${payload.phone_number}\nAddress: ${payload.address}\nPincode: ${payload.pincode}\nItems: ${itemsText}`;
-        const waUrl = `https://wa.me/917022803582?text=${encodeURIComponent(waMsg)}`;
-        
-        if (window.confirm("Our database is currently syncing. To ensure your booking is placed immediately, would you like to send it via WhatsApp?")) {
-          window.open(waUrl, "_blank");
-          setShowSuccess(true); // Treat as success if they used the fallback
-        } else {
-          throw new Error("Database and fallback both declined.");
-        }
+        throw new Error("Unable to save booking to any database. Please check your connection.");
       }
     } catch (err) {
-      console.error("Critical Booking Error:", err);
-      alert(`Failed to place booking: ${err.message}. Please try again or contact us on WhatsApp.`);
+      console.error("Booking Error:", err);
+      alert(`Booking Failed: ${err.message}. Please try again later.`);
     } finally {
       setLoading(false);
     }

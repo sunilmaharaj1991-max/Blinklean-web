@@ -275,7 +275,7 @@ const Home = () => {
             {/*  Service Card 1: Home Cleaning  */}
             <div className="service-card">
               <div className="service-image-wrapper">
-                <img src="/assets/images/service_home_branded.png" alt="Professional Home Deep Cleaning Service" />
+                <img src="/assets/images/service_home_workerless.png" alt="Professional Home Deep Cleaning Service" />
               </div>
               <div className="service-icon-wrapper">
                 <i data-lucide="home"></i>
@@ -295,7 +295,7 @@ const Home = () => {
             <div className="service-card">
               <div className="service-image-wrapper">
                 <img
-                  src="/assets/images/service_vehicle_branded.png"
+                  src="/assets/images/service_vehicle_workerless.png"
                   alt="Waterless Doorstep Vehicle Cleaning and Detailing"
                 />
               </div>
@@ -317,7 +317,7 @@ const Home = () => {
             <div className="service-card">
               <div className="service-image-wrapper">
                 <img
-                  src="/assets/images/service_laundry_branded.png"
+                  src="/assets/images/service_laundry_workerless.png"
                   alt="Doorstep Laundry, Wash and Fold, and Steam Ironing"
                 />
               </div>
@@ -339,7 +339,7 @@ const Home = () => {
             <div className="service-card">
               <div className="service-image-wrapper">
                 <img
-                  src="/assets/images/service_scrap_branded.png"
+                  src="/assets/images/service_scrap_workerless.png"
                   alt="Responsible Doorstep Scrap Collection and Recycling"
                 />
               </div>
@@ -1551,8 +1551,8 @@ const Home = () => {
               onMouseLeave={(e) => e.currentTarget.style.animationPlayState = 'running'}
             >
               {[
-                "community1.jpg", "community6.jpg", "community4.jpg", 
-                "community7.jpg", "community3.jpg", "community5.jpg",
+                "community1.jpg", "service_home_workerless.png", "community4.jpg", 
+                "service_vehicle_workerless.png", "community7.jpg", "service_scrap_workerless.png",
                 "community2.jpg"
               ].map((img, idx) => (
                 <div
@@ -1583,8 +1583,8 @@ const Home = () => {
               ))}
               {/* Duplicate for seamless loop */}
               {[
-                "community_branded_1.png", "community6.jpg", "community_branded_2.png", 
-                "community7.jpg", "community_branded_3.png", "community5.jpg",
+                "community1.jpg", "service_home_workerless.png", "community4.jpg", 
+                "service_vehicle_workerless.png", "community7.jpg", "service_scrap_workerless.png",
                 "community2.jpg"
               ].map((img, idx) => (
                 <div

@@ -7,35 +7,38 @@ const Logo = ({ type = "navbar", style = {} }) => {
     <div style={{ 
       display: "flex", 
       alignItems: "center", 
-      gap: "10px",
+      gap: "12px",
       ...style 
     }}>
       <img 
         src="/assets/images/logo_symbol.png" 
         alt="BlinKlean Symbol" 
         style={{ 
-          height: isNavbar ? "50px" : "60px", 
+          height: isNavbar ? "55px" : "65px", 
           width: "auto",
-          mixBlendMode: "multiply" 
+          objectFit: "contain"
         }} 
       />
       <div style={{ 
         display: "flex", 
         flexDirection: "column", 
-        lineHeight: "1.1" 
+        justifyContent: "center"
       }}>
         <div style={{ 
-          fontSize: isNavbar ? "1.6rem" : "1.8rem", 
+          fontSize: isNavbar ? "1.8rem" : "2.2rem", 
           fontWeight: "800",
-          fontFamily: "'Outfit', sans-serif"
+          fontFamily: "'Outfit', sans-serif",
+          lineHeight: "1",
+          color: "#009ee3"
         }}>
-          <span style={{ color: "#009ee3" }}>Blin</span>
-          <span style={{ color: "#1b9b3a" }}>Klean</span>
+          Blin<span style={{ color: "#1b9b3a" }}>Klean</span>
         </div>
         <div style={{ 
-          fontSize: isNavbar ? "0.85rem" : "0.95rem", 
+          fontSize: isNavbar ? "0.85rem" : "1rem", 
           color: "#009ee3", 
-          fontWeight: "500" 
+          fontWeight: "600",
+          marginTop: "2px",
+          letterSpacing: "0.5px"
         }}>
           Clean in a Blink
         </div>

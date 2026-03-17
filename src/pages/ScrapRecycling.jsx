@@ -1,23 +1,20 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
 import { Link } from "react-router-dom";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import BottomNav from "../components/BottomNav";
 import { auth } from "../firebase";
+import { User, MapPin, Recycle, Plus, MessageCircle } from "lucide-react";
 
 const ScrapRecycling = () => {
-  const [user, setUser] = useState(null);
-
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged((currentUser) => {
-      setUser(currentUser);
+    const unsubscribe = auth.onAuthStateChanged(() => {
     });
     return () => unsubscribe();
   }, []);
+
   return (
     <>
-      {/* Generated JSX from HTML */}
-
       <Header />
 
       <div className="booking-hero">
@@ -31,7 +28,7 @@ const ScrapRecycling = () => {
         <div className="booking-card">
           <form id="scrapBookingForm">
             <div className="step-title">
-              <i data-lucide="user"></i>
+              <User style={{ marginRight: "10px" }} />
               Personal Details
             </div>
             <div className="form-grid">
@@ -56,7 +53,7 @@ const ScrapRecycling = () => {
             </div>
 
             <div className="step-title" style={{ marginTop: "40px" }}>
-              <i data-lucide="map-pin"></i>
+              <MapPin style={{ marginRight: "10px" }} />
               Collection Address
             </div>
             <div className="form-group">
@@ -72,7 +69,6 @@ const ScrapRecycling = () => {
               <div className="form-group">
                 <label>Pincode</label>
                 <input type="text" id="pincode" placeholder="560XXX" required />
-                <div id="pincode-status"></div>
               </div>
               <div className="form-group">
                 <label>City</label>
@@ -81,17 +77,15 @@ const ScrapRecycling = () => {
             </div>
 
             <div className="step-title" style={{ marginTop: "40px" }}>
-              <i data-lucide="recycling"></i>
+              <Recycle style={{ marginRight: "10px" }} />
               What are you selling?
             </div>
             <div id="itemsContainer">
               <div className="item-row">
                 <div className="form-group">
                   <label>Material Type</label>
-                  <select className="material-select" required>
-                    <option value="" disabled selected>
-                      Select Material
-                    </option>
+                  <select className="material-select" defaultValue="" required>
+                    <option value="" disabled>Select Material</option>
                     <option value="newspapers">Newspapers</option>
                     <option value="cardboard">Cardboard</option>
                     <option value="plastic">Plastic</option>
@@ -116,25 +110,15 @@ const ScrapRecycling = () => {
             </div>
 
             <button type="button" className="btn-add-item">
-              <i data-lucide="plus"></i> Add Another Material
+              <Plus /> Add Another Material
             </button>
 
             <div className="summary-box">
-              <div id="summaryItems"></div>
-              <div
-                className="summary-item total-row"
-                style={{ color: "var(--primary)" }}
-              >
+              <div className="summary-item total-row" style={{ color: "var(--primary)" }}>
                 <span>Status</span>
-                <span id="totalValue">Awaiting Collection</span>
+                <span>Awaiting Collection</span>
               </div>
-              <p
-                style={{
-                  fontSize: "0.85rem",
-                  color: "#6b7280",
-                  marginTop: "10px",
-                }}
-              >
+              <p style={{ fontSize: "0.85rem", color: "#6b7280", marginTop: "10px" }}>
                 * Final value will be determined at the time of collection based
                 on current market rates and digital weighing scales.
               </p>
@@ -153,6 +137,18 @@ const ScrapRecycling = () => {
 
       <Footer />
       <BottomNav />
+      {/* Floating WhatsApp Button */}
+      <div className="whatsapp-float-container">
+        <span className="whatsapp-tooltip">Chat with us on WhatsApp</span>
+        <a
+          href="https://wa.me/917022803582?text=Hello%20Blinklean%2C%20I%20am%20interested%20in%20your%20services."
+          className="whatsapp-float-btn"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <MessageCircle />
+        </a>
+      </div>
     </>
   );
 };
