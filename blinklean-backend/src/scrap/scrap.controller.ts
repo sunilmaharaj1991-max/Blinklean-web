@@ -40,7 +40,7 @@ export class ScrapController {
   /** PATCH /scrap/booking/:id/confirm — Admin: confirm booking and notify customer */
   @Patch('booking/:id/confirm')
   confirmBooking(
-    @Param('id') id: number,
+    @Param('id') id: string,
     @Body() body: { pickupTiming?: string },
   ) {
     return this.scrapService.confirmBooking(
@@ -52,7 +52,7 @@ export class ScrapController {
   /** PATCH /scrap/booking/:id/status — Admin: update booking status */
   @Patch('booking/:id/status')
   updateBookingStatus(
-    @Param('id') id: number,
+    @Param('id') id: string,
     @Body() body: { status: string; final_value?: number },
   ) {
     return this.scrapService.updateBookingStatus(

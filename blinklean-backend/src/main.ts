@@ -14,7 +14,11 @@ async function bootstrap() {
   );
   app.use(compression());
   app.enableCors({
-    origin: true, // Reflect request origin (useful for testing from multiple domains)
+    origin: (origin, callback) => {
+      // Allow all origins to prevent "Failed to fetch" on mobile/various domains
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+      callback(null, true);
+    },
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     credentials: true,
   });

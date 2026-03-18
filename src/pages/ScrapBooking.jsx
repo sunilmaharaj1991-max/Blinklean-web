@@ -124,37 +124,38 @@ const ScrapBooking = () => {
     };
 
     try {
-      // 1. Primary Save: PostgreSQL (Backend)
-      if (API_BASE) {
-        try {
-          const res = await fetch(`${API_BASE}/scrap/booking`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload)
-          });
-          if (res.ok) {
-            pgSaved = true;
-            console.log("✅ Saved to PostgreSQL");
-          } else {
-            const errBody = await res.text();
-            let errData;
-            try { errData = JSON.parse(errBody); } catch { errData = errBody; }
-            console.error("Backend Error:", errData);
-            alert(`Error from server: ${typeof errData === 'object' ? JSON.stringify(errData) : errData}`);
-          }
-        } catch (apiErr) {
-          console.error("API Connection Error:", apiErr.message);
-          alert(`Connection failed: ${apiErr.message}`);
-        }
-      }
+      // Primary Attempt: Save to Backend
+      const res = await fetch(`${API_BASE}/scrap/booking`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
 
-      if (pgSaved) {
-        setShowSuccess(true);
+      if (res.ok) {
+        pgSaved = true;
+      } else {
+        throw new Error("Server responded with error");
       }
     } catch (err) {
-      console.error("Critical Submit Error:", err);
-      alert("Something went wrong. Please check your internet and try again.");
+      console.error("Booking Error:", err);
+      // Fallback: If network fails, offer WhatsApp booking
+      const waMsg = encodeURIComponent(
+        `Hello Blinklean! I'd like to book a scrap pickup.\n\n` +
+        `Name: ${formData.user_name}\n` +
+        `Phone: ${formData.phone_number}\n` +
+        `Items: ${cleanedItems.map(i => `${i.material_name} (${i.estimated_weight}kg)`).join(", ")}`
+      );
+      
+      const confirmWA = window.confirm(
+        "Network Connection Issue: We couldn't reach our server.\n\n" +
+        "Would you like to complete your booking via WhatsApp instead? This ensures your request is received immediately."
+      );
+      
+      if (confirmWA) {
+        window.open(`https://wa.me/917022803582?text=${waMsg}`, "_blank");
+      }
     } finally {
+      if (pgSaved) setShowSuccess(true);
       setLoading(false);
     }
   };
@@ -176,70 +177,138 @@ const ScrapBooking = () => {
   }
 
   return (
-    <>
+    <div className="sb-page">
       <Header />
+      
       <div className="sb-hero">
-        <h1>Recycle &amp; <span>Earn Cash</span> 💰</h1>
-        <p>Schedule a doorstep scrap pickup in Bangalore instantly.</p>
+        <div className="sb-hero-pill">♻️ India's First Smart Recycling Platform</div>
+        <h1>Recycle & <span>Earn Cash</span> 💰</h1>
+        <p>Schedule a professional doorstep scrap pickup. Turn your clutter into instant cash sustainably.</p>
+        
+        <div className="sb-trust-row">
+          <div className="sb-trust-badge">🛡️ Verified Agents</div>
+          <div className="sb-trust-badge">⚖️ Digital Weighing</div>
+          <div className="sb-trust-badge">⚡ Instant Cash</div>
+        </div>
       </div>
 
       <div className="sb-layout">
         <div className="sb-form-card">
           <form onSubmit={handleSubmit}>
+            {/* Step 1: Contact Info */}
             <div className="sb-step">
-              <label className="sb-label">Full Name</label>
-              <input className="sb-input" id="user_name" type="text" required value={formData.user_name} onChange={handleInputChange} />
-              <label className="sb-label">Phone Number</label>
-              <input className="sb-input" id="phone_number" type="tel" required pattern="[0-9]{10}" value={formData.phone_number} onChange={handleInputChange} />
+              <div className="sb-step-header">
+                <div className="sb-step-num">1</div>
+                <div>
+                  <h3 className="sb-step-title">Contact Information</h3>
+                  <p className="sb-step-subtitle">Where should our agent reach you?</p>
+                </div>
+              </div>
+              <div className="sb-form-grid">
+                <div className="sb-form-group">
+                  <label className="sb-label">Full Name</label>
+                  <input className="sb-input" id="user_name" type="text" placeholder="Enter name" required value={formData.user_name} onChange={handleInputChange} />
+                </div>
+                <div className="sb-form-group">
+                  <label className="sb-label">Phone Number</label>
+                  <input className="sb-input" id="phone_number" type="tel" placeholder="10-digit mobile" required pattern="[0-9]{10}" value={formData.phone_number} onChange={handleInputChange} />
+                </div>
+              </div>
             </div>
 
+            {/* Step 2: Location */}
             <div className="sb-step">
-              <label className="sb-label">Complete Address</label>
-              <textarea className="sb-textarea" id="address" rows="3" required value={formData.address} onChange={handleInputChange} />
+              <div className="sb-step-header">
+                <div className="sb-step-num">2</div>
+                <div>
+                  <h3 className="sb-step-title">Pickup Address</h3>
+                  <p className="sb-step-subtitle">Provide your exact location details.</p>
+                </div>
+              </div>
+              <div className="sb-form-group" style={{ marginBottom: '16px' }}>
+                <label className="sb-label">Complete Address</label>
+                <textarea className="sb-textarea" id="address" placeholder="Flat/House No, Building Name, Landmark..." rows="3" required value={formData.address} onChange={handleInputChange} />
+              </div>
               <div className="sb-form-grid">
                 <div className="sb-form-group">
                   <label className="sb-label">Pincode</label>
-                  <input className="sb-input" id="pincode" type="text" required pattern="[0-9]{6}" value={formData.pincode} onChange={handleInputChange} />
-                </div>
-                <div className="sb-form-group">
-                  <label className="sb-label">Pickup Point (Optional)</label>
-                  <input className="sb-input" id="pickup_point" type="text" value={formData.pickup_point} onChange={handleInputChange} />
+                  <input className={`sb-input ${pincodeValid ? 'success' : ''}`} id="pincode" type="text" placeholder="560XXX" required pattern="[0-9]{6}" value={formData.pincode} onChange={handleInputChange} />
                 </div>
               </div>
-              {areaError && <span className="sb-field-hint error">{areaError}</span>}
-              {pincodeValid && !areaError && <span className="sb-field-hint success">✓ Servicing this area</span>}
+              {areaError && <span className="sb-field-hint error">⚠️ {areaError}</span>}
+              {pincodeValid && !areaError && <span className="sb-field-hint success">✓ Currently servicing your area</span>}
             </div>
 
+            {/* Step 3: Materials */}
             <div className="sb-step">
-              <h3 style={{ marginBottom: 15 }}>Materials</h3>
-              {formData.items.map((item, index) => (
-                <div key={index} className="sb-item-row">
-                  <select className="sb-select" required value={item.material_name} onChange={(e) => handleItemChange(index, "material_name", e.target.value)}>
-                    <option value="" disabled>Material...</option>
-                    <option value="Newspapers">Newspapers</option>
-                    <option value="Cardboard">Cardboard</option>
-                    <option value="Plastic">Plastic</option>
-                    <option value="Metal">Metal</option>
-                    <option value="E-Waste">Electronics</option>
-                  </select>
-                  <input className="sb-input" type="number" placeholder="kg" min="0.5" step="0.5" required value={item.estimated_weight} onChange={(e) => handleItemChange(index, "estimated_weight", e.target.value)} />
-                  {formData.items.length > 1 && <button type="button" className="sb-remove-btn" onClick={() => removeItem(index)}>×</button>}
+              <div className="sb-step-header">
+                <div className="sb-step-num">3</div>
+                <div>
+                  <h3 className="sb-step-title">Scrap Details</h3>
+                  <p className="sb-step-subtitle">What would you like to recycle today?</p>
                 </div>
-              ))}
-              <button type="button" className="sb-add-btn" onClick={addItem}>+ Add Item</button>
+              </div>
+              <div className="sb-items-list">
+                {formData.items.map((item, index) => (
+                  <div key={index} className="sb-item-row">
+                    <div className="sb-form-group">
+                      <label className="sb-label">Material</label>
+                      <select className="sb-select" required value={item.material_name} onChange={(e) => handleItemChange(index, "material_name", e.target.value)}>
+                        <option value="" disabled>Select Material</option>
+                        <option value="Newspapers">Newspapers</option>
+                        <option value="Cardboard">Cardboard</option>
+                        <option value="Plastic">Plastic</option>
+                        <option value="Metal">Metals / Iron</option>
+                        <option value="E-Waste">Electronics / E-Waste</option>
+                      </select>
+                    </div>
+                    <div className="sb-form-group">
+                      <label className="sb-label">Est. Weight (kg)</label>
+                      <input className="sb-input" type="number" placeholder="kg" min="1" step="0.5" required value={item.estimated_weight} onChange={(e) => handleItemChange(index, "estimated_weight", e.target.value)} />
+                    </div>
+                    {formData.items.length > 1 && (
+                      <button type="button" className="sb-remove-btn" onClick={() => removeItem(index)}>
+                        <span style={{ fontSize: '1.4rem' }}>&times;</span>
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+              <button type="button" className="sb-add-btn" onClick={addItem}>+ Add Another Material</button>
             </div>
 
-            <button type="submit" className="sb-submit-btn" disabled={loading}>
-              {loading ? "Booking..." : "Schedule My Pickup"}
-            </button>
+            <div className="sb-submit-area">
+              <button type="submit" className="sb-submit-btn" disabled={loading}>
+                {loading ? "Processing..." : "Schedule My Pickup Now"}
+              </button>
+              <div className="sb-submit-note">🔒 Safe & Secure Pickup Promise</div>
+            </div>
           </form>
         </div>
 
         <div className="sb-sidebar">
           <div className="sb-info-card">
-            <h4>Service Areas</h4>
+            <h4 className="sb-info-card-title">📍 Active Zones</h4>
             <div className="sb-areas-grid">
-              {ALLOWED_ZONES.map((z,i) => <div key={i} className="sb-area-chip">📍 {z.name}</div>)}
+              {ALLOWED_ZONES.map((z,i) => <div key={i} className="sb-area-chip">{z.name}</div>)}
+            </div>
+          </div>
+          
+          <div className="sb-info-card">
+            <h4 className="sb-info-card-title">💡 How it Works</h4>
+            <div className="sb-steps-mini">
+              <div className="sb-step-mini">
+                <div className="sb-step-mini-num">1</div>
+                <div className="sb-step-mini-text"><strong>Book Pickup</strong> Schedule a date and time online.</div>
+              </div>
+              <div className="sb-step-mini">
+                <div className="sb-step-mini-num">2</div>
+                <div className="sb-step-mini-text"><strong> doorstep Weighing</strong> Our agent weighs scrap in front of you.</div>
+              </div>
+              <div className="sb-step-mini">
+                <div className="sb-step-mini-num">3</div>
+                <div className="sb-step-mini-text"><strong>Get Paid</strong> Receive instant cash at your doorstep.</div>
+              </div>
             </div>
           </div>
         </div>
@@ -248,9 +317,15 @@ const ScrapBooking = () => {
       {showSuccess && (
         <div className="sb-success-overlay">
           <div className="sb-success-modal">
-            <h2>Success! 🎉</h2>
-            <p>We've received your request. An admin will contact you shortly.</p>
-            <button className="sb-btn-home" onClick={() => navigate("/")}>Back to Home</button>
+            <div className="sb-success-icon-wrap">
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#1B9B3A" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            </div>
+            <h2>Pickup Scheduled! 🎉</h2>
+            <p>Your request has been received. Our pickup coordinates will contact you shortly to confirm the exact arrival time.</p>
+            <div className="sb-success-actions">
+              <button className="sb-btn-home" onClick={() => navigate("/")}>Go to Home</button>
+              <button className="sb-btn-profile" onClick={() => navigate("/profile")}>View Booking Status</button>
+            </div>
           </div>
         </div>
       )}
@@ -258,7 +333,7 @@ const ScrapBooking = () => {
       <Footer />
       <BottomNav />
       <FloatingWhatsApp />
-    </>
+    </div>
   );
 };
 
