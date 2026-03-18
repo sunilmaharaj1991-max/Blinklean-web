@@ -7,9 +7,15 @@ import { ValidationPipe } from '@nestjs/common';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  app.use(helmet());
+  app.use(helmet({
+    crossOriginResourcePolicy: false, // Allow cross-origin requests
+  }));
   app.use(compression());
-  app.enableCors(); // Enable CORS for frontend requests
+  app.enableCors({
+    origin: true, // Reflect request origin (useful for testing from multiple domains)
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+    credentials: true,
+  });
 
   app.useGlobalPipes(new ValidationPipe());
 

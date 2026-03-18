@@ -1,6 +1,0 @@
-{
-  "version": 3,
-  "sources": [],
-  "sections": [
-    {"offset": {"line": 14, "column": 0}, "map": {"version":3,"sources":["file:///C:/Users/jeevithgowdasr/blinklean-react/src/app/page.tsx"],"sourcesContent":["import React from \"react\";\n\nexport default function HomePage() {\n  return (\n    <main style={{ padding: \"100px 20px\", textAlign: \"center\" }}>\n      <h1>Blinklean AI Clean-Tech</h1>\n      <p>Welcome to India's First AI Powered QuickClean Platform.</p>\n      <div style={{ marginTop: \"20px\" }}>\n        <p>This page is now powered by Next.js and Clerk.</p>\n      </div>\n    </main>\n  );\n}\n"],"names":[],"mappings":";;;;;;AAEe,SAAS;IACtB,qBACE,8OAAC;QAAK,OAAO;YAAE,SAAS;YAAc,WAAW;QAAS;;0BACxD,8OAAC;0BAAG;;;;;;0BACJ,8OAAC;0BAAE;;;;;;0BACH,8OAAC;gBAAI,OAAO;oBAAE,WAAW;gBAAO;0BAC9B,cAAA,8OAAC;8BAAE;;;;;;;;;;;;;;;;;AAIX"}}]
-}
