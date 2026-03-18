@@ -7,9 +7,11 @@ import { ValidationPipe } from '@nestjs/common';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  app.use(helmet({
-    crossOriginResourcePolicy: false, // Allow cross-origin requests
-  }));
+  app.use(
+    helmet({
+      crossOriginResourcePolicy: false, // Allow cross-origin requests
+    }),
+  );
   app.use(compression());
   app.enableCors({
     origin: true, // Reflect request origin (useful for testing from multiple domains)
