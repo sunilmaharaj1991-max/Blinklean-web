@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { ThrottlerModule } from '@nestjs/throttler';
-import { DatabaseModule } from './database/database.module';
 import { RedisCacheModule } from './config/redis.config';
 import { HealthController } from './health.controller';
 import { AuthModule } from './auth/auth.module';
@@ -14,6 +13,7 @@ import { AvailabilityModule } from './availability/availability.module';
 import { PaymentsModule } from './payments/payments.module';
 import { ScrapModule } from './scrap/scrap.module';
 import { PartnersModule } from './partners/partners.module';
+import { FirebaseModule } from './firebase/firebase.module';
 
 @Module({
   imports: [
@@ -26,7 +26,7 @@ import { PartnersModule } from './partners/partners.module';
         limit: 20,
       },
     ]),
-    DatabaseModule,
+    FirebaseModule,
     RedisCacheModule,
     AuthModule,
     UsersModule,

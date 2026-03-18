@@ -4,24 +4,34 @@ import {
   BadRequestException,
   Logger,
 } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import type { Cache } from 'cache-manager';
-import { Service } from './services.entity';
-import { Zone } from '../zones/zones.entity';
+import { FirebaseService } from '../firebase/firebase.service';
+
+interface ServiceData {
+  id: string;
+  name: string;
+  category: string;
+  description: string;
+  app_only: boolean;
+}
 
 @Injectable()
 export class ServicesService {
   private readonly logger = new Logger(ServicesService.name);
 
   constructor(
-    @InjectRepository(Service)
-    private servicesRepository: Repository<Service>,
-    @InjectRepository(Zone)
-    private zonesRepository: Repository<Zone>,
+    private readonly firebaseService: FirebaseService,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {}
+
+  private get servicesCollection() {
+    return this.firebaseService.getCollection('services');
+  }
+
+  private get zonesCollection() {
+    return this.firebaseService.getCollection('zones');
+  }
 
   async getServices(platform: string, pincode?: string) {
     if (!platform || !['web', 'app'].includes(platform.toLowerCase())) {
@@ -41,25 +51,25 @@ export class ServicesService {
     let zoneActive = true;
 
     if (pincode) {
-      const zone = await this.zonesRepository.findOne({
-        where: { pincode, is_active: true },
-      });
-      if (!zone) {
+      const zoneSnapshot = await this.zonesCollection
+        .where('pincode', '==', pincode)
+        .where('is_active', '==', true)
+        .limit(1)
+        .get();
+
+      if (zoneSnapshot.empty) {
         zoneActive = false;
         scrapeServiceActive = false;
-        // The following are not used in current mapping logic but captured from zone
-        // _cleaningActive = false;
-        // _vehicleActive = false;
-        // _laundryActive = false;
       } else {
+        const zone = zoneSnapshot.docs[0].data();
         scrapeServiceActive = zone.scrap_service_available;
-        // _cleaningActive = zone.cleaning_service_available;
-        // _vehicleActive = zone.vehicle_service_available;
-        // _laundryActive = zone.laundry_service_available;
       }
     }
 
-    const services = await this.servicesRepository.find();
+    const servicesSnapshot = await this.servicesCollection.get();
+    const services = servicesSnapshot.docs.map(
+      (doc) => ({ id: doc.id, ...(doc.data() as any) }) as ServiceData,
+    );
 
     const result = services.map((service) => {
       let bookingEnabled = false;

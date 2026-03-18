@@ -4,26 +4,35 @@ import {
   BadRequestException,
   ConflictException,
 } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import type { Cache } from 'cache-manager';
-import { Booking } from './bookings.entity';
-import { Zone } from '../zones/zones.entity';
-import { User } from '../users/users.entity';
+import { FirebaseService } from '../firebase/firebase.service';
 import { CreateScrapBookingDto } from './dto/create-scrap-booking.dto';
+
+interface ZoneData {
+  pincode: string;
+  is_active: boolean;
+  scrap_service_available: boolean;
+}
 
 @Injectable()
 export class BookingsService {
   constructor(
-    @InjectRepository(Booking)
-    private bookingsRepository: Repository<Booking>,
-    @InjectRepository(Zone)
-    private zonesRepository: Repository<Zone>,
-    @InjectRepository(User)
-    private usersRepository: Repository<User>,
+    private readonly firebaseService: FirebaseService,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {}
+
+  private get bookingsCollection() {
+    return this.firebaseService.getCollection('bookings');
+  }
+
+  private get zonesCollection() {
+    return this.firebaseService.getCollection('zones');
+  }
+
+  private get usersCollection() {
+    return this.firebaseService.getCollection('users');
+  }
 
   async createScrapBooking(phone: string, dto: CreateScrapBookingDto) {
     const {
@@ -51,15 +60,19 @@ export class BookingsService {
     }
 
     // 3. Check service zone availability
-    const zone = await this.zonesRepository.findOne({
-      where: { pincode, is_active: true },
-    });
+    const zoneSnapshot = await this.zonesCollection
+      .where('pincode', '==', pincode)
+      .where('is_active', '==', true)
+      .limit(1)
+      .get();
 
-    if (!zone) {
+    if (zoneSnapshot.empty) {
       throw new BadRequestException(
         'Service is not available in your area yet',
       );
     }
+
+    const zone = zoneSnapshot.docs[0].data() as ZoneData;
 
     if (!zone.scrap_service_available) {
       throw new BadRequestException(
@@ -68,18 +81,31 @@ export class BookingsService {
     }
 
     // 4. Get User
-    let user = await this.usersRepository.findOne({
-      where: { phone_number: phone },
-    });
-    if (!user) {
-      // usually users are created in OTP flow, handle if new here just in case
-      user = this.usersRepository.create({ phone_number: phone });
-      user = await this.usersRepository.save(user);
+    const userSnapshot = await this.usersCollection
+      .where('phone_number', '==', phone)
+      .limit(1)
+      .get();
+
+    let userId: string;
+
+    if (userSnapshot.empty) {
+      // Create new user in users collection
+      const newUser = {
+        phone_number: phone,
+        role: 'user',
+        created_at: new Date(),
+        updated_at: new Date(),
+      };
+      const userRef = await this.usersCollection.add(newUser);
+      userId = userRef.id;
+    } else {
+      const userDoc = userSnapshot.docs[0];
+      userId = userDoc.id;
     }
 
-    // 5. Create Booking using Transaction Simulation via Save
-    const booking = this.bookingsRepository.create({
-      user,
+    // 5. Create Booking
+    const bookingData = {
+      userId,
       pickup_address,
       pincode,
       selected_materials,
@@ -87,17 +113,19 @@ export class BookingsService {
       predicted_price,
       pickup_date,
       status: 'scheduled',
-    });
+      created_at: new Date(),
+      updated_at: new Date(),
+    };
 
-    const savedBooking = await this.bookingsRepository.save(booking);
+    const bookingRef = await this.bookingsCollection.add(bookingData);
 
     // 6. Lock submissions for this user for 10 seconds
     await this.cacheManager.set(cacheKey, 'locked', 10);
 
     return {
       message: 'Scrap pickup scheduled successfully',
-      bookingId: savedBooking.id,
-      status: savedBooking.status,
+      bookingId: bookingRef.id,
+      status: bookingData.status,
     };
   }
 }

@@ -1,19 +1,24 @@
 import { Injectable, BadRequestException, Logger } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
 import * as crypto from 'crypto';
 import Razorpay from 'razorpay';
-import { Payment } from './payments.entity';
-import { Booking } from '../bookings/bookings.entity';
+import { FirebaseService } from '../firebase/firebase.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { VerifyPaymentDto } from './dto/verify-payment.dto';
 
-interface RazorpayOrder {
+interface BookingData {
   id: string;
-  amount: number;
-  currency: string;
-  receipt: string;
+  userId: string;
   status: string;
+}
+
+interface UserData {
+  phone_number: string;
+}
+
+interface PaymentRecord {
+  id: string;
+  booking_id: string;
+  payment_status: string;
 }
 
 @Injectable()
@@ -21,29 +26,47 @@ export class PaymentsService {
   private readonly logger = new Logger(PaymentsService.name);
   private razorpay: any;
 
-  constructor(
-    @InjectRepository(Payment)
-    private paymentsRepository: Repository<Payment>,
-    @InjectRepository(Booking)
-    private bookingsRepository: Repository<Booking>,
-  ) {
+  constructor(private readonly firebaseService: FirebaseService) {
     this.razorpay = new Razorpay({
       key_id: process.env.RAZORPAY_KEY_ID || 'dummy_key_id',
       key_secret: process.env.RAZORPAY_KEY_SECRET || 'dummy_key_secret',
     });
   }
 
-  async createOrder(phone: string, dto: CreateOrderDto) {
-    const booking = await this.bookingsRepository.findOne({
-      where: { id: dto.booking_id },
-      relations: ['user'],
-    });
+  private get paymentsCollection() {
+    return this.firebaseService.getCollection('payments');
+  }
 
-    if (!booking) {
+  private get bookingsCollection() {
+    return this.firebaseService.getCollection('bookings');
+  }
+
+  private get usersCollection() {
+    return this.firebaseService.getCollection('users');
+  }
+
+  async createOrder(phone: string, dto: CreateOrderDto) {
+    const bookingDoc = await this.bookingsCollection
+      .doc(String(dto.booking_id))
+      .get();
+
+    if (!bookingDoc.exists) {
       throw new BadRequestException('Booking not found');
     }
 
-    if (booking.user.phone_number !== phone) {
+    const bookingData = bookingDoc.data() as BookingData;
+    const booking = { id: bookingDoc.id, ...bookingData };
+
+    const userDoc = await this.usersCollection
+      .doc(String(booking.userId))
+      .get();
+    if (!userDoc.exists) {
+      throw new BadRequestException('User not found for this booking');
+    }
+
+    const user = userDoc.data() as UserData;
+
+    if (user.phone_number !== phone) {
       throw new BadRequestException('Payment unauthorized for this booking');
     }
 
@@ -69,14 +92,17 @@ export class PaymentsService {
       )) as RazorpayOrder;
 
       // Record pending payment
-      const payment = this.paymentsRepository.create({
+      const paymentData = {
         booking_id: booking.id,
         amount: amount,
         payment_status: 'pending',
         payment_gateway: 'razorpay',
         transaction_reference: order.id,
-      });
-      await this.paymentsRepository.save(payment);
+        created_at: new Date(),
+        updated_at: new Date(),
+      };
+
+      await this.paymentsCollection.add(paymentData);
 
       return {
         order_id: order.id,
@@ -104,28 +130,40 @@ export class PaymentsService {
       throw new BadRequestException('Payment signature verification failed');
     }
 
-    // Success flow - update models via pseudo-transaction
-    const payment = await this.paymentsRepository.findOne({
-      where: { transaction_reference: razorpay_order_id },
-    });
-    if (!payment) {
+    // Success flow - find payment by transaction_reference
+    const paymentSnapshot = await this.paymentsCollection
+      .where('transaction_reference', '==', razorpay_order_id)
+      .limit(1)
+      .get();
+
+    if (paymentSnapshot.empty) {
       throw new BadRequestException('Payment order not found in system');
     }
+
+    const paymentDoc = paymentSnapshot.docs[0];
+    const payment = { id: paymentDoc.id, ...(paymentDoc.data() as PaymentRecord) };
 
     if (payment.payment_status === 'success') {
       throw new BadRequestException('Payment already verified');
     }
 
-    payment.payment_status = 'success';
-    await this.paymentsRepository.save(payment);
-
-    const booking = await this.bookingsRepository.findOne({
-      where: { id: payment.booking_id },
+    // Update payment status
+    await paymentDoc.ref.update({
+      payment_status: 'success',
+      updated_at: new Date(),
     });
-    if (booking) {
-      booking.status = 'PAID';
-      await this.bookingsRepository.save(booking);
+
+    // Update booking status
+    const bookingDoc = await this.bookingsCollection
+      .doc(payment.booking_id)
+      .get();
+    if (bookingDoc.exists) {
+      await bookingDoc.ref.update({
+        status: 'PAID',
+        updated_at: new Date(),
+      });
     }
+
     return { status: 'success', message: 'Payment verified successfully' };
   }
 }

@@ -1,52 +1,61 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
 import { User, UserRole } from './users.entity';
+import { FirebaseService } from '../firebase/firebase.service';
 
 @Injectable()
 export class UsersService {
-  constructor(
-    @InjectRepository(User)
-    private readonly userRepository: Repository<User>,
-  ) {}
+  private readonly collectionName = 'users';
+
+  constructor(private readonly firebaseService: FirebaseService) {}
+
+  private get collection() {
+    return this.firebaseService.getCollection(this.collectionName);
+  }
 
   /** Create or update a user upon login/registration */
-  async upsertUser(userData: Partial<User>): Promise<User> {
-    const { firebase_uid, email } = userData;
-    
-    let user: User | null = null;
+  async upsertUser(userData: Partial<User>): Promise<any> {
+    const { firebase_uid } = userData;
 
-    if (firebase_uid) {
-      user = await this.userRepository.findOne({ where: { firebase_uid } });
-    } else if (email) {
-      user = await this.userRepository.findOne({ where: { email } });
+    if (!firebase_uid) {
+      throw new Error('Firebase UID is required for upserting user');
     }
 
-    if (user) {
+    const userDocRef = this.collection.doc(firebase_uid);
+    const userDoc = await userDocRef.get();
+
+    const timestamp = new Date();
+
+    if (userDoc.exists) {
       // Update existing user
-      Object.assign(user, userData);
-      return this.userRepository.save(user);
+      const updatedData = {
+        ...userData,
+        updated_at: timestamp,
+      };
+      await userDocRef.set(updatedData, { merge: true });
+      return { id: firebase_uid, ...userDoc.data(), ...updatedData };
     } else {
       // Create new user
-      const newUser = this.userRepository.create({
-          ...userData,
-          role: userData.role || UserRole.USER
-      });
-      return this.userRepository.save(newUser);
+      const newUser = {
+        ...userData,
+        role: userData.role || UserRole.USER,
+        created_at: timestamp,
+        updated_at: timestamp,
+      };
+      await userDocRef.set(newUser);
+      return { id: firebase_uid, ...newUser };
     }
   }
 
   /** Get all users for admin panel */
-  async findAll(): Promise<User[]> {
-    return this.userRepository.find({
-      order: { created_at: 'DESC' }
-    });
+  async findAll(): Promise<any[]> {
+    const snapshot = await this.collection.orderBy('created_at', 'desc').get();
+    return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
   }
 
   /** Get user by Firebase UID */
-  async findByUid(uid: string): Promise<User> {
-    const user = await this.userRepository.findOne({ where: { firebase_uid: uid } });
-    if (!user) throw new NotFoundException('User not found');
-    return user;
+  async findByUid(uid: string): Promise<any> {
+    const userDoc = await this.collection.doc(uid).get();
+    if (!userDoc.exists) throw new NotFoundException('User not found');
+    return { id: userDoc.id, ...userDoc.data() };
   }
 }

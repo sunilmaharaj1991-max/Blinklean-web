@@ -1,20 +1,20 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Injectable, NotFoundException, OnModuleInit } from '@nestjs/common';
 import axios, { AxiosError } from 'axios';
-import { ScrapRate } from './scrap-rate.entity';
-import { ScrapBooking, ScrapBookingStatus } from './scrap-booking.entity';
+import { FirebaseService } from '../firebase/firebase.service';
 import { CalculateScrapDto } from './dto/calculate-scrap.dto';
 import { CreateScrapBookingDto } from './dto/create-scrap-booking.dto';
 
 @Injectable()
-export class ScrapService {
-  constructor(
-    @InjectRepository(ScrapRate)
-    private readonly scrapRateRepository: Repository<ScrapRate>,
-    @InjectRepository(ScrapBooking)
-    private readonly scrapBookingRepository: Repository<ScrapBooking>,
-  ) {}
+export class ScrapService implements OnModuleInit {
+  constructor(private readonly firebaseService: FirebaseService) {}
+
+  private get scrapRateCollection() {
+    return this.firebaseService.getCollection('scrap_rates');
+  }
+
+  private get scrapBookingCollection() {
+    return this.firebaseService.getCollection('scrap_bookings');
+  }
 
   /** Internal helper to send real SMS via Fast2SMS gateway */
   private async sendRealSMS(
@@ -58,31 +58,43 @@ export class ScrapService {
 
   /** Seed default rates on first run if table is empty */
   async onModuleInit(): Promise<void> {
-    const count = await this.scrapRateRepository.count();
-    if (count === 0) {
-      await this.scrapRateRepository.save([
-        { material_name: 'newspapers', rate_per_kg: 15.0 },
-        { material_name: 'cardboard', rate_per_kg: 10.0 },
-        { material_name: 'plastic', rate_per_kg: 12.0 },
-        { material_name: 'metal', rate_per_kg: 30.0 },
-        { material_name: 'aluminum', rate_per_kg: 110.0 },
-        { material_name: 'copper', rate_per_kg: 400.0 },
-        { material_name: 'e-waste', rate_per_kg: 25.0 },
-        { material_name: 'glass bottles', rate_per_kg: 2.0 },
-        { material_name: 'mixed scrap', rate_per_kg: 8.0 },
-      ]);
+    const snapshot = await this.scrapRateCollection.limit(1).get();
+    if (snapshot.empty) {
+      const defaultRates = [
+        { material_name: 'newspapers', rate_per_kg: 15.0, is_active: true },
+        { material_name: 'cardboard', rate_per_kg: 10.0, is_active: true },
+        { material_name: 'plastic', rate_per_kg: 12.0, is_active: true },
+        { material_name: 'metal', rate_per_kg: 30.0, is_active: true },
+        { material_name: 'aluminum', rate_per_kg: 110.0, is_active: true },
+        { material_name: 'copper', rate_per_kg: 400.0, is_active: true },
+        { material_name: 'e-waste', rate_per_kg: 25.0, is_active: true },
+        { material_name: 'glass bottles', rate_per_kg: 2.0, is_active: true },
+        { material_name: 'mixed scrap', rate_per_kg: 8.0, is_active: true },
+      ];
+
+      const batch = this.firebaseService.firestore.batch();
+      for (const rate of defaultRates) {
+        const docRef = this.scrapRateCollection.doc();
+        batch.set(docRef, rate);
+      }
+      await batch.commit();
+      console.log('✅ Seeded default scrap rates to Firestore');
     }
   }
 
   /** Get all active material rates */
-  async getAllRates(): Promise<ScrapRate[]> {
-    return this.scrapRateRepository.find({ where: { is_active: true } });
+  async getAllRates(): Promise<any[]> {
+    const snapshot = await this.scrapRateCollection
+      .where('is_active', '==', true)
+      .get();
+    return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
   }
 
   /** Update a material rate by ID */
-  async updateRate(id: number, rate_per_kg: number): Promise<ScrapRate | null> {
-    await this.scrapRateRepository.update(id, { rate_per_kg });
-    return this.scrapRateRepository.findOne({ where: { id } });
+  async updateRate(id: string, rate_per_kg: number): Promise<any | null> {
+    await this.scrapRateCollection.doc(id).update({ rate_per_kg });
+    const updated = await this.scrapRateCollection.doc(id).get();
+    return { id: updated.id, ...updated.data() };
   }
 
   /** Calculate estimated pickup value based on current rates */
@@ -106,18 +118,19 @@ export class ScrapService {
     }> = [];
 
     for (const item of dto.items) {
-      const rate = await this.scrapRateRepository.findOne({
-        where: {
-          material_name: item.material_name.toLowerCase(),
-          is_active: true,
-        },
-      });
+      const snapshot = await this.scrapRateCollection
+        .where('material_name', '==', item.material_name.toLowerCase())
+        .where('is_active', '==', true)
+        .limit(1)
+        .get();
 
-      if (!rate) {
+      if (snapshot.empty) {
         throw new NotFoundException(
           `Material rate for "${item.material_name}" not found`,
         );
       }
+
+      const rate = snapshot.docs[0].data() as any;
 
       const itemEstimatedValue = rate.rate_per_kg * item.estimated_weight;
       totalEstimatedValue += itemEstimatedValue;
@@ -140,75 +153,95 @@ export class ScrapService {
   }
 
   /** Create a new scrap pickup booking */
-  async createBooking(dto: CreateScrapBookingDto): Promise<ScrapBooking> {
-    const booking = this.scrapBookingRepository.create({
+  async createBooking(dto: CreateScrapBookingDto): Promise<any> {
+    const bookingData = {
       ...dto,
-      status: dto.status ?? ScrapBookingStatus.PENDING_APPROVAL,
-    });
-    return this.scrapBookingRepository.save(booking);
+      status: dto.status ?? 'PENDING_APPROVAL',
+      created_at: new Date(),
+      updated_at: new Date(),
+    };
+    const docRef = await this.scrapBookingCollection.add(bookingData);
+    return { id: docRef.id, ...bookingData };
   }
 
   /** Get a single booking by its numeric ID */
-  async getBookingById(id: number): Promise<ScrapBooking | null> {
-    return this.scrapBookingRepository.findOne({ where: { id } });
+  async getBookingById(id: string): Promise<any | null> {
+    const doc = await this.scrapBookingCollection.doc(id).get();
+    if (!doc.exists) return null;
+    return { id: doc.id, ...doc.data() };
   }
 
   /** Get all bookings (admin) ordered by newest first */
-  async getAllBookings(): Promise<ScrapBooking[]> {
-    return this.scrapBookingRepository.find({
-      order: { created_at: 'DESC' },
-    });
+  async getAllBookings(): Promise<any[]> {
+    const snapshot = await this.scrapBookingCollection
+      .orderBy('created_at', 'desc')
+      .get();
+    return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
   }
 
   /** Get all bookings for a specific user (by Firebase UID) */
-  async getBookingsByUser(userId: string): Promise<ScrapBooking[]> {
-    return this.scrapBookingRepository.find({
-      where: { userId },
-      order: { created_at: 'DESC' },
-    });
+  async getBookingsByUser(userId: string): Promise<any[]> {
+    const snapshot = await this.scrapBookingCollection
+      .where('userId', '==', userId)
+      .orderBy('created_at', 'desc')
+      .get();
+    return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
   }
 
   /** Confirm a pending booking and simulate SMS notification */
-  async confirmBooking(
-    id: number,
-    pickupTiming: string,
-  ): Promise<ScrapBooking & { smsStatus: string }> {
-    const booking = await this.scrapBookingRepository.findOne({
-      where: { id },
-    });
-    if (!booking) throw new NotFoundException('Booking not found');
+  async confirmBooking(id: string, pickupTiming: string): Promise<any> {
+    const docRef = this.scrapBookingCollection.doc(id);
+    const doc = await docRef.get();
+    if (!doc.exists) throw new NotFoundException('Booking not found');
 
-    booking.status = ScrapBookingStatus.CONFIRMED;
-    booking.pickup_timing = pickupTiming;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    const data = doc.data() as any;
+    const updateData = {
+      status: 'CONFIRMED',
+      pickup_timing: pickupTiming,
+      updated_at: new Date(),
+    };
 
-    const saved = await this.scrapBookingRepository.save(booking);
+    await docRef.update(updateData);
 
     const smsMessage =
-      `Dear ${saved.user_name}, your Blinklean scrap pickup is CONFIRMED! ` +
+      `Dear ${data.user_name || 'Customer'}, your Blinklean scrap pickup is CONFIRMED! ` +
       `Our agent will arrive between ${pickupTiming}. ` +
       `Thank you for choosing green! 🌱 - Team Blinklean`;
 
-    await this.sendRealSMS(saved.phone_number, smsMessage);
+    await this.sendRealSMS(data.phone_number, smsMessage);
 
-    return { ...saved, smsStatus: `SMS sent to ${saved.phone_number}` };
+    return {
+      id: doc.id,
+      ...data,
+      ...updateData,
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      smsStatus: `SMS sent to ${data.phone_number}`,
+    };
   }
 
   /** Update the status of a booking (generic admin action) */
   async updateBookingStatus(
-    id: number,
+    id: string,
     status: string,
     final_value?: number,
-  ): Promise<ScrapBooking> {
-    const booking = await this.scrapBookingRepository.findOne({
-      where: { id },
-    });
-    if (!booking) throw new NotFoundException('Booking not found');
+  ): Promise<any> {
+    const docRef = this.scrapBookingCollection.doc(id);
+    const doc = await docRef.get();
+    if (!doc.exists) throw new NotFoundException('Booking not found');
 
-    booking.status = status;
+    const updateData: any = {
+      status,
+      updated_at: new Date(),
+    };
     if (final_value !== undefined) {
-      booking.final_value = final_value;
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      updateData.final_value = final_value;
     }
 
-    return this.scrapBookingRepository.save(booking);
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+    await docRef.update(updateData);
+    const updatedDoc = await docRef.get();
+    return { id: updatedDoc.id, ...updatedDoc.data() };
   }
 }
