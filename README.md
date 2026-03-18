@@ -53,10 +53,12 @@ blinklean-react/
 ## 📦 Local Installation
 
 ### 1. Prerequisite
+
 - Node.js (v18+)
 - PostgreSQL installed and running
 
 ### 2. Backend Setup
+
 ```bash
 cd blinklean-backend
 npm install
@@ -65,6 +67,7 @@ npm run start:dev
 ```
 
 ### 3. Frontend Setup
+
 ```bash
 # In the root directory
 npm install
@@ -86,7 +89,7 @@ npm run dev
 
 ### Backend (Render)
 
-This project is configured for **Render Blueprint**. 
+This project is configured for **Render Blueprint**.
 
 1. Connect your GitHub repository to [Render](https://dashboard.render.com).
 2. Render will automatically detect the `render.yaml` file.
@@ -100,4 +103,5 @@ Go to your **blinklean-api** dashboard on Render and set your `FAST2SMS_API_KEY`
 ---
 
 ## 📄 License
+
 © 2026 Blinklean team. All rights reserved. Registered in India.
