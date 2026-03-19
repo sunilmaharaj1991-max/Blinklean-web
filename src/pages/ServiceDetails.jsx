@@ -162,12 +162,7 @@ const ServiceDetails = () => {
               </div>
             </div>
 
-            <button
-              onclick="location.href = 'booking.html'"
-              className="btn btn-primary btn-full btn-lg"
-            >
-              Book Service Now
-            </button>
+            {/* Book Now button removed per user request */}
             <p
               style={{
                 textAlign: "center",
@@ -194,20 +189,14 @@ const ServiceDetails = () => {
             </a>
             <p>Making home services simple, safe, and sustainable.</p>
             <div className="social-links">
-              <a
-                href="https://www.instagram.com/p/DU7uAgDE5U5/?utm_source=ig_web_copy_link&igsh=NTc4MTIwNjQ2YQ=="
-                target="_blank"
-              >
+              <a href="https://www.facebook.com/share/1V83bCiMAp/" target="_blank" rel="noopener noreferrer">
+                <i data-lucide="facebook"></i>
+              </a>
+              <a href="https://www.instagram.com/blinklean?utm_source=qr&igsh=OWs2MmxoMWJ3ZnFs" target="_blank" rel="noopener noreferrer">
                 <i data-lucide="instagram"></i>
               </a>
-              <a
-                href="https://www.linkedin.com/posts/malnad-manju-cafe_Blinklean-startupindia-cleantech-activity-7429870434927448064-WCmG?utm_source=share&utm_medium=member_desktop&rcm=ACoAAFcir08BrzVapR6lEqBitqVDVd4Q2ypNtvI"
-                target="_blank"
-              >
+              <a href="https://www.linkedin.com/company/malnad-manju-cafe/" target="_blank" rel="noopener noreferrer">
                 <i data-lucide="linkedin"></i>
-              </a>
-              <a href="#">
-                <i data-lucide="facebook"></i>
               </a>
             </div>
           </div>

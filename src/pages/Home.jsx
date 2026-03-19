@@ -185,7 +185,7 @@ const Home = () => {
                   <i data-lucide="users"></i>
                 </div>
                 <div className="indicator-info">
-                  <strong>20,000+</strong>
+                  <strong>1,000+</strong>
                   <span>Happy Customers</span>
                 </div>
               </div>
@@ -234,12 +234,12 @@ const Home = () => {
             <div className="mini-stat">
               <i data-lucide="check-circle"></i>
               <span>
-                <strong 
+                    <strong 
                   className="count-up" 
-                  data-target="50000"
+                  data-target="1000"
                   style={{ color: "var(--primary)", fontSize: "1.2rem" }}
                 >
-                  50,000
+                  1,000
                 </strong>
                 + Services Completed
               </span>
@@ -1118,7 +1118,7 @@ const Home = () => {
 
           <p className="comparison-note">
             Individual bookings cost significantly more.
-            <strong>Join 5,000+ members</strong> saving time and money.
+            <strong>Join 1,000+ members</strong> saving time and money.
           </p>
         </div>
       </section>
@@ -1356,7 +1356,7 @@ const Home = () => {
               <div className="user-profile">
                 <div className="user-photo-wrapper">
                   <img
-                    src="assets/images/community1.jpg"
+                    src="/assets/images/mahesh_gowda.png"
                     alt="Mahesh Gowda"
                     className="user-photo"
                   />
@@ -1401,7 +1401,7 @@ const Home = () => {
               <div className="user-profile">
                 <div className="user-photo-wrapper">
                   <img
-                    src="assets/images/community2.jpg"
+                    src="/assets/images/sowmya_reddy.png"
                     alt="Sowmya Reddy"
                     className="user-photo"
                   />
@@ -1447,7 +1447,7 @@ const Home = () => {
               <div className="user-profile">
                 <div className="user-photo-wrapper">
                   <img
-                    src="assets/images/community3.jpg"
+                    src="/assets/images/ananth_kumar.png"
                     alt="Ananth Kumar"
                     className="user-photo"
                   />
@@ -1552,9 +1552,9 @@ const Home = () => {
               onMouseLeave={(e) => e.currentTarget.style.animationPlayState = 'running'}
             >
               {[
-                "community1.jpg", 
-                "community2.jpg", 
-                "community3.jpg", 
+                "mahesh_gowda.png", 
+                "sowmya_reddy.png", 
+                "ananth_kumar.png", 
                 "community4.jpg",
                 "community5.jpg", 
                 "community6.jpg", 
@@ -1588,9 +1588,9 @@ const Home = () => {
               ))}
               {/* Duplicate for seamless loop */}
               {[
-                "community1.jpg", 
-                "community2.jpg", 
-                "community3.jpg", 
+                "mahesh_gowda.png", 
+                "sowmya_reddy.png", 
+                "ananth_kumar.png", 
                 "community4.jpg",
                 "community5.jpg", 
                 "community6.jpg", 

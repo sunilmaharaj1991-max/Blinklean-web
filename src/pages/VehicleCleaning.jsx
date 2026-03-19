@@ -242,6 +242,7 @@ const VehicleCleaning = () => {
             </div>
             <div className="service-card">
               <div className="service-img">
+                {/* Book Now button removed per user request */}
                 <img
                   src="/assets/images/gen_car.png"
                   alt="Interior + Exterior"
@@ -666,39 +667,21 @@ const VehicleCleaning = () => {
               scrap recycling.
             </p>
             <div className="footer-social">
-              <a
-                href="https://www.instagram.com/p/DU7uAgDE5U5/?utm_source=ig_web_copy_link&igsh=NTc4MTIwNjQ2YQ=="
-                target="_blank"
-                rel="noopener noreferrer"
-              >
+              <a href="https://www.facebook.com/share/1V83bCiMAp/" target="_blank" rel="noopener noreferrer">
+                <i data-lucide="facebook"></i>
+              </a>
+              <a href="https://www.instagram.com/blinklean?utm_source=qr&igsh=OWs2MmxoMWJ3ZnFs" target="_blank" rel="noopener noreferrer">
                 <i data-lucide="instagram"></i>
               </a>
-              <a
-                href="https://www.linkedin.com/company/malnad-manju-cafe/posts/?feedView=all"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
+              <a href="https://www.linkedin.com/company/malnad-manju-cafe/" target="_blank" rel="noopener noreferrer">
                 <i data-lucide="linkedin"></i>
               </a>
-              <a
-                href="https://x.com/blinklean"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <svg
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  fill="currentColor"
-                >
-                  <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path>
-                </svg>
+              <a href="https://x.com/Blinklean" target="_blank" rel="noopener noreferrer">
+                 <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path>
+                  </svg>
               </a>
-              <a
-                href="https://wa.me/917022803582"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
+              <a href="https://wa.me/917022803582" target="_blank" rel="noopener noreferrer">
                 <i data-lucide="message-circle"></i>
               </a>
             </div>
