@@ -1818,7 +1818,10 @@ const Home = () => {
       </section>
 
       <Footer />
-      <FloatingWhatsApp badgeText={null} />
+      <FloatingWhatsApp 
+        message="Hello! 👋 Thank you for reaching out to Blinklean(India's First AI Powered QuickClean Platform )\n\nWe’d be happy to schedule your scrap pickup ♻️\n\nPlease share the following details to proceed:\n📍 Pickup Address\n📅 Preferred Date & Time\n📦 Type of Scrap (paper, plastic, metal, e-waste, etc.)\n⚖️ Approximate Quantity\n\nOur team will confirm your pickup shortly. Looking forward to serving you! 😊\n\nVisit: www.blinklean.com"
+        badgeText={null} 
+      />
       <BottomNav />
     </>
   );
