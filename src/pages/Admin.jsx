@@ -14,6 +14,8 @@ const STATUS_COLORS = {
   CANCELLED:        { bg: "#fee2e2", color: "#ef4444", label: "Cancelled" },
 };
 
+const API_BASE = import.meta.env.VITE_API_BASE_URL || "https://blinklean-api.onrender.com/api/v1";
+
 const Admin = () => {
   const [users,        setUsers]        = useState([]);
   const [bookings,     setBookings]     = useState([]);
@@ -77,12 +79,20 @@ const Admin = () => {
     const timing = pickupInput[bookingId] || "10:00 AM – 1:00 PM Tomorrow";
     setConfirming(bookingId);
     try {
-      // Update Firestore Status
+      // 1. Update Firestore Status (Source of Truth)
       const bookingRef = doc(db, "scrap_bookings", bookingId);
       await updateDoc(bookingRef, {
         status: "CONFIRMED",
         pickup_timing: timing
       });
+
+      // 2. Notify Backend API (Sync side effects like SMS)
+      // We pass the timing in the body so the backend can include it in the notification
+      fetch(`${API_BASE}/scrap/booking/${bookingId}/confirm`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pickupTiming: timing })
+      }).catch(err => console.warn("Backend confirmation notify failed, but record is safe in Firestore.", err));
 
       alert(`✅ Booking CONFIRMED!\n\nPickup Status Updated to: ${timing}`);
       await fetchData();
@@ -91,6 +101,27 @@ const Admin = () => {
       console.error(err);
     } finally {
       setConfirming(null);
+    }
+  };
+
+  const handleUpdateStatus = async (bookingId, newStatus) => {
+    try {
+      // 1. Update Firestore
+      const bookingRef = doc(db, "scrap_bookings", bookingId);
+      await updateDoc(bookingRef, { status: newStatus });
+
+      // 2. Update API
+      fetch(`${API_BASE}/scrap/booking/${bookingId}/status`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus })
+      }).catch(err => console.warn("API Status Sync Failed:", err));
+
+      alert(`Status updated to: ${newStatus}`);
+      await fetchData();
+    } catch (err) {
+      alert("Failed to update status.");
+      console.error(err);
     }
   };
 
@@ -203,7 +234,7 @@ const Admin = () => {
                       </div>
                     </div>
                     
-                    {isPending && (
+                    {isPending ? (
                        <div style={{ marginTop:"20px", background:"#fefce8", border:"1px solid #fef08a", padding:"16px", borderRadius:"15px" }}>
                          <div style={{ display:"flex", gap:"10px", alignItems:"center" }}>
                            <Clock size={18} style={{ color:"#f59e0b" }} />
@@ -223,7 +254,20 @@ const Admin = () => {
                            </button>
                          </div>
                        </div>
-                    )}
+                    ) : (
+                        <div style={{ marginTop: "16px", display: "flex", gap: "10px", alignItems: "center" }}>
+                          <span style={{ fontSize: "0.85rem", color: "#64748b" }}>Update Status:</span>
+                          <select 
+                            style={{ padding: "6px 12px", borderRadius: "8px", border: "1px solid #cbd5e1", outline: "none", fontSize: "0.85rem" }}
+                            value={b.status}
+                            onChange={(e) => handleUpdateStatus(b.id, e.target.value)}
+                          >
+                            {Object.keys(STATUS_COLORS).map(statusKey => (
+                              <option key={statusKey} value={statusKey}>{STATUS_COLORS[statusKey].label}</option>
+                            ))}
+                          </select>
+                        </div>
+                      )}
                   </div>
                 );
               })

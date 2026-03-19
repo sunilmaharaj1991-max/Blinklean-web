@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { auth } from "../firebase";
+import { auth, db } from "../firebase";
 import { useNavigate, Link } from "react-router-dom";
+import { collection, query, where, getDocs, orderBy } from "firebase/firestore";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "https://blinklean-api.onrender.com/api/v1";
 
@@ -36,13 +37,35 @@ const Profile = () => {
     setLoading(true);
     setError("");
     try {
-      const res = await fetch(`${API_BASE}/scrap/user-bookings/${uid}`);
-      if (!res.ok) throw new Error("Failed to fetch bookings");
-      const data = await res.json();
-      setBookings(Array.isArray(data) ? data : []);
+      // Fetch from Firestore directly for reliability
+      const q = query(
+        collection(db, "scrap_bookings"),
+        where("userId", "==", uid),
+        orderBy("created_at", "desc")
+      );
+      
+      const querySnapshot = await getDocs(q);
+      const docs = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      
+      setBookings(docs);
     } catch (err) {
-      console.error(err);
-      setError("Could not load bookings. Please try again.");
+      console.error("Firestore Fetch Error:", err);
+      // Fallback: If Firestore query fails (e.g. index building), we try the API
+      try {
+        const res = await fetch(`${API_BASE}/scrap/user-bookings/${uid}`);
+        if (res.ok) {
+          const data = await res.json();
+          setBookings(Array.isArray(data) ? data : []);
+        } else {
+          setError("Could not load bookings. Please try again.");
+        }
+      } catch (apiErr) {
+        console.error("API Fallback Error:", apiErr);
+        setError("Could not load bookings. Please try again.");
+      }
     } finally {
       setLoading(false);
     }
