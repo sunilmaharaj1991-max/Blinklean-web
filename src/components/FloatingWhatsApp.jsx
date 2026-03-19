@@ -8,7 +8,7 @@ const FloatingWhatsApp = ({
   right = '25px',
   left = 'auto',
   backgroundColor = '#25d366',
-  badgeText = "Scrap"
+  badgeText = "WhatsApp"
 }) => {
   const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
 
