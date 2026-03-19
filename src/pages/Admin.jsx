@@ -1,10 +1,9 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { auth } from "../firebase";
+import { auth, db } from "../firebase";
+import { collection, getDocs, getDoc, doc, query, orderBy, updateDoc } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
 import { Users, Package, Handshake, Clock, RefreshCw, LogOut, AlertCircle, MapPin, Phone, Mail } from "lucide-react";
 import "../assets/css/style.css";
-
-const API_BASE = import.meta.env.VITE_API_BASE_URL || "https://blinklean-api.onrender.com/api/v1";
 
 const STATUS_COLORS = {
   PENDING_APPROVAL: { bg: "#fef3c7", color: "#f59e0b", label: "Pending Approval" },
@@ -28,26 +27,23 @@ const Admin = () => {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      // 1. Fetch Bookings from PostgreSQL
-      const bookRes = await fetch(`${API_BASE}/scrap/all-bookings`);
-      if (bookRes.ok) {
-        const data = await bookRes.json();
-        setBookings(data || []);
-      }
+      // 1. Fetch Bookings from Firestore
+      const bookQuery = query(collection(db, "scrap_bookings"), orderBy("created_at", "desc"));
+      const bookSnap  = await getDocs(bookQuery);
+      const bookList  = bookSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+      setBookings(bookList);
 
-      // 2. Fetch Users from PostgreSQL
-      const userRes = await fetch(`${API_BASE}/users/all`);
-      if (userRes.ok) {
-        const data = await userRes.json();
-        setUsers(data || []);
-      }
+      // 2. Fetch Partners from Firestore
+      const partQuery = query(collection(db, "partner_registrations"), orderBy("created_at", "desc"));
+      const partSnap  = await getDocs(partQuery);
+      const partList  = partSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+      setPartners(partList);
 
-      // 3. Fetch Partners from PostgreSQL
-      const partRes = await fetch(`${API_BASE}/partners/all`);
-      if (partRes.ok) {
-        const data = await partRes.json();
-        setPartners(data || []);
-      }
+      // 3. Fetch Users from Firestore
+      const userSnap = await getDocs(collection(db, "users"));
+      const userList = userSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+      setUsers(userList);
+
     } catch (err) {
       console.error("Dashboard fetch error:", err);
     } finally {
@@ -59,23 +55,19 @@ const Admin = () => {
     const unsub = auth.onAuthStateChanged(async (user) => {
       if (!user) { navigate("/login"); return; }
       try {
-        const res = await fetch(`${API_BASE}/users/${user.uid}`);
-        if (res.ok) {
-          const pgUser = await res.json();
-          if (pgUser.role === "admin") {
-            setIsAuthorized(true);
-            fetchData();
-          } else {
-            setIsAuthorized(false);
-            setLoading(false);
-          }
+        // Check Admin Role in Firestore
+        const userDoc = await getDoc(doc(db, "users", user.uid));
+        if (userDoc.exists() && userDoc.data().role === "admin") {
+          setIsAuthorized(true);
+          fetchData();
         } else {
           setIsAuthorized(false);
           setLoading(false);
         }
       } catch (err) {
         console.error("Admin check error:", err);
-        navigate("/login");
+        setIsAuthorized(false);
+        setLoading(false);
       }
     });
     return () => unsub();
@@ -85,14 +77,14 @@ const Admin = () => {
     const timing = pickupInput[bookingId] || "10:00 AM – 1:00 PM Tomorrow";
     setConfirming(bookingId);
     try {
-      const res = await fetch(`${API_BASE}/scrap/booking/${bookingId}/confirm`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ pickupTiming: timing }),
+      // Update Firestore Status
+      const bookingRef = doc(db, "scrap_bookings", bookingId);
+      await updateDoc(bookingRef, {
+        status: "CONFIRMED",
+        pickup_timing: timing
       });
-      if (!res.ok) throw new Error("Confirm failed");
-      const updated = await res.json();
-      alert(`✅ Booking #${String(bookingId).padStart(4,"0")} CONFIRMED!\n\n📱 SMS sent to ${updated.phone_number}`);
+
+      alert(`✅ Booking CONFIRMED!\n\nPickup Status Updated to: ${timing}`);
       await fetchData();
     } catch (err) {
       alert("Failed to confirm booking.");
@@ -102,12 +94,16 @@ const Admin = () => {
     }
   };
 
-  const formatDate = (d) => d ? new Date(d).toLocaleString("en-IN", { day:"2-digit", month:"short", year:"numeric", hour:"2-digit", minute:"2-digit" }) : "N/A";
+  const formatDate = (ts) => {
+    if (!ts) return "N/A";
+    const d = ts.toDate ? ts.toDate() : new Date(ts);
+    return d.toLocaleString("en-IN", { day:"2-digit", month:"short", year:"numeric", hour:"2-digit", minute:"2-digit" });
+  };
 
   if (loading) return (
     <div style={{ display:"flex", height:"100vh", alignItems:"center", justifyContent:"center", flexDirection:"column", gap:"16px" }}>
       <RefreshCw size={44} style={{ color:"#009EE3", animation:"spin 1s linear infinite" }} />
-      <p style={{ color:"#64748b", fontWeight:600 }}>Loading Portal...</p>
+      <p style={{ color:"#64748b", fontWeight:600 }}>Syncing with Database...</p>
       <style>{`@keyframes spin { to { transform:rotate(360deg); } }`}</style>
     </div>
   );
@@ -130,13 +126,13 @@ const Admin = () => {
       
       <div style={{ background:"linear-gradient(135deg, #009EE3, #1B9B3A)", padding:"28px 40px", display:"flex", justifyContent:"space-between", alignItems:"center", flexWrap:"wrap", gap:"16px" }}>
         <div>
-          <span style={{ background:"rgba(255,255,255,0.2)", color:"white", padding:"4px 12px", borderRadius:"20px", fontSize:"0.75rem", fontWeight:"700" }}>ADMIN PORTAL v2.0 (PostgreSQL Linked)</span>
+          <span style={{ background:"rgba(255,255,255,0.2)", color:"white", padding:"4px 12px", borderRadius:"20px", fontSize:"0.75rem", fontWeight:"700" }}>🔒 SECURE CLOUD STORAGE LOGGED</span>
           <h1 style={{ color:"white", marginTop:"8px", marginBottom:"4px", fontSize:"1.8rem", fontWeight:"800" }}>Blinklean Dashboard</h1>
           <p style={{ color:"rgba(255,255,255,0.8)", margin:0, fontSize:"0.9rem" }}>{auth.currentUser?.email}</p>
         </div>
         <div style={{ display:"flex", gap:"10px" }}>
           <button onClick={fetchData} style={{ display:"flex", alignItems:"center", gap:"8px", background:"white", color:"#009EE3", padding:"10px 20px", borderRadius:"12px", border:"none", cursor:"pointer", fontWeight:"600" }}>
-            <RefreshCw size={18} /> Sync Data
+            <RefreshCw size={18} /> Sync Cloud
           </button>
           <button onClick={() => auth.signOut().then(() => navigate("/"))} style={{ display:"flex", alignItems:"center", gap:"8px", background:"rgba(0,0,0,0.1)", color:"white", padding:"10px 20px", borderRadius:"12px", border:"none", cursor:"pointer", fontWeight:"600" }}>
             <LogOut size={18} /> Logout
@@ -148,9 +144,9 @@ const Admin = () => {
 
         <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit, minmax(220px, 1fr))", gap:"20px", marginBottom:"40px" }}>
           {[
-            { label:"Registered Users", value:users.length, color:"#009EE3", bg:"#e0f2fe", icon:<Users /> },
-            { label:"Total Bookings", value:bookings.length, color:"#1B9B3A", bg:"#dcfce7", icon:<Package /> },
-            { label:"Active Partner Requests", value:partners.length, color:"#8b5cf6", bg:"#ede9fe", icon:<Handshake /> },
+            { label:"Total Users", value:users.length, color:"#009EE3", bg:"#e0f2fe", icon:<Users /> },
+            { label:"Scrap Bookings", value:bookings.length, color:"#1B9B3A", bg:"#dcfce7", icon:<Package /> },
+            { label:"Partner Enrollments", value:partners.length, color:"#8b5cf6", bg:"#ede9fe", icon:<Handshake /> },
             { label:"New Requests", value:pendingCount, color:"#f59e0b", bg:"#fef3c7", icon:<Clock /> },
           ].map((stat, i) => (
             <div key={i} style={{ background:"white", borderRadius:"20px", padding:"24px", boxShadow:`0 4px 20px rgba(0,0,0,0.05)`, borderTop:`5px solid ${stat.color}` }}>
@@ -167,9 +163,9 @@ const Admin = () => {
 
         {/* --- BOOKINGS SECTION --- */}
         <section style={{ marginBottom:"50px" }}>
-          <h2 style={{ marginBottom:"20px", display:"flex", alignItems:"center", gap:"10px" }}><Package color="#1B9B3A" /> All Scrap Collection Requests</h2>
+          <h2 style={{ marginBottom:"20px", display:"flex", alignItems:"center", gap:"10px" }}><Package color="#1B9B3A" /> Scrap Collection Requests</h2>
           <div style={{ display:"grid", gap:"16px" }}>
-            {bookings.length === 0 ? <div style={{ background:"white", padding:"40px", borderRadius:"20px", textAlign:"center", color:"#94a3b8" }}>No records found in database.</div> : 
+            {bookings.length === 0 ? <div style={{ background:"white", padding:"40px", borderRadius:"20px", textAlign:"center", color:"#94a3b8" }}>No records found in cloud database.</div> : 
               bookings.map(b => {
                 const cfg = STATUS_COLORS[b.status] || { bg:"#f1f5f9", color:"#94a3b8", label: b.status };
                 const isPending = b.status === "PENDING_APPROVAL";
@@ -178,7 +174,7 @@ const Admin = () => {
                     <div style={{ display:"flex", justifyContent:"space-between", flexWrap:"wrap", gap:"20px" }}>
                       <div style={{ flex:1 }}>
                         <div style={{ display:"flex", alignItems:"center", gap:"12px", marginBottom:"14px" }}>
-                          <span style={{ fontSize:"0.7rem", fontWeight:"800", color:"#94a3b8" }}>ID: #{String(b.id).padStart(4,"0")}</span>
+                          <span style={{ fontSize:"0.7rem", fontWeight:"800", color:"#94a3b8" }}>ID: {b.id.substring(0,6)}...</span>
                           <span style={{ padding:"4px 12px", borderRadius:"20px", fontSize:"0.7rem", fontWeight:"800", background:cfg.bg, color:cfg.color }}>{cfg.label}</span>
                         </div>
                         <h3 style={{ margin:"0 0 4px", fontSize:"1.2rem" }}>{b.user_name}</h3>
@@ -255,6 +251,7 @@ const Admin = () => {
                       <td style={{ padding:"18px 24px" }}>
                         <div style={{ fontWeight:"700" }}>{p.fullName}</div>
                         <div style={{ fontSize:"0.8rem", color:"#94a3b8" }}>{p.phone}</div>
+                        <div style={{ fontSize:"0.7rem", color:"#cbd5e1" }}>{formatDate(p.created_at)}</div>
                       </td>
                       <td style={{ padding:"18px 24px" }}>
                         <span style={{ background:"#f5f3ff", color:"#7c3aed", padding:"4px 10px", borderRadius:"12px", fontSize:"0.7rem", fontWeight:"700" }}>{p.serviceType}</span>
@@ -273,7 +270,7 @@ const Admin = () => {
 
         {/* --- USERS SECTION --- */}
         <section>
-          <h2 style={{ marginBottom:"20px", display:"flex", alignItems:"center", gap:"10px" }}><Users color="#009EE3" /> Registered Customers (PostgreSQL)</h2>
+          <h2 style={{ marginBottom:"20px", display:"flex", alignItems:"center", gap:"10px" }}><Users color="#009EE3" /> Registered Cloud Users</h2>
           <div style={{ background:"white", borderRadius:"24px", overflow:"hidden", boxShadow:"0 10px 40px rgba(0,0,0,0.05)" }}>
             <table style={{ width:"100%", borderCollapse:"collapse" }}>
               <thead>

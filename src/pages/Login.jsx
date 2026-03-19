@@ -9,7 +9,8 @@ import {
   signInWithPopup,
   updateProfile
 } from "firebase/auth";
-import { auth } from "../firebase";
+import { auth, db } from "../firebase";
+import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 import "../assets/css/login-premium.css";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "https://blinklean-api.onrender.com/api/v1";
@@ -33,22 +34,30 @@ const Login = () => {
   }, [formMode, showPassword]);
 
   const trackUserLogin = async (user) => {
-    if (!API_BASE) return;
-    try {
-      const userData = {
-        firebase_uid: user.uid,
-        email: user.email || "",
-        name: user.displayName || fullName || "",
-        photo_url: user.photoURL || "",
-        role: "user"
-      };
+    const userData = {
+      firebase_uid: user.uid,
+      email: user.email || "",
+      name: user.displayName || fullName || "",
+      photo_url: user.photoURL || "",
+      role: (user.email === "sunilmaharaj1991@gmail.com") ? "admin" : "user",
+      last_login: serverTimestamp(),
+      created_at: serverTimestamp()
+    };
 
-      await fetch(`${API_BASE}/users/upsert`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(userData)
-      });
-      console.log("✅ User synced to PostgreSQL");
+    try {
+      // 1. Sync to Firebase Firestore (Primary)
+      const userRef = doc(db, "users", user.uid);
+      await setDoc(userRef, userData, { merge: true });
+      console.log("✅ User synced to Cloud Firestore");
+
+      // 2. Sync to PostgreSQL (Secondary Background)
+      if (API_BASE) {
+        fetch(`${API_BASE}/users/upsert`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(userData)
+        }).catch(err => console.warn("Backend user sync failed, but data is safe in Firebase.", err));
+      }
     } catch (err) {
       console.error("Error tracking user:", err);
     }
@@ -71,24 +80,20 @@ const Login = () => {
       
       if (formMode === "signup" && fullName) {
         await updateProfile(result.user, { displayName: fullName });
-        await trackUserLogin(result.user);
-      } else if (formMode === "login") {
-        await trackUserLogin(result.user);
       }
 
-      // Fetch role from PostgreSQL
+      await trackUserLogin(result.user);
+
+      // Check Role from Firestore
       try {
-        const roleRes = await fetch(`${API_BASE}/users/${result.user.uid}`);
-        if (roleRes.ok) {
-          const pgUser = await roleRes.json();
-          if (pgUser.role === "admin") {
-            console.log("Welcome, Admin!");
-            navigate("/admin");
-            return;
-          }
+        const userSnap = await getDoc(doc(db, "users", result.user.uid));
+        if (userSnap.exists() && userSnap.data().role === "admin") {
+          console.log("Welcome, Admin!");
+          navigate("/admin");
+          return;
         }
       } catch (roleErr) {
-        console.warn("Role check failed:", roleErr);
+        console.warn("Cloud Role check failed:", roleErr);
       }
       
       navigate("/");
@@ -98,13 +103,13 @@ const Login = () => {
       
       const errorCode = err.code || "";
       if (errorCode.includes("invalid-credential") || errorCode.includes("wrong-password") || errorCode.includes("user-not-found")) {
-        friendlyMsg = "Invalid email or password. Don't have an account? Click 'Create an account' below.";
+        friendlyMsg = "Invalid email or password.";
+      } else if (errorCode.includes("email-already-in-use")) {
+        friendlyMsg = "This email is already registered.";
       } else if (errorCode.includes("too-many-requests")) {
-        friendlyMsg = "Too many failed attempts. Please reset your password or try again later.";
+        friendlyMsg = "Too many failed attempts. Try again later.";
       } else if (errorCode.includes("network-request-failed")) {
-        friendlyMsg = "Network error. Please check your internet connection.";
-      } else {
-        friendlyMsg = err.message.replace("Firebase: ", "").replace("Error ", "");
+        friendlyMsg = "Network error. Please check your connection.";
       }
       
       setError(friendlyMsg);
@@ -124,19 +129,15 @@ const Login = () => {
       // Update data in Firestore & PostgreSQL
       await trackUserLogin(result.user);
 
-      // Fetch role from PostgreSQL
+      // Check Role from Firestore
       try {
-        const roleRes = await fetch(`${API_BASE}/users/${result.user.uid}`);
-        if (roleRes.ok) {
-          const pgUser = await roleRes.json();
-          if (pgUser.role === "admin") {
-            console.log("Welcome, Admin!");
-            navigate("/admin");
-            return;
-          }
+        const userSnap = await getDoc(doc(db, "users", result.user.uid));
+        if (userSnap.exists() && userSnap.data().role === "admin") {
+          navigate("/admin");
+          return;
         }
       } catch (roleErr) {
-        console.warn("Role check failed:", roleErr);
+        console.warn("Cloud Role check failed:", roleErr);
       }
       
       navigate("/");

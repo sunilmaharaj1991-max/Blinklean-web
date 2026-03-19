@@ -2,7 +2,10 @@ import React, { useState } from "react";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import BottomNav from "../components/BottomNav";
+import FloatingWhatsApp from "../components/FloatingWhatsApp";
 import { TrendingUp, Wallet, Award, Home, Car, Shirt, Recycle, MessageCircle, ArrowRight, CheckCircle2 } from "lucide-react";
+import { db } from "../firebase";
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import "../assets/css/partner-premium.css";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "https://blinklean-api.onrender.com/api/v1";
@@ -20,19 +23,31 @@ const Partner = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    if (!API_BASE) return;
+
     try {
-      const res = await fetch(`${API_BASE}/partners/enroll`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData)
-      });
-      if (!res.ok) throw new Error("Enrollment failed");
+      const payload = {
+        ...formData,
+        status: "PENDING_REVIEW",
+        created_at: serverTimestamp()
+      };
+
+      // Direct Save to Firebase Firestore (Primary & Reliable)
+      await addDoc(collection(db, "partner_registrations"), payload);
+      
+      // Optional: Background Sync with Backend API
+      if (API_BASE) {
+        fetch(`${API_BASE}/partners/enroll`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(formData)
+        }).catch(() => console.warn("Backend sync failed, but enrollment is safe in Firebase."));
+      }
+
       alert("Registration Successful! Our team will contact you shortly.");
       setFormData({ fullName: "", phone: "", serviceType: "", location: "", experience: "" });
     } catch (err) {
-      console.error(err);
-      alert("Registration failed. Please try again.");
+      console.error("Partner Enrollment Error:", err);
+      alert("Registration failed due to network issue. Please try again or contact support.");
     } finally {
       setLoading(false);
     }
@@ -217,20 +232,7 @@ const Partner = () => {
 
       <Footer />
       <BottomNav />
-
-      {/* Floating WhatsApp Button */}
-      <div className="whatsapp-float-container">
-        <span className="whatsapp-tooltip">Partner Support</span>
-        <a
-          href="https://wa.me/917022803582?text=Hello%20Blinklean%2C%20I%20am%20interested%20in%20partnering%20with%20you."
-          className="whatsapp-float-btn"
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label="Contact us on WhatsApp"
-        >
-          <MessageCircle />
-        </a>
-      </div>
+      <FloatingWhatsApp />
     </div>
   );
 };

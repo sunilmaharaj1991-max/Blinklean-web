@@ -1,19 +1,50 @@
 import React from 'react';
+import { MessageCircle } from 'lucide-react';
 
-const FloatingWhatsApp = () => {
+const FloatingWhatsApp = ({ phoneNumber = "917022803582", message = "Hello Blinklean! I'd like to know more about your services." }) => {
+  const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
+
   return (
-    <div className="whatsapp-float-container">
-      <span className="whatsapp-tooltip">Chat with us on WhatsApp</span>
-      <a
-        href="https://wa.me/917022803582?text=Hello%20Blinklean%2C%20I%20am%20interested%20in%20your%20cleaning%20or%20scrap%20recycling%20services."
-        className="whatsapp-float-btn"
-        target="_blank"
-        rel="noopener noreferrer"
-        aria-label="Contact us on WhatsApp"
-      >
-        <i data-lucide="message-circle"></i>
-      </a>
-    </div>
+    <a 
+      href={whatsappUrl}
+      target="_blank" 
+      rel="noopener noreferrer"
+      className="floating-whatsapp-btn"
+      aria-label="Contact us on WhatsApp"
+      style={{
+        position: 'fixed',
+        bottom: '85px', // Above bottom nav for mobile
+        right: '25px',
+        width: '60px',
+        height: '60px',
+        backgroundColor: '#25d366',
+        color: 'white',
+        borderRadius: '50%',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        boxShadow: '0 4px 15px rgba(0,0,0,0.2)',
+        zIndex: 1000,
+        transition: 'transform 0.3s ease',
+        cursor: 'pointer'
+      }}
+      onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
+      onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+    >
+      <MessageCircle size={32} fill="white" />
+      <span style={{
+        position: 'absolute',
+        top: '-10px',
+        right: '-5px',
+        background: '#ef4444',
+        color: 'white',
+        fontSize: '10px',
+        fontWeight: 'bold',
+        padding: '2px 6px',
+        borderRadius: '10px',
+        border: '2px solid white'
+      }}>1</span>
+    </a>
   );
 };
 

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { auth } from "../firebase";
+import { auth, db } from "../firebase";
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import BottomNav from "../components/BottomNav";
@@ -32,69 +33,49 @@ const ScrapBooking = () => {
     address:      "",
     pincode:      "",
     pickup_point: "",
-    items: [{ material_name: "", estimated_weight: "" }]
+    items:        [{ material_name: "", estimated_weight: "" }]
   });
 
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged((user) => {
-      if (user) {
-        setIsAuthenticated(true);
-        setFormData(prev => ({
-          ...prev,
-          user_name:    user.displayName || "",
-          phone_number: user.phoneNumber?.replace("+91", "") || ""
-        }));
-      } else {
-        setIsAuthenticated(false);
-      }
+    const unsub = auth.onAuthStateChanged(user => {
+      setIsAuthenticated(!!user);
       setCheckingAuth(false);
     });
-    return () => unsubscribe();
+    return () => unsub();
   }, []);
 
   const handleInputChange = (e) => {
     const { id, value } = e.target;
     setFormData(prev => ({ ...prev, [id]: value }));
 
-    if (id === "pincode") {
-      setAreaError("");
-      if (value.length === 6) {
-        const valid = ALLOWED_ZONES.some(z => z.pincodes.includes(value));
-        setPincodeValid(valid);
-        if (!valid) setAreaError("We don't serve this area yet. Check serviceable pincodes below.");
-      } else {
+    if (id === "pincode" && value.length === 6) {
+      const zone = ALLOWED_ZONES.find(z => z.pincodes.includes(value));
+      if (!zone) {
+        setAreaError("Sorry, we haven't reached your area yet (Bangalore Only).");
         setPincodeValid(false);
+      } else {
+        setAreaError("");
+        setPincodeValid(true);
       }
+    } else if (id === "pincode") {
+      setPincodeValid(false);
+      setAreaError("");
     }
   };
 
   const handleItemChange = (index, field, value) => {
-    const items = [...formData.items];
-    items[index][field] = value;
-    setFormData(prev => ({ ...prev, items }));
+    const newItems = [...formData.items];
+    newItems[index][field] = value;
+    setFormData(prev => ({ ...prev, items: newItems }));
   };
 
-  const addItem = () => {
-    setFormData(prev => ({
-      ...prev,
-      items: [...prev.items, { material_name: "", estimated_weight: "" }]
-    }));
-  };
-
-  const removeItem = (index) => {
-    setFormData(prev => ({
-      ...prev,
-      items: prev.items.filter((_, i) => i !== index)
-    }));
-  };
+  const addItem = () => setFormData(prev => ({ ...prev, items: [...prev.items, { material_name: "", estimated_weight: "" }] }));
+  const removeItem = (index) => setFormData(prev => ({ ...prev, items: prev.items.filter((_, i) => i !== index) }));
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!auth.currentUser) { navigate("/login"); return; }
-    
-    // Pincode validation
-    if (!ALLOWED_ZONES.some(z => z.pincodes.includes(formData.pincode))) {
-      setAreaError("Sorry, we don't serve this pincode yet.");
+    if (areaError || !pincodeValid) {
+      alert("Please enter a valid pincode within our service zones.");
       return;
     }
 
@@ -108,7 +89,6 @@ const ScrapBooking = () => {
     }
 
     setLoading(true);
-    let pgSaved = false;
 
     const payload = {
       user_name:    formData.user_name,
@@ -120,42 +100,28 @@ const ScrapBooking = () => {
       status:       "PENDING_APPROVAL",
       userId:       auth.currentUser.uid,
       email:        auth.currentUser.email || "",
-      created_at:   new Date().toISOString()
+      created_at:   serverTimestamp()
     };
 
     try {
-      // Primary Attempt: Save to Backend
-      const res = await fetch(`${API_BASE}/scrap/booking`, {
+      // Direct Save to Firebase Firestore (Primary & Reliable)
+      await addDoc(collection(db, "scrap_bookings"), payload);
+      
+      // Optional: Background Sync with Backend API (don't block user if it fails)
+      fetch(`${API_BASE}/scrap/booking`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
+      }).catch(err => {
+        console.warn("Backend sync failed, but data is safe in Firebase.", err);
       });
 
-      if (res.ok) {
-        pgSaved = true;
-      } else {
-        throw new Error("Server responded with error");
-      }
+      setShowSuccess(true);
     } catch (err) {
-      console.error("Booking Error:", err);
-      // Fallback: If network fails, offer WhatsApp booking
-      const waMsg = encodeURIComponent(
-        `Hello Blinklean! I'd like to book a scrap pickup.\n\n` +
-        `Name: ${formData.user_name}\n` +
-        `Phone: ${formData.phone_number}\n` +
-        `Items: ${cleanedItems.map(i => `${i.material_name} (${i.estimated_weight}kg)`).join(", ")}`
-      );
-      
-      const confirmWA = window.confirm(
-        "Network Connection Issue: We couldn't reach our server.\n\n" +
-        "Would you like to complete your booking via WhatsApp instead? This ensures your request is received immediately."
-      );
-      
-      if (confirmWA) {
-        window.open(`https://wa.me/917022803582?text=${waMsg}`, "_blank");
-      }
+      console.error("Booking Error Detail:", err);
+      // Fallback: If Firebase write fails, we should notify user correctly.
+      alert("Something went wrong while saving your booking. Please try again or contact WhatsApp support.");
     } finally {
-      if (pgSaved) setShowSuccess(true);
       setLoading(false);
     }
   };
