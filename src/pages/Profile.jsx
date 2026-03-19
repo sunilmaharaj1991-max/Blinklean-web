@@ -37,11 +37,10 @@ const Profile = () => {
     setLoading(true);
     setError("");
     try {
-      // Fetch from Firestore directly for reliability
+      // Simplied query without orderBy to avoid "Missing Index" errors in Firestore
       const q = query(
         collection(db, "scrap_bookings"),
-        where("userId", "==", uid),
-        orderBy("created_at", "desc")
+        where("userId", "==", uid)
       );
       
       const querySnapshot = await getDocs(q);
@@ -49,6 +48,13 @@ const Profile = () => {
         id: doc.id,
         ...doc.data()
       }));
+
+      // Sort in JavaScript instead of Firestore query to prevent index requirement
+      docs.sort((a, b) => {
+        const da = a.created_at?.toDate ? a.created_at.toDate() : new Date(a.created_at || 0);
+        const db_val = b.created_at?.toDate ? b.created_at.toDate() : new Date(b.created_at || 0);
+        return db_val - da; // Descending
+      });
       
       setBookings(docs);
     } catch (err) {
