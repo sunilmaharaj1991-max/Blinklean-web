@@ -68,12 +68,27 @@ const Home = () => {
   const checkServiceArea = () => {
     const pincode = document.getElementById("pincode").value;
     const result = document.getElementById("pincode-result");
+    const supportedCodes = {
+      "573201": "Hassan",
+      "573202": "Hassan",
+      "534001": "Eluru, AP",
+      "534002": "Eluru, AP",
+      "534005": "Eluru, AP",
+      "534006": "Eluru, AP",
+      "534007": "Eluru, AP"
+    };
+
     if (pincode.length === 6) {
-      result.innerText = "Service is available in your area!";
-      result.style.color = "var(--secondary)";
+      if (supportedCodes[pincode]) {
+        result.innerText = `Service is available in ${supportedCodes[pincode]}!`;
+        result.style.color = "#1B9B3A";
+      } else {
+        result.innerText = "Sorry, service is not yet available in this area.";
+        result.style.color = "#ef4444";
+      }
     } else {
       result.innerText = "Please enter a valid 6-digit pincode.";
-      result.style.color = "red";
+      result.style.color = "#ef4444";
     }
   };
 
@@ -1552,9 +1567,9 @@ const Home = () => {
               onMouseLeave={(e) => e.currentTarget.style.animationPlayState = 'running'}
             >
               {[
-                "mahesh_gowda.png", 
-                "sowmya_reddy.png", 
-                "ananth_kumar.png", 
+                "community1.jpg", 
+                "community2.jpg", 
+                "community3.jpg", 
                 "community4.jpg",
                 "community5.jpg", 
                 "community6.jpg", 
@@ -1588,9 +1603,9 @@ const Home = () => {
               ))}
               {/* Duplicate for seamless loop */}
               {[
-                "mahesh_gowda.png", 
-                "sowmya_reddy.png", 
-                "ananth_kumar.png", 
+                "community1.jpg", 
+                "community2.jpg", 
+                "community3.jpg", 
                 "community4.jpg",
                 "community5.jpg", 
                 "community6.jpg", 
@@ -1804,6 +1819,16 @@ const Home = () => {
 
       <Footer />
       <FloatingWhatsApp />
+      
+      {/* Separate WhatsApp button for scrap pickups on the left */}
+      <FloatingWhatsApp 
+        phoneNumber="917022803582"
+        message="Hello Blinklean! I'd like to schedule a scrap pickup/recycling service."
+        right="auto"
+        left="25px"
+        backgroundColor="#1B9B3A"
+        badgeText="Scrap"
+      />
       <BottomNav />
     </>
   );

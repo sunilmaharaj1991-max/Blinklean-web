@@ -59,7 +59,7 @@ const Admin = () => {
       try {
         // Double-check Role in Firestore OR check by hardcoded admin emails
         const userDoc = await getDoc(doc(db, "users", user.uid));
-        const isAdminEmail = (user.email === "sunilmaharaj1991@gmail.com" || user.email === "jeevithgowdasr@gmail.com");
+        const isAdminEmail = (user.email === "sunilmaharaj1991@gmail.com" || user.email === "jeevithgowdasr@gmail.com" || user.email === "rohithlakshman1@gmail.com");
         
         if (isAdminEmail || (userDoc.exists() && userDoc.data().role === "admin")) {
           setIsAuthorized(true);

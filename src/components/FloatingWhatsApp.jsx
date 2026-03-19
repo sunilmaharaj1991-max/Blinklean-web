@@ -1,7 +1,15 @@
 import React from 'react';
 import { MessageCircle } from 'lucide-react';
 
-const FloatingWhatsApp = ({ phoneNumber = "917022803582", message = "Hello Blinklean! I'd like to know more about your services." }) => {
+const FloatingWhatsApp = ({ 
+  phoneNumber = "917022803582", 
+  message = "Hello Blinklean! I'd like to know more about your services.",
+  bottom = '85px',
+  right = '25px',
+  left = 'auto',
+  backgroundColor = '#25d366',
+  badgeText = "1"
+}) => {
   const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
 
   return (
@@ -13,11 +21,12 @@ const FloatingWhatsApp = ({ phoneNumber = "917022803582", message = "Hello Blink
       aria-label="Contact us on WhatsApp"
       style={{
         position: 'fixed',
-        bottom: '85px', // Above bottom nav for mobile
-        right: '25px',
+        bottom,
+        right,
+        left,
         width: '60px',
         height: '60px',
-        backgroundColor: '#25d366',
+        backgroundColor,
         color: 'white',
         borderRadius: '50%',
         display: 'flex',
@@ -32,18 +41,20 @@ const FloatingWhatsApp = ({ phoneNumber = "917022803582", message = "Hello Blink
       onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
     >
       <MessageCircle size={32} fill="white" />
-      <span style={{
-        position: 'absolute',
-        top: '-10px',
-        right: '-5px',
-        background: '#ef4444',
-        color: 'white',
-        fontSize: '10px',
-        fontWeight: 'bold',
-        padding: '2px 6px',
-        borderRadius: '10px',
-        border: '2px solid white'
-      }}>1</span>
+      {badgeText && (
+        <span style={{
+          position: 'absolute',
+          top: '-10px',
+          right: '-5px',
+          background: '#ef4444',
+          color: 'white',
+          fontSize: '10px',
+          fontWeight: 'bold',
+          padding: '2px 6px',
+          borderRadius: '10px',
+          border: '2px solid white'
+        }}>{badgeText}</span>
+      )}
     </a>
   );
 };
