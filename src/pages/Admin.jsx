@@ -57,9 +57,11 @@ const Admin = () => {
     const unsub = auth.onAuthStateChanged(async (user) => {
       if (!user) { navigate("/login"); return; }
       try {
-        // Check Admin Role in Firestore
+        // Double-check Role in Firestore OR check by hardcoded admin emails
         const userDoc = await getDoc(doc(db, "users", user.uid));
-        if (userDoc.exists() && userDoc.data().role === "admin") {
+        const isAdminEmail = (user.email === "sunilmaharaj1991@gmail.com" || user.email === "jeevithgowdasr@gmail.com");
+        
+        if (isAdminEmail || (userDoc.exists() && userDoc.data().role === "admin")) {
           setIsAuthorized(true);
           fetchData();
         } else {

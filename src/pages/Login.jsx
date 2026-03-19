@@ -39,7 +39,7 @@ const Login = () => {
       email: user.email || "",
       name: user.displayName || fullName || "",
       photo_url: user.photoURL || "",
-      role: (user.email === "sunilmaharaj1991@gmail.com") ? "admin" : "user",
+      role: (user.email === "sunilmaharaj1991@gmail.com" || user.email === "jeevithgowdasr@gmail.com") ? "admin" : "user",
       last_login: serverTimestamp(),
       created_at: serverTimestamp()
     };
@@ -86,8 +86,9 @@ const Login = () => {
 
       // Check Role from Firestore
       try {
+        const isAdminEmail = (result.user.email === "sunilmaharaj1991@gmail.com" || result.user.email === "jeevithgowdasr@gmail.com");
         const userSnap = await getDoc(doc(db, "users", result.user.uid));
-        if (userSnap.exists() && userSnap.data().role === "admin") {
+        if (isAdminEmail || (userSnap.exists() && userSnap.data().role === "admin")) {
           console.log("Welcome, Admin!");
           navigate("/admin");
           return;
@@ -131,8 +132,9 @@ const Login = () => {
 
       // Check Role from Firestore
       try {
+        const isAdminEmail = (result.user.email === "sunilmaharaj1991@gmail.com" || result.user.email === "jeevithgowdasr@gmail.com");
         const userSnap = await getDoc(doc(db, "users", result.user.uid));
-        if (userSnap.exists() && userSnap.data().role === "admin") {
+        if (isAdminEmail || (userSnap.exists() && userSnap.data().role === "admin")) {
           navigate("/admin");
           return;
         }
