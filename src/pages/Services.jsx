@@ -237,9 +237,7 @@ const Services = () => {
                 <div className="service-details">
                   <h3>{s.title}</h3>
                   <p>{s.desc}</p>
-                  <Link to="/contact" className="btn btn-primary">
-                    Book Now
-                  </Link>
+                  {/* Book Now removed per user request */}
                 </div>
               </div>
             ))}

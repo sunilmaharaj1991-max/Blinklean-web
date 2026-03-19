@@ -445,7 +445,7 @@ const Home = () => {
             <div className="process-step">
               <div className="step-icon-box">
                 <img
-                  src="assets/images/service_scrap_workerless.png"
+                  src="assets/images/choose_service_works.png"
                   alt="Choose a Service"
                 />
                 <i data-lucide="layout-grid"></i>
@@ -461,7 +461,7 @@ const Home = () => {
             {/*  Step 2  */}
             <div className="process-step" style={{ transitionDelay: "100ms" }}>
               <div className="step-icon-box">
-                <img src="assets/images/service_home_workerless.png" alt="Contact Us" />
+                <img src="assets/images/contact_us_works.png" alt="Contact Us" />
                 <i data-lucide="message-circle"></i>
                 <div className="step-number-badge">2</div>
               </div>
@@ -475,7 +475,7 @@ const Home = () => {
             {/*  Step 3  */}
             <div className="process-step" style={{ transitionDelay: "200ms" }}>
               <div className="step-icon-box">
-                <img src="assets/images/service_home_workerless.png" alt="Schedule" />
+                <img src="assets/images/schedule_service_works.png" alt="Schedule" />
                 <i data-lucide="calendar"></i>
                 <div className="step-number-badge">3</div>
               </div>
@@ -490,7 +490,7 @@ const Home = () => {
             <div className="process-step" style={{ transitionDelay: "300ms" }}>
               <div className="step-icon-box">
                 <img
-                  src="assets/images/service_home_workerless.png"
+                  src="assets/images/service_delivered_works.png"
                   alt="Professional Service"
                 />
                 <i data-lucide="sparkles"></i>
@@ -521,7 +521,7 @@ const Home = () => {
             <div className="trust-card">
               <div className="trust-image-wrapper">
                 <img
-                  src="/assets/images/service_home_workerless.png"
+                  src="/assets/images/verified_pro_trust.png"
                   alt="Verified Professionals"
                 />
               </div>
