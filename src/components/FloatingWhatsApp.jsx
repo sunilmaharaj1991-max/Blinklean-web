@@ -3,19 +3,19 @@ import { MessageCircle } from 'lucide-react';
 
 const FloatingWhatsApp = ({ 
   phoneNumber = "917022803582", 
-  message = "Hello Blinklean! I'd like to know more about your services.",
+  message = "Hello! 👋 Thank you for reaching out to Blinklean(India's First AI Powered QuickClean Platform )\n\nWe’d be happy to schedule your scrap pickup ♻️\n\nPlease share the following details to proceed:\n📍 Pickup Address\n📅 Preferred Date & Time\n📦 Type of Scrap (paper, plastic, metal, e-waste, etc.)\n⚖️ Approximate Quantity\n\nOur team will confirm your pickup shortly. Looking forward to serving you! 😊\n\nVisit: www.blinklean.com",
   bottom = '85px',
   right = '25px',
   left = 'auto',
   backgroundColor = '#25d366',
-  badgeText = null
+  badgeText = "Scrap"
 }) => {
   const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
 
   return (
-    <a 
+    <a
       href={whatsappUrl}
-      target="_blank" 
+      target="_blank"
       rel="noopener noreferrer"
       className="floating-whatsapp-btn"
       aria-label="Contact us on WhatsApp"

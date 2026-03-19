@@ -249,8 +249,8 @@ const Home = () => {
             <div className="mini-stat">
               <i data-lucide="check-circle"></i>
               <span>
-                    <strong 
-                  className="count-up" 
+                <strong
+                  className="count-up"
                   data-target="1000"
                   style={{ color: "var(--primary)", fontSize: "1.2rem" }}
                 >
@@ -1338,7 +1338,7 @@ const Home = () => {
               * Best market prices determined at pickup based on current
               recycling rates.
             </p>
-              <div style={{ marginTop: "30px", textAlign: "center" }}>
+            <div style={{ marginTop: "30px", textAlign: "center" }}>
               <Link
                 to="/scrap-booking"
                 className="btn btn-primary"
@@ -1546,7 +1546,7 @@ const Home = () => {
             </p>
           </div>
 
-          <div 
+          <div
             className="community-marquee-wrapper"
             style={{
               overflow: "hidden",
@@ -1555,7 +1555,7 @@ const Home = () => {
               width: "100%"
             }}
           >
-            <div 
+            <div
               className="community-marquee-track"
               style={{
                 display: "flex",
@@ -1567,12 +1567,12 @@ const Home = () => {
               onMouseLeave={(e) => e.currentTarget.style.animationPlayState = 'running'}
             >
               {[
-                "community1.jpg", 
-                "community2.jpg", 
-                "community3.jpg", 
+                "community1.jpg",
+                "community2.jpg",
+                "community3.jpg",
                 "community4.jpg",
-                "community5.jpg", 
-                "community6.jpg", 
+                "community5.jpg",
+                "community6.jpg",
                 "community7.jpg"
               ].map((img, idx) => (
                 <div
@@ -1603,12 +1603,12 @@ const Home = () => {
               ))}
               {/* Duplicate for seamless loop */}
               {[
-                "community1.jpg", 
-                "community2.jpg", 
-                "community3.jpg", 
+                "community1.jpg",
+                "community2.jpg",
+                "community3.jpg",
                 "community4.jpg",
-                "community5.jpg", 
-                "community6.jpg", 
+                "community5.jpg",
+                "community6.jpg",
                 "community7.jpg"
               ].map((img, idx) => (
                 <div
@@ -1636,7 +1636,7 @@ const Home = () => {
                 </div>
               ))}
             </div>
-            
+
             <style>{`
               @keyframes marquee-scroll {
                 0% { transform: translateX(0); }
@@ -1818,10 +1818,7 @@ const Home = () => {
       </section>
 
       <Footer />
-      <FloatingWhatsApp 
-        message="Hello! 👋 Thank you for reaching out to Blinklean(India's First AI Powered QuickClean Platform )\n\nWe’d be happy to schedule your scrap pickup ♻️\n\nPlease share the following details to proceed:\n📍 Pickup Address\n📅 Preferred Date & Time\n📦 Type of Scrap (paper, plastic, metal, e-waste, etc.)\n⚖️ Approximate Quantity\n\nOur team will confirm your pickup shortly. Looking forward to serving you! 😊\n\nVisit: www.blinklean.com"
-        badgeText={null} 
-      />
+      <FloatingWhatsApp />
       <BottomNav />
     </>
   );
