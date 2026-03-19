@@ -145,7 +145,20 @@ const Login = () => {
       navigate("/");
     } catch (err) {
       console.error("Google login error:", err);
-      setError("Failed to sign in with Google.");
+      let friendlyMsg = "Failed to sign in with Google.";
+      
+      const errorCode = err?.code || "";
+      if (errorCode.includes("popup-closed-by-user")) {
+        friendlyMsg = "Sign-in popup was closed before completion.";
+      } else if (errorCode.includes("unauthorized-domain")) {
+        friendlyMsg = "This domain (blinklean.com) is not authorized for Google Sign-In. Please check Firebase console.";
+      } else if (errorCode.includes("operation-not-allowed")) {
+        friendlyMsg = "Google Sign-In is not enabled for this project.";
+      } else if (err?.message) {
+        friendlyMsg = `Error: ${err.message}`;
+      }
+      
+      setError(friendlyMsg);
     } finally {
       setLoading(false);
     }
