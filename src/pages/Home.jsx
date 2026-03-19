@@ -1818,17 +1818,7 @@ const Home = () => {
       </section>
 
       <Footer />
-      <FloatingWhatsApp />
-      
-      {/* Separate WhatsApp button for scrap pickups on the left */}
-      <FloatingWhatsApp 
-        phoneNumber="917022803582"
-        message="Hello Blinklean! I'd like to schedule a scrap pickup/recycling service."
-        right="auto"
-        left="25px"
-        backgroundColor="#1B9B3A"
-        badgeText="Scrap"
-      />
+      <FloatingWhatsApp badgeText={null} />
       <BottomNav />
     </>
   );
