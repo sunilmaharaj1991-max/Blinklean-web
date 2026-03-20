@@ -1,31 +1,19 @@
-import React from "react";
+import React, { useEffect } from "react";
+import Header from "../components/Header";
+import Footer from "../components/Footer";
+import BottomNav from "../components/BottomNav";
+import FloatingWhatsApp from "../components/FloatingWhatsApp";
 
 const ServiceDetails = () => {
+  useEffect(() => {
+    if (window.lucide) {
+      window.lucide.createIcons();
+    }
+  }, []);
+
   return (
     <>
-      {/* Generated JSX from HTML */}
-
-      {/*  Navigation  */}
-      <nav className="navbar">
-        <div className="container nav-container">
-          <a href="index.html" className="logo-wrapper">
-            <div className="logo-text">
-              Blink<span>lean</span>
-            </div>
-          </a>
-          <div className="nav-links" id="navLinks">
-            <a href="index.html">Home</a>
-            <a href="services.html">Services</a>
-            <a href="pricing.html">Pricing</a>
-            <a href="about.html">About</a>
-            <a href="partner.html">Partner</a>
-            <a href="contact.html">Contact Us</a>
-          </div>
-          <button className="mobile-menu-btn" id="menuBtn">
-            <i data-lucide="menu"></i>
-          </button>
-        </div>
-      </nav>
+      <Header />
 
       {/*  1. Service Image Banner  */}
       <header className="service-banner">
@@ -177,43 +165,9 @@ const ServiceDetails = () => {
         </aside>
       </main>
 
-      {/*  7. Sticky Book Now Button (Mobile)  */}
-      {/*  Removed Book Now Mobile Bar per user request  */}
-
-      {/*  Footer  */}
-      <footer className="footer">
-        <div className="container footer-grid">
-          <div className="footer-brand">
-            <a href="index.html" className="logo">
-              Blink<span>lean</span>
-            </a>
-            <p>Making home services simple, safe, and sustainable.</p>
-            <div className="social-links">
-              <a href="https://www.facebook.com/share/1V83bCiMAp/" target="_blank" rel="noopener noreferrer">
-                <i data-lucide="facebook"></i>
-              </a>
-              <a href="https://www.instagram.com/blinklean?utm_source=qr&igsh=OWs2MmxoMWJ3ZnFs" target="_blank" rel="noopener noreferrer">
-                <i data-lucide="instagram"></i>
-              </a>
-              <a href="https://www.linkedin.com/company/malnad-manju-cafe/" target="_blank" rel="noopener noreferrer">
-                <i data-lucide="linkedin"></i>
-              </a>
-            </div>
-          </div>
-          <div className="footer-links">
-            <h4>Services</h4>
-            <a href="#">Home Cleaning</a>
-            <a href="#">Car Washing</a>
-            <a href="#">Grooming</a>
-          </div>
-          <div className="footer-links">
-            <h4>Company</h4>
-            <a href="#">About Us</a>
-            <a href="#">Privacy Policy</a>
-            <a href="#">Terms of Service</a>
-          </div>
-        </div>
-      </footer>
+      <Footer />
+      <BottomNav />
+      <FloatingWhatsApp />
     </>
   );
 };

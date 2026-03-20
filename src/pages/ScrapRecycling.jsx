@@ -1,19 +1,13 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { Link } from "react-router-dom";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import BottomNav from "../components/BottomNav";
-import { auth } from "../firebase";
-import { User, MapPin, Recycle, Plus, MessageCircle, ArrowRight } from "lucide-react";
+import FloatingWhatsApp from "../components/FloatingWhatsApp";
+import { User, MapPin, Recycle, Plus } from "lucide-react";
 import "../assets/css/scrap-recycling.css";
 
 const ScrapRecycling = () => {
-  useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged(() => {
-    });
-    return () => unsubscribe();
-  }, []);
-
   return (
     <>
       <Header />
@@ -138,18 +132,7 @@ const ScrapRecycling = () => {
 
       <Footer />
       <BottomNav />
-      {/* Floating WhatsApp Button */}
-      <div className="whatsapp-float-container">
-        <span className="whatsapp-tooltip">Chat with us on WhatsApp</span>
-        <a
-          href="https://wa.me/917022803582?text=Hello%20Blinklean%2C%20I%20am%20interested%20in%20your%20services."
-          className="whatsapp-float-btn"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <MessageCircle />
-        </a>
-      </div>
+      <FloatingWhatsApp />
     </>
   );
 };
