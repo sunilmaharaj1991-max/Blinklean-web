@@ -15,7 +15,9 @@ const ALLOWED_ZONES = [
   { name: "Chandra Layout",      pincodes: ["560040", "560072"] },
   { name: "Attiguppe",           pincodes: ["560040"] },
   { name: "Rajajinagar",         pincodes: ["560010", "560023"] },
-  { name: "Rajarajeshwari Nagar",pincodes: ["560098"] }
+  { name: "Rajarajeshwari Nagar",pincodes: ["560098"] },
+  { name: "Hassan",              pincodes: ["573201", "573202"] },
+  { name: "Amaravathi (Andhra Pradesh)", pincodes: ["522237", "522002"] }
 ];
 
 const ScrapBooking = () => {
@@ -51,7 +53,7 @@ const ScrapBooking = () => {
     if (id === "pincode" && value.length === 6) {
       const zone = ALLOWED_ZONES.find(z => z.pincodes.includes(value));
       if (!zone) {
-        setAreaError("Sorry, we haven't reached your area yet (Bangalore Only).");
+        setAreaError("Sorry, we haven't reached your area yet.");
         setPincodeValid(false);
       } else {
         setAreaError("");

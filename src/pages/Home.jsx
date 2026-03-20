@@ -35,7 +35,7 @@ const Home = () => {
     {
       question: "Which areas do you serve?",
       answer:
-        "We are currently hyper-local in Bengaluru, serving key areas including Vijayanagar, Chandra Layout, Attiguppe, Rajajinagar, and Rajarajeshwari Nagar. We are rapidly expanding to other urban clusters!",
+        "We are hyper-local in Bengaluru, Hassan and Amaravathi (AP), serving key areas including Vijayanagar, Chandra Layout, Attiguppe, Rajajinagar, Rajarajeshwari Nagar, Hassan and Amaravathi. We are rapidly expanding to other urban clusters!",
     },
     {
       question: "How can I book a scrap recycling service?",
@@ -71,6 +71,8 @@ const Home = () => {
     const supportedCodes = {
       "573201": "Hassan",
       "573202": "Hassan",
+      "522237": "Amaravathi, AP",
+      "522002": "Amaravathi, AP",
       "534001": "Eluru, AP",
       "534002": "Eluru, AP",
       "534005": "Eluru, AP",
@@ -410,6 +412,12 @@ const Home = () => {
                 </div>
                 <div className="location-item">
                   <i data-lucide="map-pin"></i> Rajarajeshwari Nagar
+                </div>
+                <div className="location-item">
+                  <i data-lucide="map-pin"></i> Hassan
+                </div>
+                <div className="location-item">
+                  <i data-lucide="map-pin"></i> Amaravathi (AP)
                 </div>
               </div>
 

@@ -6,7 +6,6 @@ import { CreateOrderDto } from './dto/create-order.dto';
 import { VerifyPaymentDto } from './dto/verify-payment.dto';
 
 interface BookingData {
-  id: string;
   userId: string;
   status: string;
 }
@@ -16,9 +15,13 @@ interface UserData {
 }
 
 interface PaymentRecord {
-  id: string;
   booking_id: string;
   payment_status: string;
+}
+
+interface RazorpayOrder {
+  id: string;
+  amount: number;
 }
 
 @Injectable()
@@ -141,7 +144,11 @@ export class PaymentsService {
     }
 
     const paymentDoc = paymentSnapshot.docs[0];
-    const payment = { id: paymentDoc.id, ...(paymentDoc.data() as PaymentRecord) };
+    const paymentData = paymentDoc.data() as PaymentRecord;
+    const payment = {
+      id: paymentDoc.id,
+      ...paymentData,
+    };
 
     if (payment.payment_status === 'success') {
       throw new BadRequestException('Payment already verified');
@@ -167,3 +174,4 @@ export class PaymentsService {
     return { status: 'success', message: 'Payment verified successfully' };
   }
 }
+

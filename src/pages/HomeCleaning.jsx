@@ -497,6 +497,24 @@ const HomeCleaning = () => {
                 ></i>
                 Rajarajeshwari Nagar
               </span>
+              <span
+                style={{ display: "flex", alignItems: "center", gap: "5px" }}
+              >
+                <i
+                  data-lucide="check"
+                  style={{ width: "14px", color: "var(--primary)" }}
+                ></i>
+                Hassan
+              </span>
+              <span
+                style={{ display: "flex", alignItems: "center", gap: "5px" }}
+              >
+                <i
+                  data-lucide="check"
+                  style={{ width: "14px", color: "var(--primary)" }}
+                ></i>
+                Amaravathi (Andhra Pradesh)
+              </span>
             </div>
           </div>
 
@@ -524,8 +542,8 @@ const HomeCleaning = () => {
               textAlign: "center",
             }}
           >
-            *Serving Vijayanagar, Chandra Layout, Attiguppe, Rajajinagar &
-            Rajarajeshwari Nagar. Check availability for your specific pincode
+            *Serving Vijayanagar, Chandra Layout, Attiguppe, Rajajinagar,
+            Rajarajeshwari Nagar, Hassan & Amaravathi. Check availability for your specific pincode
             on the home page.
           </p>
 

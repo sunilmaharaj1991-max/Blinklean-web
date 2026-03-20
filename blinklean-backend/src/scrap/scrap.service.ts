@@ -4,6 +4,19 @@ import { FirebaseService } from '../firebase/firebase.service';
 import { CalculateScrapDto } from './dto/calculate-scrap.dto';
 import { CreateScrapBookingDto } from './dto/create-scrap-booking.dto';
 
+interface ScrapRate {
+  material_name: string;
+  rate_per_kg: number;
+  is_active: boolean;
+}
+
+interface ScrapBookingData extends CreateScrapBookingDto {
+  created_at: Date;
+  updated_at: Date;
+  pickup_timing?: string;
+  final_value?: number;
+}
+
 @Injectable()
 export class ScrapService implements OnModuleInit {
   constructor(private readonly firebaseService: FirebaseService) {}
@@ -60,7 +73,7 @@ export class ScrapService implements OnModuleInit {
   async onModuleInit(): Promise<void> {
     const snapshot = await this.scrapRateCollection.limit(1).get();
     if (snapshot.empty) {
-      const defaultRates = [
+      const defaultRates: ScrapRate[] = [
         { material_name: 'newspapers', rate_per_kg: 15.0, is_active: true },
         { material_name: 'cardboard', rate_per_kg: 10.0, is_active: true },
         { material_name: 'plastic', rate_per_kg: 12.0, is_active: true },
@@ -91,7 +104,7 @@ export class ScrapService implements OnModuleInit {
   }
 
   /** Update a material rate by ID */
-  async updateRate(id: string, rate_per_kg: number): Promise<any | null> {
+  async updateRate(id: string, rate_per_kg: number): Promise<any> {
     await this.scrapRateCollection.doc(id).update({ rate_per_kg });
     const updated = await this.scrapRateCollection.doc(id).get();
     return { id: updated.id, ...updated.data() };
@@ -130,7 +143,7 @@ export class ScrapService implements OnModuleInit {
         );
       }
 
-      const rate = snapshot.docs[0].data() as any;
+      const rate = snapshot.docs[0].data() as ScrapRate;
 
       const itemEstimatedValue = rate.rate_per_kg * item.estimated_weight;
       totalEstimatedValue += itemEstimatedValue;
@@ -164,8 +177,8 @@ export class ScrapService implements OnModuleInit {
     return { id: docRef.id, ...bookingData };
   }
 
-  /** Get a single booking by its numeric ID */
-  async getBookingById(id: string): Promise<any | null> {
+  /** Get a single booking by its ID */
+  async getBookingById(id: string): Promise<any> {
     const doc = await this.scrapBookingCollection.doc(id).get();
     if (!doc.exists) return null;
     return { id: doc.id, ...doc.data() };
@@ -194,8 +207,7 @@ export class ScrapService implements OnModuleInit {
     const doc = await docRef.get();
     if (!doc.exists) throw new NotFoundException('Booking not found');
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    const data = doc.data() as any;
+    const data = doc.data() as ScrapBookingData;
     const updateData = {
       status: 'CONFIRMED',
       pickup_timing: pickupTiming,
@@ -215,7 +227,6 @@ export class ScrapService implements OnModuleInit {
       id: doc.id,
       ...data,
       ...updateData,
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       smsStatus: `SMS sent to ${data.phone_number}`,
     };
   }
@@ -230,16 +241,14 @@ export class ScrapService implements OnModuleInit {
     const doc = await docRef.get();
     if (!doc.exists) throw new NotFoundException('Booking not found');
 
-    const updateData: any = {
+    const updateData: Partial<ScrapBookingData> = {
       status,
       updated_at: new Date(),
     };
     if (final_value !== undefined) {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       updateData.final_value = final_value;
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     await docRef.update(updateData);
     const updatedDoc = await docRef.get();
     return { id: updatedDoc.id, ...updatedDoc.data() };
