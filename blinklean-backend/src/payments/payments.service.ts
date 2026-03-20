@@ -174,4 +174,3 @@ export class PaymentsService {
     return { status: 'success', message: 'Payment verified successfully' };
   }
 }
-
