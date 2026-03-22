@@ -1,0 +1,39 @@
+import i18n from 'i18next';
+import { initReactI18next } from 'react-i18next';
+import LanguageDetector from 'i18next-browser-languagedetector';
+
+// Import translations
+import enTranslation from './locales/en.json';
+import hiTranslation from './locales/hi.json';
+import mrTranslation from './locales/mr.json';
+import teTranslation from './locales/te.json';
+import taTranslation from './locales/ta.json';
+import mlTranslation from './locales/ml.json';
+import knTranslation from './locales/kn.json';
+
+const resources = {
+  en: { translation: enTranslation },
+  hi: { translation: hiTranslation },
+  mr: { translation: mrTranslation },
+  te: { translation: teTranslation },
+  ta: { translation: taTranslation },
+  ml: { translation: mlTranslation },
+  kn: { translation: knTranslation },
+};
+
+i18n
+  .use(LanguageDetector)
+  .use(initReactI18next)
+  .init({
+    resources,
+    fallbackLng: 'en',
+    interpolation: {
+      escapeValue: false,
+    },
+    detection: {
+      order: ['localStorage', 'cookie', 'htmlTag', 'path', 'subdomain'],
+      caches: ['localStorage', 'cookie'],
+    },
+  });
+
+export default i18n;

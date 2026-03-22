@@ -1,0 +1,51 @@
+{
+  "nav": {
+    "home_cleaning": "Home Cleaning",
+    "vehicle_care": "Vehicle Care",
+    "laundry": "Laundry",
+    "scrap_recycling": "Scrap & Recycling",
+    "partner": "Partner With Us",
+    "profile": "Profile",
+    "login": "Login"
+  },
+  "footer": {
+    "desc": "Blinklean provides professional doorstep clean-tech services including home cleaning, waterless vehicle detailing, laundry, and scrap recycling.",
+    "our_services": "Our Services",
+    "quick_links": "Quick Links",
+    "contact_us": "Contact Us",
+    "all_rights_reserved": "All rights reserved.",
+    "about_us": "About Us",
+    "faq": "FAQ",
+    "join_partner": "Join as Partner",
+    "privacy_policy": "Privacy Policy"
+  },
+  "login": {
+    "welcome_back": "Welcome Back",
+    "create_account": "Create Account",
+    "reset_password": "Reset Password",
+    "join_platform": "Join India's First AI Powered QuickClean platform",
+    "enter_reset_link": "Enter your email to receive a reset link",
+    "manage_bookings": "Login to manage your bookings",
+    "full_name": "Full Name",
+    "email_address": "Email Address",
+    "password": "Password",
+    "remember_me": "Remember Me",
+    "forgot_password": "Forgot Password?",
+    "sign_in": "Sign In",
+    "sign_up": "Sign Up",
+    "send_link": "Send Link",
+    "or": "OR",
+    "continue_google": "Continue with Google",
+    "new_to_blinklean": "New to Blinklean?",
+    "already_have_account": "Already have an account?"
+  },
+  "languages": {
+    "en": "English",
+    "hi": "हिंदी (Hindi)",
+    "mr": "मराठी (Marathi)",
+    "te": "తెలుగు (Telugu)",
+    "ta": "தமிழ் (Tamil)",
+    "ml": "മലയാളം (Malayalam)",
+    "kn": "ಕನ್ನಡ (Kannada)"
+  }
+}

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import Logo from "../components/Logo";
 import { 
   signInWithEmailAndPassword, 
@@ -16,6 +17,7 @@ import "../assets/css/login-premium.css";
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "https://blinklean-api.onrender.com/api/v1";
 
 const Login = () => {
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const [formMode, setFormMode] = useState("login"); // login, signup, forgot
   const [email, setEmail] = useState("");
@@ -32,6 +34,10 @@ const Login = () => {
       window.lucide.createIcons();
     }
   }, [formMode, showPassword]);
+
+  const changeLanguage = (lng) => {
+    i18n.changeLanguage(lng);
+  };
 
   const trackUserLogin = async (user) => {
     const userData = {
@@ -173,8 +179,24 @@ const Login = () => {
               <Logo type="navbar" style={{ height: "85px" }} />
             </div>
           </a>
-          <h2>{formMode === "signup" ? "Create Account" : formMode === "forgot" ? "Reset Password" : "Welcome Back"}</h2>
-          <p>{formMode === "signup" ? "Join India's First AI Powered QuickClean platform" : formMode === "forgot" ? "Enter your email to receive a reset link" : "Login to manage your bookings"}</p>
+          <h2>{formMode === "signup" ? t('login.create_account') : formMode === "forgot" ? t('login.reset_password') : t('login.welcome_back')}</h2>
+          <p>{formMode === "signup" ? t('login.join_platform') : formMode === "forgot" ? t('login.enter_reset_link') : t('login.manage_bookings')}</p>
+          
+          <div className="language-selector-premium">
+            <select 
+              value={i18n.language} 
+              onChange={(e) => changeLanguage(e.target.value)}
+              className="lang-select"
+            >
+              <option value="en">English</option>
+              <option value="hi">हिंदी (Hindi)</option>
+              <option value="mr">मराठी (Marathi)</option>
+              <option value="te">తెలుగు (Telugu)</option>
+              <option value="ta">தமிழ் (Tamil)</option>
+              <option value="ml">മലയാളം (Malayalam)</option>
+              <option value="kn">ಕನ್ನಡ (Kannada)</option>
+            </select>
+          </div>
         </div>
 
         {error && <div className="feedback-msg error">{error}</div>}
@@ -183,19 +205,19 @@ const Login = () => {
         <form className="auth-form-premium" onSubmit={handleEmailAction}>
           {formMode === "signup" && (
             <div className="form-group-premium">
-              <label>Full Name</label>
+              <label>{t('login.full_name')}</label>
               <i data-lucide="user"></i>
               <input type="text" placeholder="John Doe" required value={fullName} onChange={(e) => setFullName(e.target.value)} />
             </div>
           )}
           <div className="form-group-premium">
-            <label>Email Address</label>
+            <label>{t('login.email_address')}</label>
             <i data-lucide="mail"></i>
             <input type="email" placeholder="name@example.com" required value={email} onChange={(e) => setEmail(e.target.value)} />
           </div>
           {formMode !== "forgot" && (
             <div className="form-group-premium">
-              <label>Password</label>
+              <label>{t('login.password')}</label>
               <i data-lucide="lock"></i>
               <input 
                 type={showPassword ? "text" : "password"} 
@@ -215,31 +237,31 @@ const Login = () => {
               <label className="checkbox-container">
                 <input type="checkbox" checked={rememberMe} onChange={() => setRememberMe(!rememberMe)} />
                 <span className="checkmark"></span>
-                Remember Me
+                {t('login.remember_me')}
               </label>
-              <button type="button" className="link-btn" onClick={() => setFormMode("forgot")}>Forgot Password?</button>
+              <button type="button" className="link-btn" onClick={() => setFormMode("forgot")}>{t('login.forgot_password')}</button>
             </div>
           )}
 
           <button type="submit" className="btn-login-premium" disabled={loading}>
             {loading ? <span className="loader-dots"><span>.</span><span>.</span><span>.</span></span> : 
-              (formMode === "signup" ? "Sign Up" : formMode === "forgot" ? "Send Link" : "Sign In")
+              (formMode === "signup" ? t('login.sign_up') : formMode === "forgot" ? t('login.send_link') : t('login.sign_in'))
             }
           </button>
         </form>
 
-        <div className="divider-premium">OR</div>
+        <div className="divider-premium">{t('login.or')}</div>
 
         <button className="btn-social-premium" onClick={handleGoogleLogin} disabled={loading}>
           <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" />
-          Continue with Google
+          {t('login.continue_google')}
         </button>
 
         <div className="signup-link-premium">
           {formMode === "login" ? (
-            <>New to Blinklean? <button onClick={() => setFormMode("signup")} className="link-btn">Create an account</button></>
+            <>{t('login.new_to_blinklean')} <button onClick={() => setFormMode("signup")} className="link-btn">{t('login.create_account')}</button></>
           ) : (
-            <>Already have an account? <button onClick={() => { setFormMode("login"); setError(""); setMessage(""); }} className="link-btn">Sign In</button></>
+            <>{t('login.already_have_account')} <button onClick={() => { setFormMode("login"); setError(""); setMessage(""); }} className="link-btn">{t('login.sign_in')}</button></>
           )}
         </div>
       </div>
