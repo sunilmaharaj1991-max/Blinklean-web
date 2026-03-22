@@ -28,16 +28,37 @@ const Login = () => {
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showLangModal, setShowLangModal] = useState(false);
+
+  useEffect(() => {
+    // Check if user has already set a language
+    const langSet = localStorage.getItem("blinklean_lang_set");
+    if (!langSet) {
+      setShowLangModal(true);
+    }
+  }, []);
 
   useEffect(() => {
     if (window.lucide) {
       window.lucide.createIcons();
     }
-  }, [formMode, showPassword]);
+  }, [formMode, showPassword, showLangModal]);
 
-  const changeLanguage = (lng) => {
+  const selectLanguage = (lng) => {
     i18n.changeLanguage(lng);
+    localStorage.setItem("blinklean_lang_set", "true");
+    setShowLangModal(false);
   };
+
+  const languages = [
+    { code: 'en', name: 'English' },
+    { code: 'hi', name: 'हिंदी (Hindi)' },
+    { code: 'kn', name: 'ಕನ್ನಡ (Kannada)' },
+    { code: 'te', name: 'తెలుగు (Telugu)' },
+    { code: 'ta', name: 'தமிழ் (Tamil)' },
+    { code: 'mr', name: 'मराठी (Marathi)' },
+    { code: 'ml', name: 'മലയാളം (Malayalam)' }
+  ];
 
   const trackUserLogin = async (user) => {
     const userData = {
@@ -47,7 +68,8 @@ const Login = () => {
       photo_url: user.photoURL || "",
       role: (user.email === "sunilmaharaj1991@gmail.com" || user.email === "jeevithgowdasr@gmail.com") ? "admin" : "user",
       last_login: serverTimestamp(),
-      created_at: serverTimestamp()
+      created_at: serverTimestamp(),
+      preferred_language: i18n.language
     };
 
     try {
@@ -172,6 +194,42 @@ const Login = () => {
 
   return (
     <div className="login-page-container">
+      {/* Language Selection Modal */}
+      {showLangModal && (
+        <div className="lang-modal-overlay">
+          <div className="lang-modal-content">
+            <div className="lang-modal-header">
+              <i data-lucide="languages" className="modal-icon"></i>
+              <h3>Choose Your Language / भाषा चुनें</h3>
+              <p>Select your preferred language for a better experience</p>
+            </div>
+            <div className="lang-grid-premium">
+              {languages.map((lang) => (
+                <button 
+                  key={lang.code} 
+                  className={`lang-option-btn ${i18n.language === lang.code ? 'active' : ''}`}
+                  onClick={() => selectLanguage(lang.code)}
+                >
+                  <span className="lang-name">{lang.name}</span>
+                  {i18n.language === lang.code && <i data-lucide="check-circle" className="check-icon"></i>}
+                </button>
+              ))}
+            </div>
+            <div className="lang-modal-footer">
+              <button 
+                className="skip-btn" 
+                onClick={() => {
+                  localStorage.setItem("blinklean_lang_set", "true");
+                  setShowLangModal(false);
+                }}
+              >
+                Continue with English
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="login-card-premium">
         <div className="login-header-premium">
           <a href="/" style={{ textDecoration: "none" }}>
@@ -181,22 +239,6 @@ const Login = () => {
           </a>
           <h2>{formMode === "signup" ? t('login.create_account') : formMode === "forgot" ? t('login.reset_password') : t('login.welcome_back')}</h2>
           <p>{formMode === "signup" ? t('login.join_platform') : formMode === "forgot" ? t('login.enter_reset_link') : t('login.manage_bookings')}</p>
-          
-          <div className="language-selector-premium">
-            <select 
-              value={i18n.language} 
-              onChange={(e) => changeLanguage(e.target.value)}
-              className="lang-select"
-            >
-              <option value="en">English</option>
-              <option value="hi">हिंदी (Hindi)</option>
-              <option value="mr">मराठी (Marathi)</option>
-              <option value="te">తెలుగు (Telugu)</option>
-              <option value="ta">தமிழ் (Tamil)</option>
-              <option value="ml">മലയാളം (Malayalam)</option>
-              <option value="kn">ಕನ್ನಡ (Kannada)</option>
-            </select>
-          </div>
         </div>
 
         {error && <div className="feedback-msg error">{error}</div>}
@@ -263,6 +305,22 @@ const Login = () => {
           ) : (
             <>{t('login.already_have_account')} <button onClick={() => { setFormMode("login"); setError(""); setMessage(""); }} className="link-btn">{t('login.sign_in')}</button></>
           )}
+        </div>
+        
+        {/* Quick language switch at bottom */}
+        <div className="language-selector-premium">
+          <select 
+            className="lang-select" 
+            value={i18n.language} 
+            onChange={(e) => {
+              i18n.changeLanguage(e.target.value);
+              localStorage.setItem("blinklean_lang_set", "true");
+            }}
+          >
+            {languages.map(l => (
+              <option key={l.code} value={l.code}>{l.name}</option>
+            ))}
+          </select>
         </div>
       </div>
     </div>
