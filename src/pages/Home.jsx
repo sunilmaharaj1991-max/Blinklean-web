@@ -79,14 +79,14 @@ const Home = () => {
 
     if (pincode.length === 6) {
       if (supportedCodes[pincode]) {
-        result.innerText = `Service is available in ${supportedCodes[pincode]}!`;
+        result.innerText = t('home.hero.service_available', { area: supportedCodes[pincode] });
         result.style.color = "#1B9B3A";
       } else {
-        result.innerText = "Sorry, service is not yet available in this area.";
+        result.innerText = t('home.hero.service_not_available');
         result.style.color = "#ef4444";
       }
     } else {
-      result.innerText = "Please enter a valid 6-digit pincode.";
+      result.innerText = t('home.hero.invalid_pincode');
       result.style.color = "#ef4444";
     }
   };
@@ -233,7 +233,7 @@ const Home = () => {
                 <i data-lucide="check-circle"></i>
               </div>
               <div className="stat-info">
-                <h3>5,000+</h3>
+                <h3>{t('home.stats.completed_count')}</h3>
                 <p>{t('home.stats.completed')}</p>
               </div>
             </div>
@@ -242,7 +242,7 @@ const Home = () => {
                 <i data-lucide="users"></i>
               </div>
               <div className="stat-info">
-                <h3>150+</h3>
+                <h3>{t('home.stats.staff_count')}</h3>
                 <p>{t('home.stats.staff')}</p>
               </div>
             </div>
@@ -251,7 +251,7 @@ const Home = () => {
                 <i data-lucide="leaf"></i>
               </div>
               <div className="stat-info">
-                <h3>100%</h3>
+                <h3>{t('home.stats.eco_count')}</h3>
                 <p>{t('home.stats.eco')}</p>
               </div>
             </div>
@@ -260,7 +260,7 @@ const Home = () => {
                 <i data-lucide="shield-check"></i>
               </div>
               <div className="stat-info">
-                <h3>Secure</h3>
+                <h3>{t('home.stats.secure_label')}</h3>
                 <p>{t('home.stats.secure')}</p>
               </div>
             </div>
@@ -269,7 +269,7 @@ const Home = () => {
                 <i data-lucide="star"></i>
               </div>
               <div className="stat-info">
-                <h3>Premium</h3>
+                <h3>{t('home.stats.premium_label')}</h3>
                 <p>{t('home.stats.premium')}</p>
               </div>
             </div>
@@ -370,7 +370,7 @@ const Home = () => {
                   src="https://images.unsplash.com/photo-1532996122724-e3c354a0b15b?auto=format&fit=crop&w=800&q=80"
                   alt="Scrap Recycling"
                 />
-                <div className="price-tag-simple highlight">Top Rates</div>
+                <div className="price-tag-simple highlight">{t('home.services.top_rates')}</div>
               </div>
               <div className="service-content">
                 <div className="service-icon-wrapper">
@@ -593,19 +593,19 @@ const Home = () => {
           <div className="trust-reassurance-strip">
             <div className="reassurance-item">
               <i data-lucide="shield-check"></i>
-              <span>Background-checked staff</span>
+              <span>{t('home.trust.reassurance_staff')}</span>
             </div>
             <div className="reassurance-item">
               <i data-lucide="sparkles"></i>
-              <span>Premium materials</span>
+              <span>{t('home.trust.reassurance_materials')}</span>
             </div>
             <div className="reassurance-item">
               <i data-lucide="message-circle"></i>
-              <span>WhatsApp Support</span>
+              <span>{t('home.trust.reassurance_support')}</span>
             </div>
             <div className="reassurance-item">
               <i data-lucide="award"></i>
-              <span>Quality Guarantee</span>
+              <span>{t('home.trust.reassurance_guarantee')}</span>
             </div>
           </div>
         </div>
@@ -764,10 +764,10 @@ const Home = () => {
                     <i data-lucide="star"></i> 4.8 (2.4k)
                   </div>
                   <div className="verified-tag">
-                    <i data-lucide="shield-check"></i> Verified
+                    <i data-lucide="shield-check"></i> {t('home.trending.verified')}
                   </div>
                 </div>
-                <div className="card-status-badge">Trending</div>
+                <div className="card-status-badge">{t('home.trending.trending')}</div>
               </div>
               <div className="trending-card-body">
                 <h3>{t('home.trending.bathroom_title')}</h3>
@@ -784,8 +784,8 @@ const Home = () => {
                 </div>
                 <div className="why-book-strip">
                   <ul>
-                    <li>Deep tile scrubbing</li>
-                    <li>Mirror and glass polishing</li>
+                    <li>{t('home.trending.benefit_tile')}</li>
+                    <li>{t('home.trending.benefit_glass')}</li>
                   </ul>
                 </div>
                 <div className="card-footer">
@@ -820,8 +820,8 @@ const Home = () => {
                 </p>
                 <div className="why-book-strip">
                   <ul>
-                    <li>Chimney & Exhaust care</li>
-                    <li>Cabinet degreasing</li>
+                    <li>{t('home.trending.benefit_chimney')}</li>
+                    <li>{t('home.trending.benefit_cabinet')}</li>
                   </ul>
                 </div>
                 <div className="card-footer">
@@ -856,8 +856,8 @@ const Home = () => {
                 </p>
                 <div className="why-book-strip">
                   <ul>
-                    <li>Fabric rejuvenating</li>
-                    <li>Stain removal expert</li>
+                    <li>{t('home.trending.benefit_fabric')}</li>
+                    <li>{t('home.trending.benefit_stain')}</li>
                   </ul>
                 </div>
                 <div className="card-footer">
@@ -892,8 +892,8 @@ const Home = () => {
                 </p>
                 <div className="why-book-strip">
                   <ul>
-                    <li>Eco-friendly chemicals</li>
-                    <li>Safe for delicate fabrics</li>
+                    <li>{t('home.trending.benefit_eco')}</li>
+                    <li>{t('home.trending.benefit_delicate')}</li>
                   </ul>
                 </div>
                 <div className="card-footer">
@@ -928,7 +928,7 @@ const Home = () => {
                 </p>
                 <div className="meta-row">
                   <div className="meta-item">
-                    <i data-lucide="clock"></i> 3 Hours
+                    <i data-lucide="clock"></i> 3 {t('home.trending.time_hours')}
                   </div>
                   <div className="meta-item">
                     <i data-lucide="sparkles"></i> {t('home.trending.meta_wax')}
@@ -1000,7 +1000,7 @@ const Home = () => {
             <div className="care-card" id="plan-bike">
               <div className="card-image-wrapper">
                 <img src="/assets/images/bike_detailing.png" alt="Bike Care" />
-                <span className="card-badge">Essential</span>
+                <span className="card-badge">{t('home.subscriptions.essential')}</span>
               </div>
               <div className="card-content">
                 <h3>{t('home.subscriptions.bike_title')}</h3>
@@ -1013,9 +1013,9 @@ const Home = () => {
                 </div>
                 <div className="why-book-strip" style={{ marginTop: "20px" }}>
                   <ul>
-                    <li>2 Premium Foam Washes</li>
-                    <li>Chain Cleaning & Lube</li>
-                    <li>Full Body Polish</li>
+                    <li>{t('home.subscriptions.benefit_bike1')}</li>
+                    <li>{t('home.subscriptions.benefit_bike2')}</li>
+                    <li>{t('home.subscriptions.benefit_bike3')}</li>
                   </ul>
                 </div>
               </div>
@@ -1028,7 +1028,7 @@ const Home = () => {
                   src="/assets/images/car_exterior_wash.png"
                   alt="Car Care"
                 />
-                <span className="card-badge popular">Most Popular</span>
+                <span className="card-badge popular">{t('home.subscriptions.most_popular')}</span>
               </div>
               <div className="card-content">
                 <h3>{t('home.subscriptions.car_title')}</h3>
@@ -1041,9 +1041,9 @@ const Home = () => {
                 </div>
                 <div className="why-book-strip" style={{ marginTop: "20px" }}>
                   <ul>
-                    <li>2 Full Interior Details</li>
-                    <li>Weekly Exterior Wash</li>
-                    <li>Tire & Dashboard Polish</li>
+                    <li>{t('home.subscriptions.benefit_car1')}</li>
+                    <li>{t('home.subscriptions.benefit_car2')}</li>
+                    <li>{t('home.subscriptions.benefit_car3')}</li>
                   </ul>
                 </div>
               </div>
@@ -1053,7 +1053,7 @@ const Home = () => {
             <div className="care-card" id="plan-home">
               <div className="card-image-wrapper">
                 <img src="/assets/images/2bhk_cleaning.png" alt="Home Care" />
-                <span className="card-badge">All-In-One</span>
+                <span className="card-badge">{t('home.subscriptions.all_in_one')}</span>
               </div>
               <div className="card-content">
                 <h3>{t('home.subscriptions.home_title')}</h3>
@@ -1066,9 +1066,9 @@ const Home = () => {
                 </div>
                 <div className="why-book-strip" style={{ marginTop: "20px" }}>
                   <ul>
-                    <li>1 Full Deep Cleaning</li>
-                    <li>2 Pest Control Sessions</li>
-                    <li>Priority Booking Access</li>
+                    <li>{t('home.subscriptions.benefit_home1')}</li>
+                    <li>{t('home.subscriptions.benefit_home2')}</li>
+                    <li>{t('home.subscriptions.benefit_home3')}</li>
                   </ul>
                 </div>
               </div>
@@ -1206,7 +1206,7 @@ const Home = () => {
                   data-lucide="check-circle"
                   style={{ color: "#22c55e", width: "18px" }}
                 ></i>
-                <span>Newspaper & Paper Waste</span>
+                <span>{t('home.scrap_promo.newspaper')}</span>
               </div>
               <div
                 style={{
@@ -1221,7 +1221,7 @@ const Home = () => {
                   data-lucide="check-circle"
                   style={{ color: "#22c55e", width: "18px" }}
                 ></i>
-                <span>Hard & Soft Plastics</span>
+                <span>{t('home.scrap_promo.plastics')}</span>
               </div>
               <div
                 style={{
@@ -1236,7 +1236,7 @@ const Home = () => {
                   data-lucide="check-circle"
                   style={{ color: "#22c55e", width: "18px" }}
                 ></i>
-                <span>Cardboard & Packaging</span>
+                <span>{t('home.scrap_promo.cardboard')}</span>
               </div>
               <div
                 style={{
@@ -1251,7 +1251,7 @@ const Home = () => {
                   data-lucide="check-circle"
                   style={{ color: "#22c55e", width: "18px" }}
                 ></i>
-                <span>Iron, Copper, Aluminum & Metals</span>
+                <span>{t('home.scrap_promo.metals')}</span>
               </div>
               <div
                 style={{
@@ -1266,7 +1266,7 @@ const Home = () => {
                   data-lucide="check-circle"
                   style={{ color: "#22c55e", width: "18px" }}
                 ></i>
-                <span>Electronic Waste</span>
+                <span>{t('home.scrap_promo.electronics')}</span>
               </div>
             </div>
             <p
@@ -1276,8 +1276,7 @@ const Home = () => {
                 marginTop: "15px",
               }}
             >
-              * Best market prices determined at pickup based on current
-              recycling rates.
+              {t('home.scrap_promo.prices_note')}
             </p>
             <div style={{ marginTop: "30px", textAlign: "center" }}>
               <Link
@@ -1322,7 +1321,7 @@ const Home = () => {
                 <div className="user-details">
                   <h4>Mahesh Gowda</h4>
                   <span className="user-meta">
-                    Verified Customer • Vijayanagar
+                    {t('home.testimonials.verified_customer')} • Vijayanagar
                   </span>
                 </div>
               </div>
@@ -1334,8 +1333,7 @@ const Home = () => {
                 <i data-lucide="star"></i>
               </div>
               <p className="premium-review-text">
-                “The bathroom cleaning service was excellent. The team arrived
-                on time and left the space spotless. Highly recommend!”
+                {t('home.testimonials.review1_text')}
               </p>
               <div className="premium-service-badge">
                 <i data-lucide="home"></i>
@@ -1367,7 +1365,7 @@ const Home = () => {
                 <div className="user-details">
                   <h4>Sowmya Reddy</h4>
                   <span className="user-meta">
-                    Diamond Member • Chandra Layout
+                    {t('home.testimonials.diamond_member')} • Chandra Layout
                   </span>
                 </div>
               </div>
@@ -1379,9 +1377,7 @@ const Home = () => {
                 <i data-lucide="star"></i>
               </div>
               <p className="premium-review-text">
-                “Very professional and affordable. Booking was simple and the
-                results were amazing. Will definitely book again for my monthly
-                maintenance.”
+                {t('home.testimonials.review2_text')}
               </p>
               <div className="premium-service-badge">
                 <i data-lucide="sparkles"></i>
@@ -1413,7 +1409,7 @@ const Home = () => {
                 <div className="user-details">
                   <h4>Ananth Kumar</h4>
                   <span className="user-meta">
-                    Verified Customer • Rajajinagar
+                    {t('home.testimonials.verified_customer')} • Rajajinagar
                   </span>
                 </div>
               </div>
@@ -1424,10 +1420,8 @@ const Home = () => {
                 <i data-lucide="star"></i>
                 <i data-lucide="star"></i>
               </div>
-              <p className="premium-review-text">
-                “Car cleaning service was quick and thorough. The team was
-                polite and used high-quality products. 5-stars for the
-                eco-friendly approach!”
+               <p className="premium-review-text">
+                {t('home.testimonials.review3_text')}
               </p>
               <div className="premium-service-badge">
                 <i data-lucide="car-front"></i>

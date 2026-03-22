@@ -52,7 +52,7 @@ const PageFallback = () => (
 
 const App = () => {
   const [showLanguageModal, setShowLanguageModal] = useState(() => {
-    return !localStorage.getItem('languageSelected');
+    return !localStorage.getItem('blinklean_lang_set');
   });
 
   return (

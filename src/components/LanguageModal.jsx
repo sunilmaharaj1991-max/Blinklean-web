@@ -19,7 +19,7 @@ const LanguageModal = ({ isOpen, onClose }) => {
 
   const handleLanguageSelect = (code) => {
     i18n.changeLanguage(code);
-    localStorage.setItem('languageSelected', 'true');
+    localStorage.setItem('blinklean_lang_set', 'true');
     onClose();
   };
 

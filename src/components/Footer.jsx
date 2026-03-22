@@ -47,7 +47,7 @@ const Footer = () => {
           <div className="footer-contact-info">
             <div className="contact-item">
               <i data-lucide="map-pin"></i>
-              <span>Vijayanagar, Bangalore</span>
+              <span>{t('footer.address')}</span>
             </div>
             <div className="contact-item">
               <i data-lucide="mail"></i>
@@ -65,9 +65,9 @@ const Footer = () => {
         <div className="container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
           <div className="footer-policy-links" style={{ display: 'flex', gap: '15px', flexWrap: 'wrap', justifyContent: 'center', fontSize: '0.85rem' }}>
             <Link to="/privacy-policy" style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>{t('footer.privacy_policy')}</Link>
-            <Link to="/terms-and-conditions" style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>Terms & Conditions</Link>
-            <Link to="/refund-and-cancellation-policy" style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>Refund Policy</Link>
-            <Link to="/equal-opportunity-policy" style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>Equal Opportunity</Link>
+            <Link to="/terms-and-conditions" style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>{t('footer.terms')}</Link>
+            <Link to="/refund-and-cancellation-policy" style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>{t('footer.refund')}</Link>
+            <Link to="/equal-opportunity-policy" style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>{t('footer.equal_opportunity')}</Link>
           </div>
           <p>&copy; 2026 Blinklean. {t('footer.all_rights_reserved')}</p>
         </div>

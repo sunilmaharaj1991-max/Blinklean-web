@@ -13,14 +13,22 @@
       "check_availability": "Check Availability",
       "avg_rating": "Average Rating",
       "happy_customers": "Happy Customers",
-      "verified_pros": "Verified Pros"
+      "verified_pros": "Verified Pros",
+      "service_available": "Service is available in {{area}}!",
+      "service_not_available": "Sorry, service is not yet available in this area.",
+      "invalid_pincode": "Please enter a valid 6-digit pincode."
     },
     "stats": {
       "completed": "Services Completed",
       "staff": "Background Checked Staff",
       "eco": "Eco-friendly Products",
       "secure": "Secure Payments",
-      "premium": "Premium Standards"
+      "premium": "Premium Standards",
+      "completed_count": "5,000+",
+      "staff_count": "150+",
+      "eco_count": "100%",
+      "secure_label": "Secure",
+      "premium_label": "Premium"
     },
     "services": {
       "title": "Our Professional Services",
@@ -35,7 +43,9 @@
       "scrap": "Scrap Recycling",
       "scrap_desc": "Sell your recyclable scrap materials and get instant pickup and payment at best market rates.",
       "learn_more": "Learn More",
-      "book_pickup": "Book Scrap Pickup"
+      "book_pickup": "Book Scrap Pickup",
+      "top_rates": "Top Rates",
+      "per_kg": "/KG"
     },
     "areas": {
       "title": "Servicing Reliably with Cleaning & Recycling Services",
@@ -69,7 +79,11 @@
       "card5_title": "Responsible Recycling",
       "card5_desc": "Scrap materials are collected responsibly and sent for proper recycling.",
       "card6_title": "Customer Support",
-      "card6_desc": "Our team is available to assist customers through WhatsApp and online support."
+      "card6_desc": "Our team is available to assist customers through WhatsApp and online support.",
+      "reassurance_staff": "Background-checked staff",
+      "reassurance_materials": "Premium materials",
+      "reassurance_support": "WhatsApp Support",
+      "reassurance_guarantee": "Quality Guarantee"
     },
     "faq": {
       "title": "Frequently Asked Questions",
@@ -117,7 +131,18 @@
       "meta_mins": "Mins",
       "meta_guarantee": "30-Day Guarantee",
       "meta_wax": "Wax Finish",
-      "starts_at": "Starts at"
+      "starts_at": "Starts at",
+      "verified": "Verified",
+      "trending": "Trending",
+      "time_hours": "Hours",
+      "benefit_tile": "Deep tile scrubbing",
+      "benefit_glass": "Mirror and glass polishing",
+      "benefit_chimney": "Chimney & Exhaust care",
+      "benefit_cabinet": "Cabinet degreasing",
+      "benefit_fabric": "Fabric rejuvenating",
+      "benefit_stain": "Stain removal expert",
+      "benefit_eco": "Eco-friendly chemicals",
+      "benefit_delicate": "Safe for delicate fabrics"
     },
     "subscriptions": {
       "badge": "MEMBERSHIP",
@@ -135,7 +160,19 @@
       "save_up_to": "Save up to",
       "best_value": "Best Value - 30% Off",
       "save_monthly": "Save ₹500+ monthly",
-      "comparison_note": "Individual bookings cost significantly more. Join 1,000+ members saving time and money."
+      "comparison_note": "Individual bookings cost significantly more. Join 1,000+ members saving time and money.",
+      "essential": "Essential",
+      "most_popular": "Most Popular",
+      "all_in_one": "All-In-One",
+      "benefit_bike1": "2 Premium Foam Washes",
+      "benefit_bike2": "Chain Cleaning & Lube",
+      "benefit_bike3": "Full Body Polish",
+      "benefit_car1": "2 Full Interior Details",
+      "benefit_car2": "Weekly Exterior Wash",
+      "benefit_car3": "Tire & Dashboard Polish",
+      "benefit_home1": "1 Full Deep Cleaning",
+      "benefit_home2": "2 Pest Control Sessions",
+      "benefit_home3": "Priority Booking Access"
     },
     "scrap_promo": {
       "badge": "MONETIZE WASTE",
@@ -146,7 +183,13 @@
       "scales": "Digital Weighing Scales",
       "payments": "Instant Cash/UPI Payment",
       "book_now": "Book Pickup Now",
-      "start_recycling": "Start Recycling Now"
+      "start_recycling": "Start Recycling Now",
+      "newspaper": "Newspaper & Paper Waste",
+      "plastics": "Hard & Soft Plastics",
+      "cardboard": "Cardboard & Packaging",
+      "metals": "Iron, Copper, Aluminum & Metals",
+      "electronics": "Electronic Waste",
+      "prices_note": "* Best market prices determined at pickup based on current recycling rates."
     },
     "testimonials": {
       "micro_text": "Verified reviews • Genuine feedback",
@@ -156,15 +199,87 @@
       "quality": "Quality Assured",
       "promised": "Service as Promised",
       "verified": "Verified Booking",
-      "highly_rated": "Highly Rated"
+      "highly_rated": "Highly Rated",
+      "verified_customer": "Verified Customer",
+      "diamond_member": "Diamond Member",
+      "review1_text": "“The bathroom cleaning service was excellent. The team arrived on time and left the space spotless. Highly recommend!”",
+      "review2_text": "“Very professional and affordable. Booking was simple and the results were amazing. Will definitely book again for my monthly maintenance.”",
+      "review3_text": "“Car cleaning service was quick and thorough. The team was polite and used high-quality products. 5-stars for the eco-friendly approach!”"
     },
     "community": {
       "badge": "COMMUNITY FIRST",
       "title": "Our Green Initiatives",
       "desc": "Join the Blinklean movement to recycle responsibly and protect our environment for future generations."
+    },
+    "services_page": {
+      "hero_title": "Professional Services at Your Doorstep",
+      "hero_subtitle": "Choose from our range of tech-enabled services designed for the modern urban lifestyle.",
+      "residential_title": "Full House Deep Cleaning",
+      "residential_desc": "Complete restoration of your living spaces by experts.",
+      "deep_cleaning_title": "Kitchen & Bathroom Deep Cleaning",
+      "deep_cleaning_desc": "Targeted cleaning for high-utility hygiene areas.",
+      "vehicle_care_title": "Waterless Vehicle Care",
+      "vehicle_care_desc": "Eco-friendly detailing that saves water and adds shine.",
+      "laundry_title": "Fabric Care & Laundry",
+      "laundry_desc": "Professional garment care delivered to your door.",
+      "scrap_cash_title": "Turn Your Scrap into Cash!",
+      "scrap_cash_desc": "Book a doorstep pickup for your recyclable materials today.",
+      "bhk1_title": "1BHK Cleaning",
+      "bhk1_desc": "Detailed floor-to-ceiling cleaning for compact living spaces. Includes dust removal and sanitization.",
+      "bhk2_title": "2BHK Cleaning",
+      "bhk2_desc": "Thorough deep clean for small families. Covers kitchen greasing, bathroom scaling, and floor polishing.",
+      "bhk3_title": "3BHK Cleaning",
+      "bhk3_desc": "Full-spectrum home detailing for large apartments. Every corner meticulously scrubbed and polished.",
+      "kitchen_title": "Kitchen Cleaning",
+      "kitchen_desc": "High-intensity degreasing for chimneys, cabinets, and tiles. Restores your kitchen to showroom shine.",
+      "bathroom_title": "Bathroom Cleaning",
+      "bathroom_desc": "Descaling of fittings and anti-bacterial scrub for tiles and floors. Hygiene focused deep clean.",
+      "sofa_title": "Sofa Cleaning",
+      "sofa_desc": "Premium foam-based extraction for fabric and leather. Removes deep-seated allergens and stains.",
+      "car_wash_title": "Waterless Polish Wash",
+      "car_wash_desc": "Premium waterless exterior detailing using eco-safe polymer sprays. Saves 200L of water while leaving a high-gloss protective wax coating.",
+      "car_care_title": "Waterless Full Care",
+      "car_care_desc": "Comprehensive waterless treatment including exterior wax wash, interior vacuuming, and dashboard conditioning.",
+      "bike_detail_title": "Two-Wheeler Detail",
+      "bike_detail_desc": "Expert detailing for motorcycles and scooters. Includes chain lubrication and high-gloss paint protection.",
+      "wash_fold_title": "Wash & Fold",
+      "wash_fold_desc": "Daily wear laundry cleaned with premium detergents, neatly folded and packed. Minimum 3kg.",
+      "wash_iron_title": "Wash & Steam Iron",
+      "wash_iron_desc": "Complete garment care including washing and professional steam ironing for a crisp look.",
+      "dry_clean_title": "Premium Dry Cleaning",
+      "dry_clean_desc": "Gentle chemical cleaning for silks, woolens, and designer wear. Preserves fabric life and color."
+    },
+    "scrap_recycling_page": {
+      "hero_title": "Recycle & Earn Money",
+      "hero_subtitle": "Schedule a door-step scrap pick-up instantly. Professional collection and instant payment.",
+      "personal_details": "Personal Details",
+      "name_label": "Your Name",
+      "name_placeholder": "Enter Full Name",
+      "phone_label": "Phone Number",
+      "address_title": "Collection Address",
+      "address_label": "Complete Address",
+      "address_placeholder": "House/Flat No, Apartment Name, Street...",
+      "pincode_label": "Pincode",
+      "city_label": "City",
+      "selling_title": "What are you selling?",
+      "material_label": "Material Type",
+      "weight_label": "Weight (Approx Kg)",
+      "select_material": "Select Material",
+      "add_another": "Add Another Material",
+      "status_label": "Status",
+      "awaiting_collection": "Awaiting Collection",
+      "final_value_note": "* Final value will be determined at the time of collection based on current market rates and digital weighing scales.",
+      "start_booking": "Start On-Site Booking",
+      "bangalore": "Bangalore"
+    },
+    "whatsapp": {
+      "message": "Hello Blinklean, I am interested in your cleaning or scrap recycling services.",
+      "badge": "WhatsApp"
     }
   },
   "nav": {
+    "home": "Home",
+    "services": "Services",
     "home_cleaning": "Home Cleaning",
     "vehicle_care": "Vehicle Care",
     "laundry": "Laundry",
@@ -182,7 +297,11 @@
     "about_us": "About Us",
     "faq": "FAQ",
     "join_partner": "Join as Partner",
-    "privacy_policy": "Privacy Policy"
+    "privacy_policy": "Privacy Policy",
+    "address": "Vijayanagar, Bangalore",
+    "terms": "Terms & Conditions",
+    "refund": "Refund Policy",
+    "equal_opportunity": "Equal Opportunity"
   },
   "login": {
     "welcome_back": "Welcome Back",

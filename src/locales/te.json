@@ -165,6 +165,8 @@
     }
   },
   "nav": {
+    "home": "హోమ్",
+    "services": "సేవలు",
     "home_cleaning": "ఇంటి శుభ్రత",
     "vehicle_care": "వాహన సంరక్షణ",
     "laundry": "లాండ్రీ",

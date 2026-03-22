@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { auth } from '../firebase';
 
 const BottomNav = () => {
+  const { t } = useTranslation();
   const [user, setUser] = useState(null);
   const location = useLocation();
 
@@ -19,21 +21,21 @@ const BottomNav = () => {
     <div className="bottom-nav">
       <Link to="/" className={`bottom-nav-item ${isActive('/') ? 'active' : ''}`}>
         <i data-lucide="home"></i>
-        <span>Home</span>
+        <span>{t('nav.home')}</span>
       </Link>
       <Link to="/services" className={`bottom-nav-item ${isActive('/services') ? 'active' : ''}`}>
         <i data-lucide="layout-grid"></i>
-        <span>Services</span>
+        <span>{t('nav.services')}</span>
       </Link>
       {user ? (
         <Link to="/profile" className={`bottom-nav-item ${isActive('/profile') ? 'active' : ''}`}>
           <i data-lucide="user"></i>
-          <span>Profile</span>
+          <span>{t('nav.profile')}</span>
         </Link>
       ) : (
         <Link to="/login" className={`bottom-nav-item ${isActive('/login') ? 'active' : ''}`}>
           <i data-lucide="log-in"></i>
-          <span>Login</span>
+          <span>{t('nav.login')}</span>
         </Link>
       )}
     </div>

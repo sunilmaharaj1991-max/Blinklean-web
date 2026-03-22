@@ -165,6 +165,8 @@
     }
   },
   "nav": {
+    "home": "मुख्य पृष्ठ",
+    "services": "सेवाएँ",
     "home_cleaning": "घर की सफाई",
     "vehicle_care": "वाहन की देखभाल",
     "laundry": "लॉन्ड्री",
