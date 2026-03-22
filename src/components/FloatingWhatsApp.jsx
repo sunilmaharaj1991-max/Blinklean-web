@@ -1,17 +1,15 @@
 import React from 'react';
 import { MessageCircle } from 'lucide-react';
-import { useTranslation } from 'react-i18next';
 
 const FloatingWhatsApp = ({ 
   phoneNumber = "917022803582", 
+  message = "Hello Blinklean, I am interested in your cleaning or scrap recycling services.",
   bottom = '85px',
   right = '25px',
   left = 'auto',
-  backgroundColor = '#25d366'
+  backgroundColor = '#25d366',
+  badgeText = "WhatsApp"
 }) => {
-  const { t } = useTranslation();
-  const message = t('whatsapp.message');
-  const badgeText = t('whatsapp.badge');
   const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
 
   return (

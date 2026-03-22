@@ -1,13 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { useTranslation } from "react-i18next";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import BottomNav from "../components/BottomNav";
 import FloatingWhatsApp from "../components/FloatingWhatsApp";
 
 const Home = () => {
-  const { t } = useTranslation();
   const [activeFaq, setActiveFaq] = useState(null);
   const [heroOpacity, setHeroOpacity] = useState(1);
 
@@ -30,24 +28,29 @@ const Home = () => {
 
   const faqData = [
     {
-      question: t('home.faq.q1'),
-      answer: t('home.faq.a1'),
+      question: "What services does Blinklean provide?",
+      answer:
+        "Blinklean is your one-stop clean-tech platform providing professional House Cleaning, innovative Waterless Vehicle Detailing, Fabric-safe Laundry, and incentivized Scrap Recycling services directly at your doorstep.",
     },
     {
-      question: t('home.faq.q2'),
-      answer: t('home.faq.a2'),
+      question: "Which areas do you serve?",
+      answer:
+        "We are hyper-local in Bengaluru, Hassan and Amaravathi (AP), serving key areas including Vijayanagar, Chandra Layout, Attiguppe, Rajajinagar, Rajarajeshwari Nagar, Hassan and Amaravathi. We are rapidly expanding to other urban clusters!",
     },
     {
-      question: t('home.faq.q3'),
-      answer: t('home.faq.a3'),
+      question: "How can I book a scrap recycling service?",
+      answer:
+        "Simply click on the 'Sell Scrap on WhatsApp' button. Our AI-assisted chat will help you schedule a pickup. A verified agent will then visit with digital scales, pay you instantly at best market rates, and collect the items.",
     },
     {
-      question: t('home.faq.q4'),
-      answer: t('home.faq.a4'),
+      question: "Do you provide eco-friendly cleaning?",
+      answer:
+        "Absolutely! Environmental sustainability is at our core. Our vehicle cleaning is 100% waterless, saving up to 200L of water per wash, and we use biodegradable cleaning agents for all residential tasks.",
     },
     {
-      question: t('home.faq.q5'),
-      answer: t('home.faq.a5'),
+      question: "Will services be available through an app?",
+      answer:
+        "Yes, our AI-powered mobile app is in the final stages of development. It will feature real-time tracking, service history, and one-tap rebooking for a truly frictionless experience.",
     },
   ];
 
@@ -79,14 +82,14 @@ const Home = () => {
 
     if (pincode.length === 6) {
       if (supportedCodes[pincode]) {
-        result.innerText = t('home.hero.service_available', { area: supportedCodes[pincode] });
+        result.innerText = `Service is available in ${supportedCodes[pincode]}!`;
         result.style.color = "#1B9B3A";
       } else {
-        result.innerText = t('home.hero.service_not_available');
+        result.innerText = "Sorry, service is not yet available in this area.";
         result.style.color = "#ef4444";
       }
     } else {
-      result.innerText = t('home.hero.invalid_pincode');
+      result.innerText = "Please enter a valid 6-digit pincode.";
       result.style.color = "#ef4444";
     }
   };
@@ -102,100 +105,117 @@ const Home = () => {
 
       <header className="hero-premium">
         <div className="container hero-container-centered">
-          <div className="hero-stats-row reveal delay-300">
-            <div className="stat-item">
-              <span className="stat-value">12k+</span>
-              <span className="stat-label">{t('home.hero.avg_rating')}</span>
+          <div className="hero-content-centered reveal">
+            <div className="availability-pill">
+              <i data-lucide="map-pin"></i>
+              <span>India's first AI Powered QuickClean Platform</span>
             </div>
-            <div className="stat-divider"></div>
-            <div className="stat-item">
-              <span className="stat-value">25k+</span>
-              <span className="stat-label">{t('home.hero.happy_customers')}</span>
-            </div>
-            <div className="stat-divider"></div>
-            <div className="stat-item">
-              <span className="stat-value">100%</span>
-              <span className="stat-label">{t('home.hero.verified_pros')}</span>
-            </div>
-          </div>
-          <div className="availability-pill">
-            <i data-lucide="map-pin"></i>
-            <span>{t('home.hero.pill')}</span>
-          </div>
-          <h1
-            style={{
-              fontFamily: "var(--font-serif)",
-              fontWeight: "800",
-              fontSize: "clamp(2.1rem, 5vw, 4rem)",
-              lineHeight: "1.2",
-              marginBottom: "15px",
-              textAlign: "center"
-            }}
-          >
-            {t('home.hero.h1_line1')} <span style={{ color: "var(--primary)" }}>{t('home.hero.h1_ai')}</span>
-            <br />
-            {t('home.hero.h1_line2')}
-          </h1>
-          <p
-            className="tagline-premium"
-            style={{
-              fontFamily: "var(--font-accent)",
-              fontSize: "clamp(2.5rem, 6vw, 4.2rem)",
-              color: "#16a34a",
-              fontWeight: "700",
-              marginBottom: "30px",
-              display: "block",
-              textShadow: "0 2px 4px rgba(0,0,0,0.05)",
-              transform: "rotate(-1deg)",
-            }}
-          >
-            {t('home.hero.tagline')}
-          </p>
-          <p
-            className="hero-subtext"
-            style={{
-              fontSize: "1.25rem",
-              opacity: "0.9",
-              maxWidth: "800px",
-              margin: "0 auto 30px",
-              lineHeight: "1.6",
-            }}
-          >
-            {t('home.hero.subtext')}
-          </p>
-
-          <div className="hero-cta-buttons">
-            <Link to="/services" className="btn btn-primary btn-lg">
-              <i data-lucide="sparkles"></i>
-              {t('home.hero.explore_services')}
-            </Link>
-            <Link
-              to="/scrap-booking"
-              className="btn btn-secondary btn-lg"
-            >
-              <i data-lucide="shopping-basket"></i>
-              {t('home.hero.sell_scrap')}
-            </Link>
-          </div>
-
-          <div className="hero-pincode-checker-centered">
-            <input
-              type="text"
-              placeholder={t('home.hero.pincode_placeholder')}
-              id="pincode"
-            />
-            <button onClick={() => checkServiceArea()}>
-              {t('home.hero.check_availability')}
-            </button>
-            <p
-              id="pincode-result"
+            <h1
               style={{
-                marginTop: "10px",
-                fontSize: "0.85rem",
-                fontWeight: "600",
-                minHeight: "1.2rem",
+                fontFamily: "var(--font-serif)",
+                fontWeight: "800",
+                fontSize: "clamp(2.1rem, 5vw, 4rem)",
+                lineHeight: "1.2",
+                marginBottom: "15px",
+                textAlign: "center"
               }}
-            ></p>
+            >
+              India's first <span style={{ color: "var(--primary)" }}>AI Powered</span>
+              <br />
+              QuickClean Platform
+            </h1>
+            <p
+              className="tagline-premium"
+              style={{
+                fontFamily: "var(--font-accent)",
+                fontSize: "clamp(2.5rem, 6vw, 4.2rem)",
+                color: "#16a34a",
+                fontWeight: "700",
+                marginBottom: "30px",
+                display: "block",
+                textShadow: "0 2px 4px rgba(0,0,0,0.05)",
+                transform: "rotate(-1deg)",
+              }}
+            >
+              Clean in a Blink!
+            </p>
+            <p
+              className="hero-subtext"
+              style={{
+                fontSize: "1.25rem",
+                opacity: "0.9",
+                maxWidth: "800px",
+                margin: "0 auto 30px",
+                lineHeight: "1.6",
+              }}
+            >
+              Doorstep Smart Cleaning & Recycling tailored for your modern
+              lifestyle. Expert care for your Home, Vehicles, and Fabrics.
+            </p>
+
+            <div className="hero-cta-buttons">
+              <Link to="/services" className="btn btn-primary btn-lg">
+                <i data-lucide="sparkles"></i>
+                Explore Services
+              </Link>
+              <Link
+                to="/scrap-booking"
+                className="btn btn-secondary btn-lg"
+              >
+                <i data-lucide="shopping-basket"></i>
+                Sell Scrap Now
+              </Link>
+            </div>
+
+            <div className="hero-pincode-checker-centered">
+              <input
+                type="text"
+                placeholder="Enter Pincode (e.g. 560066)"
+                id="pincode"
+              />
+              <button onClick={() => checkServiceArea()}>
+                Check Availability
+              </button>
+              <p
+                id="pincode-result"
+                style={{
+                  marginTop: "10px",
+                  fontSize: "0.85rem",
+                  fontWeight: "600",
+                  minHeight: "1.2rem",
+                }}
+              ></p>
+            </div>
+
+            <div className="hero-trust-strip">
+              <div className="indicator-badge">
+                <div className="indicator-icon-sm">
+                  <i data-lucide="star"></i>
+                </div>
+                <div className="indicator-info">
+                  <strong>4.8</strong>
+                  <span>Avg Rating</span>
+                </div>
+              </div>
+              <div className="indicator-badge">
+                <div className="indicator-icon-sm">
+                  <i data-lucide="users"></i>
+                </div>
+                <div className="indicator-info">
+                  <strong>1,000+</strong>
+                  <span>Happy Customers</span>
+                </div>
+              </div>
+              <div className="indicator-badge">
+                <div className="indicator-icon-sm">
+                  <i data-lucide="shield-check"></i>
+                </div>
+                <div className="indicator-info">
+                  <strong>Verified</strong>
+                  <span>Professionals</span>
+                </div>
+              </div>
+            </div>
           </div>
 
           {/*  Hero Slider Illustration (Restored)  */}
@@ -227,51 +247,35 @@ const Home = () => {
         </div>
 
         <div className="container reveal">
-          <div className="key-stats-grid">
-            <div className="key-stat-card">
-              <div className="stat-icon">
-                <i data-lucide="check-circle"></i>
-              </div>
-              <div className="stat-info">
-                <h3>{t('home.stats.completed_count')}</h3>
-                <p>{t('home.stats.completed')}</p>
-              </div>
+          <div className="hero-mini-stats">
+            <div className="mini-stat">
+              <i data-lucide="check-circle"></i>
+              <span>
+                <strong
+                  className="count-up"
+                  data-target="1000"
+                  style={{ color: "var(--primary)", fontSize: "1.2rem" }}
+                >
+                  1,000
+                </strong>
+                + Services Completed
+              </span>
             </div>
-            <div className="key-stat-card">
-              <div className="stat-icon">
-                <i data-lucide="users"></i>
-              </div>
-              <div className="stat-info">
-                <h3>{t('home.stats.staff_count')}</h3>
-                <p>{t('home.stats.staff')}</p>
-              </div>
+            <div className="mini-stat">
+              <i data-lucide="user-check"></i>
+              <span>Background Checked Staff</span>
             </div>
-            <div className="key-stat-card">
-              <div className="stat-icon">
-                <i data-lucide="leaf"></i>
-              </div>
-              <div className="stat-info">
-                <h3>{t('home.stats.eco_count')}</h3>
-                <p>{t('home.stats.eco')}</p>
-              </div>
+            <div className="mini-stat">
+              <i data-lucide="leaf"></i>
+              <span>Eco-Friendly Products</span>
             </div>
-            <div className="key-stat-card">
-              <div className="stat-icon">
-                <i data-lucide="shield-check"></i>
-              </div>
-              <div className="stat-info">
-                <h3>{t('home.stats.secure_label')}</h3>
-                <p>{t('home.stats.secure')}</p>
-              </div>
+            <div className="mini-stat">
+              <i data-lucide="lock"></i>
+              <span>Secure Payments</span>
             </div>
-            <div className="key-stat-card highlight">
-              <div className="stat-icon">
-                <i data-lucide="star"></i>
-              </div>
-              <div className="stat-info">
-                <h3>{t('home.stats.premium_label')}</h3>
-                <p>{t('home.stats.premium')}</p>
-              </div>
+            <div className="mini-stat">
+              <i data-lucide="award"></i>
+              <span>Premium Standards</span>
             </div>
           </div>
         </div>
@@ -280,110 +284,98 @@ const Home = () => {
       {/*  Our Professional Services Section  */}
       <section id="our-services" className="our-services-section reveal">
         <div className="container">
-          <div className="section-header reveal">
-            <h2 className="section-title">{t('home.services.title')}</h2>
-            <p className="section-subtitle">
-              {t('home.services.subtitle')}
-            </p>
+          <div className="section-header">
+            <h2>Our Professional Services</h2>
+            <p>We provide reliable doorstep cleaning and recycling services.</p>
           </div>
 
           <div className="services-grid">
-            {/* Home Cleaning */}
-            <div className="service-card reveal">
+            {/*  Service Card 1: Home Cleaning  */}
+            <div className="service-card">
               <div className="service-image-wrapper">
-                <img
-                  src="https://images.unsplash.com/photo-1581578731548-c64695cc6954?auto=format&fit=crop&w=800&q=80"
-                  alt="Home Cleaning"
-                />
-                <div className="price-tag-simple">
-                  {t('home.services.starting_at')} ₹299
-                </div>
+                <img src="/assets/images/service_home_workerless.png" alt="Professional Home Deep Cleaning Service" />
               </div>
-              <div className="service-content">
-                <div className="service-icon-wrapper">
-                  <i data-lucide="home"></i>
-                </div>
-                <h3>{t('home.services.home_cleaning')}</h3>
-                <p>
-                  {t('home.services.home_desc')}
-                </p>
-                <Link to="/home-cleaning" className="btn btn-outline">
-                  {t('home.services.learn_more')} <i data-lucide="arrow-right"></i>
-                </Link>
+              <div className="service-icon-wrapper">
+                <i data-lucide="home"></i>
               </div>
+              <h3>House Cleaning</h3>
+              <p>
+                Professional cleaning for kitchens, bathrooms, bedrooms and full
+                house interiors.
+              </p>
+              <div className="price-tag-simple">Starting at ₹599</div>
+              <Link to="/services#home-cleaning" className="btn btn-outline">
+                Learn More
+              </Link>
             </div>
 
-            {/* Vehicle Cleaning */}
-            <div className="service-card reveal delay-100">
+            {/*  Service Card 2: Vehicle Cleaning  */}
+            <div className="service-card">
               <div className="service-image-wrapper">
                 <img
-                  src="https://images.unsplash.com/photo-1520340356584-f9917d1eea6f?auto=format&fit=crop&w=800&q=80"
-                  alt="Vehicle Cleaning"
+                  src="/assets/images/service_vehicle_workerless.png"
+                  alt="Waterless Doorstep Vehicle Cleaning and Detailing"
                 />
-                <div className="price-tag-simple">
-                  {t('home.services.starting_at')} ₹149
-                </div>
               </div>
-              <div className="service-content">
-                <div className="service-icon-wrapper">
-                  <i data-lucide="car"></i>
-                </div>
-                <h3>{t('home.services.vehicle_cleaning')}</h3>
-                <p>
-                  {t('home.services.vehicle_desc')}
-                </p>
-                <Link to="/vehicle-cleaning" className="btn btn-outline">
-                  {t('home.services.learn_more')} <i data-lucide="arrow-right"></i>
-                </Link>
+              <div className="service-icon-wrapper">
+                <i data-lucide="car"></i>
               </div>
+              <h3>Vehicle Cleaning</h3>
+              <p>
+                Premium waterless cleaning service for cars, motorcycles,
+                auto-rickshaws and bicycles.
+              </p>
+              <div className="price-tag-simple">Starting at ₹99</div>
+              <Link to="/services#vehicle-cleaning" className="btn btn-outline">
+                Learn More
+              </Link>
             </div>
 
-            {/* Laundry */}
-            <div className="service-card reveal delay-200">
+            {/*  Service Card 3: Laundry Services  */}
+            <div className="service-card">
               <div className="service-image-wrapper">
                 <img
-                  src="https://images.unsplash.com/photo-1545173153-5dd9a739679c?auto=format&fit=crop&w=800&q=80"
-                  alt="Laundry Services"
+                  src="/assets/images/gen_laundry.png"
+                  alt="Doorstep Laundry, Wash and Fold, and Steam Ironing"
                 />
-                <div className="price-tag-simple">
-                  {t('home.services.starting_at')} ₹9/KG
-                </div>
               </div>
-              <div className="service-content">
-                <div className="service-icon-wrapper">
-                  <i data-lucide="washing-machine"></i>
-                </div>
-                <h3>{t('home.services.laundry')}</h3>
-                <p>
-                  {t('home.services.laundry_desc')}
-                </p>
-                <Link to="/laundry" className="btn btn-outline">
-                  {t('home.services.learn_more')} <i data-lucide="arrow-right"></i>
-                </Link>
+              <div className="service-icon-wrapper">
+                <i data-lucide="shirt"></i>
               </div>
+              <h3>Laundry Services</h3>
+              <p>
+                Washing, folding and steam ironing services handled by
+                professionals.
+              </p>
+              <div className="price-tag-simple">Starting at ₹49</div>
+              <Link to="/services#laundry" className="btn btn-outline">
+                Learn More
+              </Link>
             </div>
 
-            {/* Scrap */}
-            <div className="service-card reveal delay-300">
+            {/*  Service Card 4: Scrap Recycling  */}
+            <div className="service-card">
               <div className="service-image-wrapper">
                 <img
-                  src="https://images.unsplash.com/photo-1532996122724-e3c354a0b15b?auto=format&fit=crop&w=800&q=80"
-                  alt="Scrap Recycling"
+                  src="/assets/images/service_scrap_workerless.png"
+                  alt="Responsible Doorstep Scrap Collection and Recycling"
                 />
-                <div className="price-tag-simple highlight">{t('home.services.top_rates')}</div>
               </div>
-              <div className="service-content">
-                <div className="service-icon-wrapper">
-                  <i data-lucide="recycle"></i>
-                </div>
-                <h3>{t('home.services.scrap')}</h3>
-                <p>
-                  {t('home.services.scrap_desc')}
-                </p>
-                <Link to="/scrap-booking" className="btn btn-primary">
-                  {t('home.services.book_pickup')}
-                </Link>
+              <div className="service-icon-wrapper">
+                <i data-lucide="recycle"></i>
               </div>
+              <h3>Scrap Recycling</h3>
+              <p>
+                Sell your recyclable scrap materials and get instant pickup and
+                payment.
+              </p>
+              <Link
+                to="/scrap-booking"
+                className="btn btn-secondary"
+              >
+                <i data-lucide="calendar"></i>
+                Book Scrap Pickup
+              </Link>
             </div>
           </div>
         </div>
@@ -394,9 +386,10 @@ const Home = () => {
         <div className="container">
           <div className="service-areas-container">
             <div className="service-areas-content">
-              <h2>{t('home.areas.title')}</h2>
+              <h2>Servicing Reliably with Cleaning & Recycling Services</h2>
               <p className="section-desc">
-                {t('home.areas.desc')}
+                Our professional team provides doorstep cleaning and recycling
+                services.
               </p>
 
               <div
@@ -430,7 +423,8 @@ const Home = () => {
 
               <div className="service-areas-cta">
                 <p>
-                  {t('home.areas.cta')}
+                  Looking for cleaning services near you? Contact Blinklean
+                  today.
                 </p>
                 <div className="area-buttons">
                   <a
@@ -439,10 +433,10 @@ const Home = () => {
                     className="btn btn-wa-area"
                   >
                     <i data-lucide="message-circle"></i>
-                    {t('home.areas.whatsapp_cta')}
+                    Contact Us on WhatsApp
                   </a>
                   <a href="#our-services" className="btn btn-secondary">
-                    {t('home.hero.explore_services')}
+                    Explore Our Services
                   </a>
                 </div>
               </div>
@@ -462,74 +456,73 @@ const Home = () => {
       <section id="how-it-works" className="process-section reveal">
         <div className="container">
           <div className="section-header">
-            <h2>{t('home.process.title')}</h2>
+            <h2>How Blinklean Works</h2>
             <p>
-              {t('home.process.subtitle')}
+              Getting professional cleaning or scrap pickup is simple and
+              hassle-free.
             </p>
           </div>
 
           <div className="process-grid">
-            {/* Step 1 */}
+            {/*  Step 1  */}
             <div className="process-step">
               <div className="step-icon-box">
                 <img
-                   src="https://images.unsplash.com/photo-1516738901171-8eb4fc13bd20?auto=format&fit=crop&w=400&q=80"
+                  src="assets/images/choose_service_works.png"
                   alt="Choose a Service"
                 />
                 <i data-lucide="layout-grid"></i>
                 <div className="step-number-badge">1</div>
               </div>
-              <h3>{t('home.process.step1_title')}</h3>
+              <h3>Choose a Service</h3>
               <p>
-                {t('home.process.step1_desc')}
+                Browse our services including home cleaning, vehicle cleaning,
+                laundry services, and scrap recycling.
               </p>
             </div>
 
-            {/* Step 2 */}
+            {/*  Step 2  */}
             <div className="process-step" style={{ transitionDelay: "100ms" }}>
               <div className="step-icon-box">
-                <img
-                   src="https://images.unsplash.com/photo-1596524430615-b46475ddff6e?auto=format&fit=crop&w=400&q=80"
-                  alt="Contact Us"
-                />
+                <img src="assets/images/contact_us_works.png" alt="Contact Us" />
                 <i data-lucide="message-circle"></i>
                 <div className="step-number-badge">2</div>
               </div>
-              <h3>{t('home.process.step2_title')}</h3>
+              <h3>Contact Us</h3>
               <p>
-                {t('home.process.step2_desc')}
+                Reach out through WhatsApp or our platform to request the
+                service you need.
               </p>
             </div>
 
-            {/* Step 3 */}
+            {/*  Step 3  */}
             <div className="process-step" style={{ transitionDelay: "200ms" }}>
               <div className="step-icon-box">
-                <img
-                   src="https://images.unsplash.com/photo-1506784983877-45594efa4cbe?auto=format&fit=crop&w=400&q=80"
-                  alt="Schedule"
-                />
+                <img src="assets/images/schedule_service_works.png" alt="Schedule" />
                 <i data-lucide="calendar"></i>
                 <div className="step-number-badge">3</div>
               </div>
-              <h3>{t('home.process.step3_title')}</h3>
+              <h3>Schedule the Service</h3>
               <p>
-                {t('home.process.step3_desc')}
+                Our team coordinates with you and schedules the service at your
+                convenient time.
               </p>
             </div>
 
-            {/* Step 4 */}
+            {/*  Step 4  */}
             <div className="process-step" style={{ transitionDelay: "300ms" }}>
               <div className="step-icon-box">
                 <img
-                   src="https://images.unsplash.com/photo-1527515545081-5db817172677?auto=format&fit=crop&w=400&q=80"
-                  alt="Service Delivered"
+                  src="assets/images/service_delivered_works.png"
+                  alt="Professional Service"
                 />
                 <i data-lucide="sparkles"></i>
                 <div className="step-number-badge">4</div>
               </div>
-              <h3>{t('home.process.step4_title')}</h3>
+              <h3>Service Delivered</h3>
               <p>
-                {t('home.process.step4_desc')}
+                Our trained team arrives at your location and completes the
+                service efficiently.
               </p>
             </div>
           </div>
@@ -539,73 +532,139 @@ const Home = () => {
       <section id="trust" className="trust-section reveal">
         <div className="container">
           <div className="trust-header">
-            <h2>{t('home.trust.title')}</h2>
+            <h2>Why Customers Trust Blinklean</h2>
             <p>
-              {t('home.trust.subtitle')}
+              We are committed to providing reliable, professional, and
+              eco-friendly cleaning and recycling services.
             </p>
           </div>
 
           <div className="trust-grid">
+            {/*  Feature 1: Verified Professionals  */}
             <div className="trust-card">
+              <div className="trust-image-wrapper">
+                <img
+                  src="/assets/images/verified_pro_trust.png"
+                  alt="Verified Professionals"
+                />
+              </div>
               <div className="trust-icon-box">
                 <i data-lucide="user-check"></i>
               </div>
-              <h3>{t('home.trust.card1_title')}</h3>
-              <p>{t('home.trust.card1_desc')}</p>
+              <h3>Verified Professionals</h3>
+              <p>
+                Our team members are trained and verified to provide safe and
+                reliable services.
+              </p>
             </div>
+
+            {/*  Feature 2: Eco-Friendly Cleaning  */}
             <div className="trust-card">
+              <div className="trust-image-wrapper">
+                <img
+                  src="/assets/images/eco_friendly.png"
+                  alt="Eco-Friendly Cleaning"
+                />
+              </div>
               <div className="trust-icon-box">
                 <i data-lucide="leaf"></i>
               </div>
-              <h3>{t('home.trust.card2_title')}</h3>
-              <p>{t('home.trust.card2_desc')}</p>
+              <h3>Eco-Friendly Cleaning</h3>
+              <p>
+                We use environmentally friendly cleaning methods and waterless
+                vehicle cleaning solutions.
+              </p>
             </div>
+
+            {/*  Feature 3: Transparent Process  */}
             <div className="trust-card">
+              <div className="trust-image-wrapper">
+                <img
+                  src="/assets/images/tracking_app.png"
+                  alt="Transparent Process"
+                />
+              </div>
               <div className="trust-icon-box">
                 <i data-lucide="clipboard-check"></i>
               </div>
-              <h3>{t('home.trust.card3_title')}</h3>
-              <p>{t('home.trust.card3_desc')}</p>
+              <h3>Transparent Process</h3>
+              <p>
+                Customers always know what service they are receiving with clear
+                communication.
+              </p>
             </div>
+
+            {/*  Feature 4: Doorstep Services  */}
             <div className="trust-card">
+              <div className="trust-image-wrapper">
+                <img
+                  src="/assets/images/doorstep_service.png"
+                  alt="Doorstep Services"
+                />
+              </div>
               <div className="trust-icon-box">
                 <i data-lucide="map-pin"></i>
               </div>
-              <h3>{t('home.trust.card4_title')}</h3>
-              <p>{t('home.trust.card4_desc')}</p>
+              <h3>Doorstep Services</h3>
+              <p>
+                All services are delivered directly at your location for maximum
+                convenience.
+              </p>
             </div>
+
+            {/*  Feature 5: Responsible Recycling  */}
             <div className="trust-card">
+              <div className="trust-image-wrapper">
+                <img
+                  src="/assets/images/responsible_recycling.png"
+                  alt="Responsible Recycling"
+                />
+              </div>
               <div className="trust-icon-box">
                 <i data-lucide="recycle"></i>
               </div>
-              <h3>{t('home.trust.card5_title')}</h3>
-              <p>{t('home.trust.card5_desc')}</p>
+              <h3>Responsible Recycling</h3>
+              <p>
+                Scrap materials are collected responsibly and sent for proper
+                recycling.
+              </p>
             </div>
+
+            {/*  Feature 6: Customer Support  */}
             <div className="trust-card">
+              <div className="trust-image-wrapper">
+                <img
+                  src="/assets/images/gen_bathroom.png"
+                  alt="Customer Support"
+                />
+              </div>
               <div className="trust-icon-box">
                 <i data-lucide="headset"></i>
               </div>
-              <h3>{t('home.trust.card6_title')}</h3>
-              <p>{t('home.trust.card6_desc')}</p>
+              <h3>Customer Support</h3>
+              <p>
+                Our team is available to assist customers through WhatsApp and
+                online support.
+              </p>
             </div>
           </div>
 
           <div className="trust-reassurance-strip">
             <div className="reassurance-item">
               <i data-lucide="shield-check"></i>
-              <span>{t('home.trust.reassurance_staff')}</span>
+              <span>Background-checked staff</span>
             </div>
             <div className="reassurance-item">
               <i data-lucide="sparkles"></i>
-              <span>{t('home.trust.reassurance_materials')}</span>
+              <span>Premium materials</span>
             </div>
             <div className="reassurance-item">
               <i data-lucide="message-circle"></i>
-              <span>{t('home.trust.reassurance_support')}</span>
+              <span>WhatsApp Support</span>
             </div>
             <div className="reassurance-item">
               <i data-lucide="award"></i>
-              <span>{t('home.trust.reassurance_guarantee')}</span>
+              <span>Quality Guarantee</span>
             </div>
           </div>
         </div>
@@ -617,14 +676,14 @@ const Home = () => {
       <section id="faq" className="faq-section reveal">
         <div className="container">
           <div className="faq-container">
-          <div className="section-header">
-            <h2
-              style={{ fontFamily: "var(--font-serif)", fontSize: "2.5rem" }}
-            >
-              {t('home.faq.title')}
-            </h2>
-            <p>{t('home.faq.subtitle')}</p>
-          </div>
+            <div className="section-header">
+              <h2
+                style={{ fontFamily: "var(--font-serif)", fontSize: "2.5rem" }}
+              >
+                Frequently Asked Questions
+              </h2>
+              <p>Find answers to common questions about Blinklean services.</p>
+            </div>
 
             <div className="faq-list">
               {faqData.map((faq, index) => (
@@ -659,50 +718,54 @@ const Home = () => {
                   marginBottom: "16px",
                 }}
               >
-                {t('home.app.pill')}
+                MOBILE APP
               </div>
               <h2>
-                {t('home.app.h2_line1')} <br />
-                <span style={{ color: "#2dd4bf" }}>{t('home.app.h2_highlight')}</span>
+                INDIA'S FIRST AI POWERED <br />
+                <span style={{ color: "#2dd4bf" }}>QUICKCLEAN PLATFORM</span>
               </h2>
               <p className="section-desc">
-                {t('home.app.desc')}
+                On-demand home services to empower urban households.
               </p>
 
               <div className="app-features-list">
-                {/* Feature 1 */}
+                {/*  Feature 1  */}
                 <div className="app-feature-item">
                   <i data-lucide="zap"></i>
-                  <h4>{t('home.app.feature1_title')}</h4>
+                  <h4>Easy Service Booking</h4>
                   <p>
-                    {t('home.app.feature1_desc')}
+                    Book home cleaning, vehicle cleaning, laundry, and scrap
+                    recycling services in seconds.
                   </p>
                 </div>
 
-                {/* Feature 2 */}
+                {/*  Feature 2  */}
                 <div className="app-feature-item">
                   <i data-lucide="map"></i>
-                  <h4>{t('home.app.feature2_title')}</h4>
+                  <h4>Track Your Service</h4>
                   <p>
-                    {t('home.app.feature2_desc')}
+                    Monitor the status of your cleaning or recycling request
+                    directly from the app.
                   </p>
                 </div>
 
-                {/* Feature 3 */}
+                {/*  Feature 3  */}
                 <div className="app-feature-item">
                   <i data-lucide="shield-check"></i>
-                  <h4>{t('home.app.feature3_title')}</h4>
+                  <h4>Secure Payments</h4>
                   <p>
-                    {t('home.app.feature3_desc')}
+                    Manage payments safely and transparently through the mobile
+                    platform.
                   </p>
                 </div>
 
-                {/* Feature 4 */}
+                {/*  Feature 4  */}
                 <div className="app-feature-item">
                   <i data-lucide="history"></i>
-                  <h4>{t('home.app.feature4_title')}</h4>
+                  <h4>Service History</h4>
                   <p>
-                    {t('home.app.feature4_desc')}
+                    Keep track of all your previous cleaning and recycling
+                    services in one place.
                   </p>
                 </div>
               </div>
@@ -710,7 +773,7 @@ const Home = () => {
               <div className="app-buttons">
                 <a href="#" className="btn btn-app-primary">
                   <i data-lucide="download"></i>
-                  {t('home.app.get_app')}
+                  Get the App (Coming Soon)
                 </a>
                 <a
                   href="https://wa.me/917022803582"
@@ -718,7 +781,7 @@ const Home = () => {
                   className="btn btn-secondary"
                 >
                   <i data-lucide="message-circle"></i>
-                  {t('home.areas.whatsapp_cta')}
+                  Contact Us on WhatsApp
                 </a>
               </div>
             </div>
@@ -740,14 +803,14 @@ const Home = () => {
           <div className="trending-header">
             <div className="section-header">
               <div className="trending-tag">
-                <i data-lucide="flame"></i> {t('home.trending.tag')}
+                <i data-lucide="flame"></i> Popular This Week
               </div>
               <h2
                 style={{ fontFamily: "var(--font-serif)", fontSize: "2.5rem" }}
               >
-                {t('home.trending.title')}
+                Trending Services
               </h2>
-              <p>{t('home.trending.subtitle')}</p>
+              <p>Highly rated services trusted by customers near you.</p>
             </div>
           </div>
 
@@ -764,33 +827,33 @@ const Home = () => {
                     <i data-lucide="star"></i> 4.8 (2.4k)
                   </div>
                   <div className="verified-tag">
-                    <i data-lucide="shield-check"></i> {t('home.trending.verified')}
+                    <i data-lucide="shield-check"></i> Verified
                   </div>
                 </div>
-                <div className="card-status-badge">{t('home.trending.trending')}</div>
+                <div className="card-status-badge">Trending</div>
               </div>
               <div className="trending-card-body">
-                <h3>{t('home.trending.bathroom_title')}</h3>
+                <h3>Bathroom Deep Cleaning</h3>
                 <p className="benefit-line">
-                  {t('home.trending.bathroom_desc')}
+                  Intensive cleaning for a germ-free bathroom.
                 </p>
                 <div className="meta-row">
                   <div className="meta-item">
-                    <i data-lucide="clock"></i> 90 {t('home.trending.meta_mins')}
+                    <i data-lucide="clock"></i> 90 Mins
                   </div>
                   <div className="meta-item">
-                    <i data-lucide="shield"></i> {t('home.trending.meta_guarantee')}
+                    <i data-lucide="shield"></i> 30-Day Guarantee
                   </div>
                 </div>
                 <div className="why-book-strip">
                   <ul>
-                    <li>{t('home.trending.benefit_tile')}</li>
-                    <li>{t('home.trending.benefit_glass')}</li>
+                    <li>Deep tile scrubbing</li>
+                    <li>Mirror and glass polishing</li>
                   </ul>
                 </div>
                 <div className="card-footer">
                   <div className="price-display">
-                    <span className="label">{t('home.trending.starts_at')}</span>
+                    <span className="label">Starts at</span>
                     <span className="amount">₹499</span>
                   </div>
                 </div>
@@ -814,19 +877,19 @@ const Home = () => {
                 </div>
               </div>
               <div className="trending-card-body">
-                <h3>{t('home.trending.kitchen_title')}</h3>
+                <h3>Kitchen Cleaning</h3>
                 <p className="benefit-line">
-                  {t('home.trending.kitchen_desc')}
+                  Deep degreasing and sanitization of your kitchen.
                 </p>
                 <div className="why-book-strip">
                   <ul>
-                    <li>{t('home.trending.benefit_chimney')}</li>
-                    <li>{t('home.trending.benefit_cabinet')}</li>
+                    <li>Chimney & Exhaust care</li>
+                    <li>Cabinet degreasing</li>
                   </ul>
                 </div>
                 <div className="card-footer">
                   <div className="price-display">
-                    <span className="label">{t('home.trending.starts_at')}</span>
+                    <span className="label">Starts at</span>
                     <span className="amount">₹1,299</span>
                   </div>
                 </div>
@@ -850,19 +913,19 @@ const Home = () => {
                 </div>
               </div>
               <div className="trending-card-body">
-                <h3>{t('home.trending.sofa_title')}</h3>
+                <h3>Sofa Spa Cleaning</h3>
                 <p className="benefit-line">
-                  {t('home.trending.sofa_desc')}
+                  Premium shampooing and stain removal for sofas.
                 </p>
                 <div className="why-book-strip">
                   <ul>
-                    <li>{t('home.trending.benefit_fabric')}</li>
-                    <li>{t('home.trending.benefit_stain')}</li>
+                    <li>Fabric rejuvenating</li>
+                    <li>Stain removal expert</li>
                   </ul>
                 </div>
                 <div className="card-footer">
                   <div className="price-display">
-                    <span className="label">{t('home.trending.starts_at')}</span>
+                    <span className="label">Starts at</span>
                     <span className="amount">₹599</span>
                   </div>
                 </div>
@@ -886,19 +949,19 @@ const Home = () => {
                 </div>
               </div>
               <div className="trending-card-body">
-                <h3>{t('home.trending.dry_cleaning_title')}</h3>
+                <h3>Premium Dry Cleaning</h3>
                 <p className="benefit-line">
-                  {t('home.trending.dry_cleaning_desc')}
+                  Professional care for your delicate clothes.
                 </p>
                 <div className="why-book-strip">
                   <ul>
-                    <li>{t('home.trending.benefit_eco')}</li>
-                    <li>{t('home.trending.benefit_delicate')}</li>
+                    <li>Eco-friendly chemicals</li>
+                    <li>Safe for delicate fabrics</li>
                   </ul>
                 </div>
                 <div className="card-footer">
                   <div className="price-display">
-                    <span className="label">{t('home.trending.starts_at')}</span>
+                    <span className="label">Starts at</span>
                     <span className="amount">₹149</span>
                   </div>
                 </div>
@@ -922,21 +985,21 @@ const Home = () => {
                 </div>
               </div>
               <div className="trending-card-body">
-                <h3>{t('home.trending.car_polish_title')}</h3>
+                <h3>Premium Car Polish</h3>
                 <p className="benefit-line">
-                  {t('home.trending.car_polish_desc')}
+                  Ultimate shine and protection for your car.
                 </p>
                 <div className="meta-row">
                   <div className="meta-item">
-                    <i data-lucide="clock"></i> 3 {t('home.trending.time_hours')}
+                    <i data-lucide="clock"></i> 3 Hours
                   </div>
                   <div className="meta-item">
-                    <i data-lucide="sparkles"></i> {t('home.trending.meta_wax')}
+                    <i data-lucide="sparkles"></i> Wax Finish
                   </div>
                 </div>
                 <div className="card-footer">
                   <div className="price-display">
-                    <span className="label">{t('home.trending.starts_at')}</span>
+                    <span className="label">Starts at</span>
                     <span className="amount">₹699</span>
                   </div>
                 </div>
@@ -949,7 +1012,7 @@ const Home = () => {
       <section id="subscriptions" className="smart-care-section">
         <div className="container care-plans-container">
           <div className="section-header">
-            <span className="ai-badge">{t('home.subscriptions.badge')}</span>
+            <span className="ai-badge">MEMBERSHIP</span>
             <h2
               style={{
                 fontFamily: "var(--font-serif)",
@@ -957,40 +1020,41 @@ const Home = () => {
                 marginTop: "10px",
               }}
             >
-              {t('home.subscriptions.title')}
+              Smart Care Plans
             </h2>
             <p>
-              {t('home.subscriptions.subtitle')}
+              Save more with regular maintenance plans designed for your
+              lifestyle.
             </p>
           </div>
 
           {/*  Smart Decision Helper  */}
           <div className="plan-helper">
-            <label>{t('home.subscriptions.helper_label')}</label>
+            <label>Who is this for?</label>
             <div className="helper-options">
               <button
                 className="helper-btn active"
                 onClick={() => highlightPlan("all")}
               >
-                {t('home.subscriptions.helper_everyone')}
+                Everyone
               </button>
               <button
                 className="helper-btn"
                 onClick={() => highlightPlan("bike")}
               >
-                {t('home.subscriptions.helper_riders')}
+                Daily Riders
               </button>
               <button
                 className="helper-btn"
                 onClick={() => highlightPlan("car")}
               >
-                {t('home.subscriptions.helper_drivers')}
+                Daily Drivers
               </button>
               <button
                 className="helper-btn"
                 onClick={() => highlightPlan("home")}
               >
-                {t('home.subscriptions.helper_families')}
+                Busy Families
               </button>
             </div>
           </div>
@@ -1000,22 +1064,22 @@ const Home = () => {
             <div className="care-card" id="plan-bike">
               <div className="card-image-wrapper">
                 <img src="/assets/images/bike_detailing.png" alt="Bike Care" />
-                <span className="card-badge">{t('home.subscriptions.essential')}</span>
+                <span className="card-badge">Essential</span>
               </div>
               <div className="card-content">
-                <h3>{t('home.subscriptions.bike_title')}</h3>
+                <h3>Bike Care Plan</h3>
                 <div className="price-box">
                   <span className="price-amount">₹299</span>
-                  <span className="price-period">{t('home.subscriptions.per_month')}</span>
+                  <span className="price-period">/month</span>
                   <div className="savings-highlight">
-                    <i data-lucide="trending-down"></i> {t('home.subscriptions.save_up_to')} 20%
+                    <i data-lucide="trending-down"></i> Save up to 20%
                   </div>
                 </div>
                 <div className="why-book-strip" style={{ marginTop: "20px" }}>
                   <ul>
-                    <li>{t('home.subscriptions.benefit_bike1')}</li>
-                    <li>{t('home.subscriptions.benefit_bike2')}</li>
-                    <li>{t('home.subscriptions.benefit_bike3')}</li>
+                    <li>2 Premium Foam Washes</li>
+                    <li>Chain Cleaning & Lube</li>
+                    <li>Full Body Polish</li>
                   </ul>
                 </div>
               </div>
@@ -1028,22 +1092,22 @@ const Home = () => {
                   src="/assets/images/car_exterior_wash.png"
                   alt="Car Care"
                 />
-                <span className="card-badge popular">{t('home.subscriptions.most_popular')}</span>
+                <span className="card-badge popular">Most Popular</span>
               </div>
               <div className="card-content">
-                <h3>{t('home.subscriptions.car_title')}</h3>
+                <h3>Car Care Plan</h3>
                 <div className="price-box">
                   <span className="price-amount">₹799</span>
-                  <span className="price-period">{t('home.subscriptions.per_month')}</span>
+                  <span className="price-period">/month</span>
                   <div className="savings-highlight">
-                    <i data-lucide="trending-down"></i> {t('home.subscriptions.best_value')}
+                    <i data-lucide="trending-down"></i> Best Value - 30% Off
                   </div>
                 </div>
                 <div className="why-book-strip" style={{ marginTop: "20px" }}>
                   <ul>
-                    <li>{t('home.subscriptions.benefit_car1')}</li>
-                    <li>{t('home.subscriptions.benefit_car2')}</li>
-                    <li>{t('home.subscriptions.benefit_car3')}</li>
+                    <li>2 Full Interior Details</li>
+                    <li>Weekly Exterior Wash</li>
+                    <li>Tire & Dashboard Polish</li>
                   </ul>
                 </div>
               </div>
@@ -1053,22 +1117,22 @@ const Home = () => {
             <div className="care-card" id="plan-home">
               <div className="card-image-wrapper">
                 <img src="/assets/images/2bhk_cleaning.png" alt="Home Care" />
-                <span className="card-badge">{t('home.subscriptions.all_in_one')}</span>
+                <span className="card-badge">All-In-One</span>
               </div>
               <div className="card-content">
-                <h3>{t('home.subscriptions.home_title')}</h3>
+                <h3>Home Care Membership</h3>
                 <div className="price-box">
                   <span className="price-amount">₹1,999</span>
-                  <span className="price-period">{t('home.subscriptions.per_month')}</span>
+                  <span className="price-period">/month</span>
                   <div className="savings-highlight">
-                    <i data-lucide="trending-down"></i> {t('home.subscriptions.save_monthly')}
+                    <i data-lucide="trending-down"></i> Save ₹500+ monthly
                   </div>
                 </div>
                 <div className="why-book-strip" style={{ marginTop: "20px" }}>
                   <ul>
-                    <li>{t('home.subscriptions.benefit_home1')}</li>
-                    <li>{t('home.subscriptions.benefit_home2')}</li>
-                    <li>{t('home.subscriptions.benefit_home3')}</li>
+                    <li>1 Full Deep Cleaning</li>
+                    <li>2 Pest Control Sessions</li>
+                    <li>Priority Booking Access</li>
                   </ul>
                 </div>
               </div>
@@ -1076,7 +1140,8 @@ const Home = () => {
           </div>
 
           <p className="comparison-note">
-            {t('home.subscriptions.comparison_note')}
+            Individual bookings cost significantly more.
+            <strong>Join 1,000+ members</strong> saving time and money.
           </p>
         </div>
       </section>
@@ -1100,7 +1165,7 @@ const Home = () => {
               className="ai-badge"
               style={{ background: "#e0f2fe", color: "#009ee3" }}
             >
-              {t('home.scrap_promo.badge')}
+              MONETIZE WASTE
             </span>
             <h2
               style={{
@@ -1109,7 +1174,7 @@ const Home = () => {
                 color: "var(--primary)",
               }}
             >
-              {t('home.scrap_promo.title')}
+              Turn Your Scrap into Cash
             </h2>
             <p
               style={{
@@ -1119,7 +1184,9 @@ const Home = () => {
                 lineHeight: "1.6",
               }}
             >
-              {t('home.scrap_promo.desc')}
+              Why throw it away when you can get paid? Schedule a pickup for
+              newspapers, plastic, metal, and electronic waste. Our verified
+              agents collect it from your doorstep and pay you instantly.
             </p>
             <ul
               style={{ listStyle: "none", padding: "0", marginBottom: "40px" }}
@@ -1134,7 +1201,7 @@ const Home = () => {
                 }}
               >
                 <i data-lucide="check-circle" style={{ color: "#22c55e" }}></i>{" "}
-                {t('home.scrap_promo.rates')}
+                Daily Market Rates
               </li>
               <li
                 style={{
@@ -1146,7 +1213,7 @@ const Home = () => {
                 }}
               >
                 <i data-lucide="check-circle" style={{ color: "#22c55e" }}></i>{" "}
-                {t('home.scrap_promo.scales')}
+                Digital Weighing Scales
               </li>
               <li
                 style={{
@@ -1158,7 +1225,7 @@ const Home = () => {
                 }}
               >
                 <i data-lucide="check-circle" style={{ color: "#22c55e" }}></i>{" "}
-                {t('home.scrap_promo.payments')}
+                Instant Cash/UPI Payment
               </li>
             </ul>
             <Link
@@ -1173,7 +1240,7 @@ const Home = () => {
               }}
             >
               <i data-lucide="calendar"></i>
-              {t('home.scrap_promo.book_now')}
+              Book Pickup Now
             </Link>
           </div>
           <div
@@ -1188,7 +1255,7 @@ const Home = () => {
             }}
           >
             <h4 style={{ marginBottom: "20px", color: "var(--secondary)" }}>
-              {t('home.scrap_promo.materials_title')}
+              Top Accepted Materials
             </h4>
             <div
               style={{ display: "flex", flexDirection: "column", gap: "15px" }}
@@ -1206,7 +1273,7 @@ const Home = () => {
                   data-lucide="check-circle"
                   style={{ color: "#22c55e", width: "18px" }}
                 ></i>
-                <span>{t('home.scrap_promo.newspaper')}</span>
+                <span>Newspaper & Paper Waste</span>
               </div>
               <div
                 style={{
@@ -1221,7 +1288,7 @@ const Home = () => {
                   data-lucide="check-circle"
                   style={{ color: "#22c55e", width: "18px" }}
                 ></i>
-                <span>{t('home.scrap_promo.plastics')}</span>
+                <span>Hard & Soft Plastics</span>
               </div>
               <div
                 style={{
@@ -1236,7 +1303,7 @@ const Home = () => {
                   data-lucide="check-circle"
                   style={{ color: "#22c55e", width: "18px" }}
                 ></i>
-                <span>{t('home.scrap_promo.cardboard')}</span>
+                <span>Cardboard & Packaging</span>
               </div>
               <div
                 style={{
@@ -1251,7 +1318,7 @@ const Home = () => {
                   data-lucide="check-circle"
                   style={{ color: "#22c55e", width: "18px" }}
                 ></i>
-                <span>{t('home.scrap_promo.metals')}</span>
+                <span>Iron, Copper, Aluminum & Metals</span>
               </div>
               <div
                 style={{
@@ -1266,7 +1333,7 @@ const Home = () => {
                   data-lucide="check-circle"
                   style={{ color: "#22c55e", width: "18px" }}
                 ></i>
-                <span>{t('home.scrap_promo.electronics')}</span>
+                <span>Electronic Waste</span>
               </div>
             </div>
             <p
@@ -1276,7 +1343,8 @@ const Home = () => {
                 marginTop: "15px",
               }}
             >
-              {t('home.scrap_promo.prices_note')}
+              * Best market prices determined at pickup based on current
+              recycling rates.
             </p>
             <div style={{ marginTop: "30px", textAlign: "center" }}>
               <Link
@@ -1285,7 +1353,7 @@ const Home = () => {
                 style={{ padding: "12px 30px", borderRadius: "12px" }}
               >
                 <i data-lucide="calendar" style={{ marginRight: "8px" }}></i>
-                {t('home.scrap_promo.start_recycling')}
+                Start Recycling Now
               </Link>
             </div>
           </div>
@@ -1296,11 +1364,12 @@ const Home = () => {
         <div className="container">
           <div className="section-header">
             <p className="trust-micro-text">
-              {t('home.testimonials.micro_text')}
+              Verified reviews • Genuine feedback
             </p>
-            <h2>{t('home.testimonials.title')}</h2>
+            <h2>Trusted by Thousands of Happy Customers</h2>
             <p>
-              {t('home.testimonials.subtitle')}
+              Real experiences from people who rely on Blinklean every day for
+              their home and vehicle care across Karnataka.
             </p>
           </div>
 
@@ -1321,7 +1390,7 @@ const Home = () => {
                 <div className="user-details">
                   <h4>Mahesh Gowda</h4>
                   <span className="user-meta">
-                    {t('home.testimonials.verified_customer')} • Vijayanagar
+                    Verified Customer • Vijayanagar
                   </span>
                 </div>
               </div>
@@ -1333,7 +1402,8 @@ const Home = () => {
                 <i data-lucide="star"></i>
               </div>
               <p className="premium-review-text">
-                {t('home.testimonials.review1_text')}
+                “The bathroom cleaning service was excellent. The team arrived
+                on time and left the space spotless. Highly recommend!”
               </p>
               <div className="premium-service-badge">
                 <i data-lucide="home"></i>
@@ -1341,10 +1411,10 @@ const Home = () => {
               </div>
               <div className="review-trust-markers">
                 <div className="marker">
-                  <i data-lucide="check-circle"></i> {t('home.testimonials.on_time')}
+                  <i data-lucide="check-circle"></i> On-Time Service
                 </div>
                 <div className="marker">
-                  <i data-lucide="shield-check"></i> {t('home.testimonials.quality')}
+                  <i data-lucide="shield-check"></i> Quality Assured
                 </div>
               </div>
             </div>
@@ -1365,7 +1435,7 @@ const Home = () => {
                 <div className="user-details">
                   <h4>Sowmya Reddy</h4>
                   <span className="user-meta">
-                    {t('home.testimonials.diamond_member')} • Chandra Layout
+                    Diamond Member • Chandra Layout
                   </span>
                 </div>
               </div>
@@ -1377,7 +1447,9 @@ const Home = () => {
                 <i data-lucide="star"></i>
               </div>
               <p className="premium-review-text">
-                {t('home.testimonials.review2_text')}
+                “Very professional and affordable. Booking was simple and the
+                results were amazing. Will definitely book again for my monthly
+                maintenance.”
               </p>
               <div className="premium-service-badge">
                 <i data-lucide="sparkles"></i>
@@ -1385,10 +1457,10 @@ const Home = () => {
               </div>
               <div className="review-trust-markers">
                 <div className="marker">
-                  <i data-lucide="check-circle"></i> {t('home.testimonials.promised')}
+                  <i data-lucide="check-circle"></i> Service as Promised
                 </div>
                 <div className="marker">
-                  <i data-lucide="shield-check"></i> {t('home.testimonials.verified')}
+                  <i data-lucide="shield-check"></i> Verified Booking
                 </div>
               </div>
             </div>
@@ -1409,7 +1481,7 @@ const Home = () => {
                 <div className="user-details">
                   <h4>Ananth Kumar</h4>
                   <span className="user-meta">
-                    {t('home.testimonials.verified_customer')} • Rajajinagar
+                    Verified Customer • Rajajinagar
                   </span>
                 </div>
               </div>
@@ -1420,8 +1492,10 @@ const Home = () => {
                 <i data-lucide="star"></i>
                 <i data-lucide="star"></i>
               </div>
-               <p className="premium-review-text">
-                {t('home.testimonials.review3_text')}
+              <p className="premium-review-text">
+                “Car cleaning service was quick and thorough. The team was
+                polite and used high-quality products. 5-stars for the
+                eco-friendly approach!”
               </p>
               <div className="premium-service-badge">
                 <i data-lucide="car-front"></i>
@@ -1429,10 +1503,10 @@ const Home = () => {
               </div>
               <div className="review-trust-markers">
                 <div className="marker">
-                  <i data-lucide="check-circle"></i> {t('home.testimonials.on_time')}
+                  <i data-lucide="check-circle"></i> On-Time Service
                 </div>
                 <div className="marker">
-                  <i data-lucide="star-half"></i> {t('home.testimonials.highly_rated')}
+                  <i data-lucide="star-half"></i> Highly Rated
                 </div>
               </div>
             </div>
@@ -1454,7 +1528,7 @@ const Home = () => {
               className="ai-badge"
               style={{ background: "rgba(34, 197, 94, 0.1)", color: "#16a34a" }}
             >
-              {t('home.community.badge')}
+              COMMUNITY FIRST
             </span>
             <h2
               style={{
@@ -1465,7 +1539,7 @@ const Home = () => {
                 letterSpacing: "-1px",
               }}
             >
-              {t('home.community.title')}
+              Our Green Initiatives
             </h2>
             <p
               style={{
@@ -1475,7 +1549,8 @@ const Home = () => {
                 margin: "0 auto",
               }}
             >
-              {t('home.community.desc')}
+              Join the Blinklean movement to recycle responsibly and protect our
+              environment for future generations.
             </p>
           </div>
 

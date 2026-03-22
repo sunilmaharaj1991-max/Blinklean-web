@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useTranslation } from "react-i18next";
 import Logo from "../components/Logo";
 import { 
   signInWithEmailAndPassword, 
@@ -17,7 +16,6 @@ import "../assets/css/login-premium.css";
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "https://blinklean-api.onrender.com/api/v1";
 
 const Login = () => {
-  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const [formMode, setFormMode] = useState("login"); // login, signup, forgot
   const [email, setEmail] = useState("");
@@ -28,37 +26,12 @@ const Login = () => {
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
-  const [showLangModal, setShowLangModal] = useState(false);
-
-  useEffect(() => {
-    // Check if user has already set a language
-    const langSet = localStorage.getItem("blinklean_lang_set");
-    if (!langSet) {
-      setShowLangModal(true);
-    }
-  }, []);
 
   useEffect(() => {
     if (window.lucide) {
       window.lucide.createIcons();
     }
-  }, [formMode, showPassword, showLangModal]);
-
-  const selectLanguage = (lng) => {
-    i18n.changeLanguage(lng);
-    localStorage.setItem("blinklean_lang_set", "true");
-    setShowLangModal(false);
-  };
-
-  const languages = [
-    { code: 'en', name: 'English' },
-    { code: 'hi', name: 'हिंदी (Hindi)' },
-    { code: 'kn', name: 'ಕನ್ನಡ (Kannada)' },
-    { code: 'te', name: 'తెలుగు (Telugu)' },
-    { code: 'ta', name: 'தமிழ் (Tamil)' },
-    { code: 'mr', name: 'मराठी (Marathi)' },
-    { code: 'ml', name: 'മലയാളം (Malayalam)' }
-  ];
+  }, [formMode, showPassword]);
 
   const trackUserLogin = async (user) => {
     const userData = {
@@ -68,8 +41,7 @@ const Login = () => {
       photo_url: user.photoURL || "",
       role: (user.email === "sunilmaharaj1991@gmail.com" || user.email === "jeevithgowdasr@gmail.com") ? "admin" : "user",
       last_login: serverTimestamp(),
-      created_at: serverTimestamp(),
-      preferred_language: i18n.language
+      created_at: serverTimestamp()
     };
 
     try {
@@ -194,42 +166,6 @@ const Login = () => {
 
   return (
     <div className="login-page-container">
-      {/* Language Selection Modal */}
-      {showLangModal && (
-        <div className="lang-modal-overlay">
-          <div className="lang-modal-content">
-            <div className="lang-modal-header">
-              <i data-lucide="languages" className="modal-icon"></i>
-              <h3>Choose Your Language / भाषा चुनें</h3>
-              <p>Select your preferred language for a better experience</p>
-            </div>
-            <div className="lang-grid-premium">
-              {languages.map((lang) => (
-                <button 
-                  key={lang.code} 
-                  className={`lang-option-btn ${i18n.language === lang.code ? 'active' : ''}`}
-                  onClick={() => selectLanguage(lang.code)}
-                >
-                  <span className="lang-name">{lang.name}</span>
-                  {i18n.language === lang.code && <i data-lucide="check-circle" className="check-icon"></i>}
-                </button>
-              ))}
-            </div>
-            <div className="lang-modal-footer">
-              <button 
-                className="skip-btn" 
-                onClick={() => {
-                  localStorage.setItem("blinklean_lang_set", "true");
-                  setShowLangModal(false);
-                }}
-              >
-                Continue with English
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
       <div className="login-card-premium">
         <div className="login-header-premium">
           <a href="/" style={{ textDecoration: "none" }}>
@@ -237,8 +173,8 @@ const Login = () => {
               <Logo type="navbar" style={{ height: "85px" }} />
             </div>
           </a>
-          <h2>{formMode === "signup" ? t('login.create_account') : formMode === "forgot" ? t('login.reset_password') : t('login.welcome_back')}</h2>
-          <p>{formMode === "signup" ? t('login.join_platform') : formMode === "forgot" ? t('login.enter_reset_link') : t('login.manage_bookings')}</p>
+          <h2>{formMode === "signup" ? "Create Account" : formMode === "forgot" ? "Reset Password" : "Welcome Back"}</h2>
+          <p>{formMode === "signup" ? "Join India's First AI Powered QuickClean platform" : formMode === "forgot" ? "Enter your email to receive a reset link" : "Login to manage your bookings"}</p>
         </div>
 
         {error && <div className="feedback-msg error">{error}</div>}
@@ -247,19 +183,19 @@ const Login = () => {
         <form className="auth-form-premium" onSubmit={handleEmailAction}>
           {formMode === "signup" && (
             <div className="form-group-premium">
-              <label>{t('login.full_name')}</label>
+              <label>Full Name</label>
               <i data-lucide="user"></i>
               <input type="text" placeholder="John Doe" required value={fullName} onChange={(e) => setFullName(e.target.value)} />
             </div>
           )}
           <div className="form-group-premium">
-            <label>{t('login.email_address')}</label>
+            <label>Email Address</label>
             <i data-lucide="mail"></i>
             <input type="email" placeholder="name@example.com" required value={email} onChange={(e) => setEmail(e.target.value)} />
           </div>
           {formMode !== "forgot" && (
             <div className="form-group-premium">
-              <label>{t('login.password')}</label>
+              <label>Password</label>
               <i data-lucide="lock"></i>
               <input 
                 type={showPassword ? "text" : "password"} 
@@ -279,48 +215,32 @@ const Login = () => {
               <label className="checkbox-container">
                 <input type="checkbox" checked={rememberMe} onChange={() => setRememberMe(!rememberMe)} />
                 <span className="checkmark"></span>
-                {t('login.remember_me')}
+                Remember Me
               </label>
-              <button type="button" className="link-btn" onClick={() => setFormMode("forgot")}>{t('login.forgot_password')}</button>
+              <button type="button" className="link-btn" onClick={() => setFormMode("forgot")}>Forgot Password?</button>
             </div>
           )}
 
           <button type="submit" className="btn-login-premium" disabled={loading}>
             {loading ? <span className="loader-dots"><span>.</span><span>.</span><span>.</span></span> : 
-              (formMode === "signup" ? t('login.sign_up') : formMode === "forgot" ? t('login.send_link') : t('login.sign_in'))
+              (formMode === "signup" ? "Sign Up" : formMode === "forgot" ? "Send Link" : "Sign In")
             }
           </button>
         </form>
 
-        <div className="divider-premium">{t('login.or')}</div>
+        <div className="divider-premium">OR</div>
 
         <button className="btn-social-premium" onClick={handleGoogleLogin} disabled={loading}>
           <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" />
-          {t('login.continue_google')}
+          Continue with Google
         </button>
 
         <div className="signup-link-premium">
           {formMode === "login" ? (
-            <>{t('login.new_to_blinklean')} <button onClick={() => setFormMode("signup")} className="link-btn">{t('login.create_account')}</button></>
+            <>New to Blinklean? <button onClick={() => setFormMode("signup")} className="link-btn">Create an account</button></>
           ) : (
-            <>{t('login.already_have_account')} <button onClick={() => { setFormMode("login"); setError(""); setMessage(""); }} className="link-btn">{t('login.sign_in')}</button></>
+            <>Already have an account? <button onClick={() => { setFormMode("login"); setError(""); setMessage(""); }} className="link-btn">Sign In</button></>
           )}
-        </div>
-        
-        {/* Quick language switch at bottom */}
-        <div className="language-selector-premium">
-          <select 
-            className="lang-select" 
-            value={i18n.language} 
-            onChange={(e) => {
-              i18n.changeLanguage(e.target.value);
-              localStorage.setItem("blinklean_lang_set", "true");
-            }}
-          >
-            {languages.map(l => (
-              <option key={l.code} value={l.code}>{l.name}</option>
-            ))}
-          </select>
         </div>
       </div>
     </div>

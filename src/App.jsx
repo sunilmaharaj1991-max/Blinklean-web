@@ -1,6 +1,5 @@
-import React, { Suspense, lazy, useState } from "react";
+import React, { Suspense, lazy } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import LanguageModal from "./components/LanguageModal";
 
 /* ---- Eager-load only the most-visited pages ---- */
 import Home  from "./pages/Home";
@@ -50,47 +49,37 @@ const PageFallback = () => (
   </div>
 );
 
-const App = () => {
-  const [showLanguageModal, setShowLanguageModal] = useState(() => {
-    return !localStorage.getItem('blinklean_lang_set');
-  });
+const App = () => (
+  <Router>
+    <Suspense fallback={<PageFallback />}>
+      <Routes>
+        {/* Eagerly loaded */}
+        <Route path="/"      element={<Home />} />
+        <Route path="/login" element={<Login />} />
 
-  return (
-    <Router>
-      <LanguageModal 
-        isOpen={showLanguageModal} 
-        onClose={() => setShowLanguageModal(false)} 
-      />
-      <Suspense fallback={<PageFallback />}>
-        <Routes>
-          {/* Eagerly loaded */}
-          <Route path="/"      element={<Home />} />
-          <Route path="/login" element={<Login />} />
-
-          {/* Lazily loaded */}
-          <Route path="/about"                         element={<About />} />
-          <Route path="/admin"                         element={<Admin />} />
-          <Route path="/contact"                       element={<Contact />} />
-          <Route path="/equal-opportunity-policy"      element={<EqualOpportunityPolicy />} />
-          <Route path="/faq"                           element={<Faq />} />
-          <Route path="/home-cleaning"                 element={<HomeCleaning />} />
-          <Route path="/laundry-services"              element={<LaundryServices />} />
-          <Route path="/partner"                       element={<Partner />} />
-          <Route path="/pricing"                       element={<Pricing />} />
-          <Route path="/privacy-policy"                element={<PrivacyPolicy />} />
-          <Route path="/profile"                       element={<Profile />} />
-          <Route path="/refund-and-cancellation-policy" element={<RefundAndCancellationPolicy />} />
-          <Route path="/scrap-booking"                 element={<ScrapBooking />} />
-          <Route path="/scrap-recycling"               element={<ScrapRecycling />} />
-          <Route path="/service-details"               element={<ServiceDetails />} />
-          <Route path="/services"                      element={<Services />} />
-          <Route path="/terms-and-conditions"          element={<TermsAndConditions />} />
-          <Route path="/vehicle-cleaning"              element={<VehicleCleaning />} />
-          <Route path="/vulnerability-disclosure-policy" element={<VulnerabilityDisclosurePolicy />} />
-        </Routes>
-      </Suspense>
-    </Router>
-  );
-};
+        {/* Lazily loaded */}
+        <Route path="/about"                         element={<About />} />
+        <Route path="/admin"                         element={<Admin />} />
+        <Route path="/contact"                       element={<Contact />} />
+        <Route path="/equal-opportunity-policy"      element={<EqualOpportunityPolicy />} />
+        <Route path="/faq"                           element={<Faq />} />
+        <Route path="/home-cleaning"                 element={<HomeCleaning />} />
+        <Route path="/laundry-services"              element={<LaundryServices />} />
+        <Route path="/partner"                       element={<Partner />} />
+        <Route path="/pricing"                       element={<Pricing />} />
+        <Route path="/privacy-policy"                element={<PrivacyPolicy />} />
+        <Route path="/profile"                       element={<Profile />} />
+        <Route path="/refund-and-cancellation-policy" element={<RefundAndCancellationPolicy />} />
+        <Route path="/scrap-booking"                 element={<ScrapBooking />} />
+        <Route path="/scrap-recycling"               element={<ScrapRecycling />} />
+        <Route path="/service-details"               element={<ServiceDetails />} />
+        <Route path="/services"                      element={<Services />} />
+        <Route path="/terms-and-conditions"          element={<TermsAndConditions />} />
+        <Route path="/vehicle-cleaning"              element={<VehicleCleaning />} />
+        <Route path="/vulnerability-disclosure-policy" element={<VulnerabilityDisclosurePolicy />} />
+      </Routes>
+    </Suspense>
+  </Router>
+);
 
 export default App;
