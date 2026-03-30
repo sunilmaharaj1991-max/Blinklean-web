@@ -33,10 +33,10 @@ const Home = () => {
         "Blinklean is your one-stop clean-tech platform providing professional House Cleaning, innovative Waterless Vehicle Detailing, Fabric-safe Laundry, and incentivized Scrap Recycling services directly at your doorstep.",
     },
     {
-      question: "Which areas do you serve?",
-      answer:
-        "We are hyper-local in Bengaluru, Hassan and Amaravathi (AP), serving key areas including Vijayanagar, Chandra Layout, Attiguppe, Rajajinagar, Rajarajeshwari Nagar, Hassan and Amaravathi. We are rapidly expanding to other urban clusters!",
-    },
+    question: "Which areas do you serve?",
+    answer:
+      "We are hyper-local in Bengaluru, Jharkhand, Bihar, Hassan and Amaravathi (AP), serving key areas including Vijayanagar, Chandra Layout, Attiguppe, Rajajinagar, Rajarajeshwari Nagar, Hassan, Amaravathi, and Chas (Jharkhand). We are rapidly expanding to other urban clusters!",
+  },
     {
       question: "How can I book a scrap recycling service?",
       answer:
@@ -77,7 +77,9 @@ const Home = () => {
       "534002": "Eluru, AP",
       "534005": "Eluru, AP",
       "534006": "Eluru, AP",
-      "534007": "Eluru, AP"
+      "534007": "Eluru, AP",
+      "800001": "Patna, Bihar",
+      "827013": "Chas, Jharkhand"
     };
 
     if (pincode.length === 6) {
@@ -418,6 +420,12 @@ const Home = () => {
                 </div>
                 <div className="location-item">
                   <i data-lucide="map-pin"></i> Amaravathi (AP)
+                </div>
+                <div className="location-item">
+                  <i data-lucide="map-pin"></i> Chas (Jharkhand)
+                </div>
+                <div className="location-item">
+                  <i data-lucide="map-pin"></i> Patna (Bihar)
                 </div>
               </div>
 
