@@ -61,8 +61,10 @@ export class ServicesService {
         zoneActive = false;
         scrapeServiceActive = false;
       } else {
-        const zone = zoneSnapshot.docs[0].data();
-        scrapeServiceActive = zone.scrap_service_available;
+        const zone = zoneSnapshot.docs[0].data() as {
+          scrap_service_available?: boolean;
+        };
+        scrapeServiceActive = Boolean(zone.scrap_service_available);
       }
     }
 

@@ -16,6 +16,7 @@ const LaundryServices             = lazy(() => import("./pages/LaundryServices")
 const Partner                     = lazy(() => import("./pages/Partner"));
 const Pricing                     = lazy(() => import("./pages/Pricing"));
 const PrivacyPolicy               = lazy(() => import("./pages/PrivacyPolicy"));
+const DeleteAccount               = lazy(() => import("./pages/DeleteAccount"));
 const Profile                     = lazy(() => import("./pages/Profile"));
 const RefundAndCancellationPolicy = lazy(() => import("./pages/RefundAndCancellationPolicy"));
 const ScrapBooking                = lazy(() => import("./pages/ScrapBooking"));
@@ -68,6 +69,8 @@ const App = () => (
         <Route path="/partner"                       element={<Partner />} />
         <Route path="/pricing"                       element={<Pricing />} />
         <Route path="/privacy-policy"                element={<PrivacyPolicy />} />
+        <Route path="/privacy"                       element={<PrivacyPolicy />} />
+        <Route path="/delete-account"                element={<DeleteAccount />} />
         <Route path="/profile"                       element={<Profile />} />
         <Route path="/refund-and-cancellation-policy" element={<RefundAndCancellationPolicy />} />
         <Route path="/scrap-booking"                 element={<ScrapBooking />} />
@@ -75,6 +78,7 @@ const App = () => (
         <Route path="/service-details"               element={<ServiceDetails />} />
         <Route path="/services"                      element={<Services />} />
         <Route path="/terms-and-conditions"          element={<TermsAndConditions />} />
+        <Route path="/terms"                         element={<TermsAndConditions />} />
         <Route path="/vehicle-cleaning"              element={<VehicleCleaning />} />
         <Route path="/vulnerability-disclosure-policy" element={<VulnerabilityDisclosurePolicy />} />
       </Routes>

@@ -31,8 +31,9 @@ export class FirebaseService implements OnModuleInit {
       // This will use GOOGLE_APPLICATION_CREDENTIALS or default metadata service if on GCP
       try {
         admin.initializeApp();
-      } catch (error) {
-        this.logger.error('Failed to initialize Firebase: ' + error.message);
+      } catch (error: unknown) {
+        const msg = error instanceof Error ? error.message : String(error);
+        this.logger.error('Failed to initialize Firebase: ' + msg);
       }
     }
 
@@ -40,18 +41,18 @@ export class FirebaseService implements OnModuleInit {
     this._auth = admin.auth();
   }
 
-  get firestore() {
+  get firestore(): admin.firestore.Firestore {
     return this._firestore;
   }
 
-  get auth() {
+  get auth(): admin.auth.Auth {
     return this._auth;
   }
 
   /**
    * Helper to get a collection reference
    */
-  getCollection(collectionName: string) {
+  getCollection(collectionName: string): admin.firestore.CollectionReference {
     return this._firestore.collection(collectionName);
   }
 }

@@ -52,11 +52,16 @@ const Login = () => {
 
       // 2. Sync to PostgreSQL (Secondary Background)
       if (API_BASE) {
-        fetch(`${API_BASE}/users/upsert`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(userData)
-        }).catch(err => console.warn("Backend user sync failed, but data is safe in Firebase.", err));
+        user.getIdToken().then(idToken => {
+          fetch(`${API_BASE}/users/upsert`, {
+            method: "POST",
+            headers: { 
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${idToken}`
+            },
+            body: JSON.stringify(userData)
+          }).catch(err => console.warn("Backend user sync failed, but data is safe in Firebase.", err));
+        }).catch(tokenErr => console.error("Failed to get Firebase ID token:", tokenErr));
       }
     } catch (err) {
       console.error("Error tracking user:", err);

@@ -1,4 +1,5 @@
 import React, { useEffect } from "react";
+import { Link } from "react-router-dom";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import BottomNav from "../components/BottomNav";
@@ -18,7 +19,7 @@ const PrivacyPolicy = () => {
       <div className="policy-hero">
         <div className="container">
           <h1 className="animate-fade-in">Privacy Policy</h1>
-          <p className="animate-fade-in" style={{ animationDelay: '0.2s' }}>Last updated: March 2026</p>
+          <p className="animate-fade-in" style={{ animationDelay: '0.2s' }}>Last updated: May 2026</p>
         </div>
       </div>
 
@@ -39,6 +40,9 @@ const PrivacyPolicy = () => {
                 <li>
                   <strong>Personal Information:</strong> Name, phone number, email
                   address, business name, and service address.
+                </li>
+                <li>
+                  <strong>Location Information:</strong> Precise and approximate location data for accurate service delivery and backend routing.
                 </li>
                 <li>
                   <strong>Service Information:</strong> Details related to cleaning
@@ -80,7 +84,12 @@ const PrivacyPolicy = () => {
                 <li>When required by law or government authorities</li>
               </ul>
 
-              <h2>4. Data Security</h2>
+              <h2>4. Third-Party Disclosure</h2>
+              <p>
+                We share necessary data parameters with trusted third-party service providers to handle app operations: Google Sign-In (for secure authentication), Razorpay SDK (for secure payment gateway processing), and Firebase Cloud Messaging (for sending booking update push notifications).
+              </p>
+
+              <h2>5. Data Security</h2>
               <p>
                 We implement reasonable security measures to protect your
                 information against unauthorized access, misuse, or disclosure.
@@ -88,7 +97,7 @@ const PrivacyPolicy = () => {
                 guaranteed to be 100% secure.
               </p>
 
-              <h2>5. Cookies & Tracking Technologies</h2>
+              <h2>6. Cookies & Tracking Technologies</h2>
               <p>Our website may use cookies and similar technologies to:</p>
               <ul>
                 <li>Enhance website functionality</li>
@@ -100,13 +109,18 @@ const PrivacyPolicy = () => {
                 though some features may not function properly.
               </p>
 
-              <h2>6. Data Retention</h2>
+              <h2>7. Account and Data Deletion</h2>
+              <p>
+                Users can request the complete permanent deletion of their account and historical data at any time by visiting our dedicated data erasure portal at <Link to="/delete-account" style={{ color: "var(--primary)", textDecoration: "underline" }}>https://blinklean.com/delete-account</Link>.
+              </p>
+
+              <h2>8. Data Retention</h2>
               <p>
                 We retain personal information only for as long as necessary to
                 fulfill the purposes outlined in this policy or as required by law.
               </p>
 
-              <h2>7. Your Rights</h2>
+              <h2>9. Your Rights</h2>
               <p>You have the right to:</p>
               <ul>
                 <li>Access, update, or correct your personal information</li>
@@ -121,28 +135,28 @@ const PrivacyPolicy = () => {
                 communication channels.
               </p>
 
-              <h2>8. Third-Party Links</h2>
+              <h2>10. Third-Party Links</h2>
               <p>
                 Our website may contain links to third-party websites. Blinklean is
                 not responsible for the privacy practices or content of such
                 websites.
               </p>
 
-              <h2>9. Children’s Privacy</h2>
+              <h2>11. Children’s Privacy</h2>
               <p>
                 Our services and website are not intended for individuals under the
                 age of 18. We do not knowingly collect personal information from
                 minors.
               </p>
 
-              <h2>10. Policy Updates</h2>
+              <h2>12. Policy Updates</h2>
               <p>
                 Blinklean reserves the right to update this Privacy Policy at any
                 time. Any changes will be posted on this page with an updated
                 effective date.
               </p>
 
-              <h2>11. Contact Us</h2>
+              <h2>13. Contact Us</h2>
               <p>
                 If you have any questions or concerns about this Privacy Policy or
                 your personal data, please contact us via the details mentioned on
