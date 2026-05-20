@@ -69,6 +69,9 @@ const Home = () => {
     const pincode = document.getElementById("pincode").value;
     const result = document.getElementById("pincode-result");
     const supportedCodes = {
+      "560040": "Bengaluru (Vijayanagar/Chandra Layout)",
+      "560010": "Bengaluru (Rajajinagar)",
+      "560098": "Bengaluru (Rajarajeshwari Nagar)",
       "573201": "Hassan",
       "573202": "Hassan",
       "522237": "Amaravathi, AP",
