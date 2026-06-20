@@ -8,6 +8,7 @@ import Login from "./pages/Login";
 /* ---- Lazy-load all other pages (code-split per route) ---- */
 const About                       = lazy(() => import("./pages/About"));
 const Admin                       = lazy(() => import("./pages/Admin"));
+const BlinkleanGreenClub          = lazy(() => import("./pages/BlinkleanGreenClub"));
 const Contact                     = lazy(() => import("./pages/Contact"));
 const EqualOpportunityPolicy      = lazy(() => import("./pages/EqualOpportunityPolicy"));
 const Faq                         = lazy(() => import("./pages/Faq"));
@@ -61,6 +62,7 @@ const App = () => (
         {/* Lazily loaded */}
         <Route path="/about"                         element={<About />} />
         <Route path="/admin"                         element={<Admin />} />
+        <Route path="/green-club"                    element={<BlinkleanGreenClub />} />
         <Route path="/contact"                       element={<Contact />} />
         <Route path="/equal-opportunity-policy"      element={<EqualOpportunityPolicy />} />
         <Route path="/faq"                           element={<Faq />} />
