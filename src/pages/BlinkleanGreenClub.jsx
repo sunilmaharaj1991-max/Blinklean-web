@@ -149,13 +149,16 @@ const BlinkleanGreenClub = () => {
       };
 
       await addDoc(collection(db, "green_club_registrations"), payload);
-      alert(`🎉 Registration Successful!\n\nYou have successfully registered for "${selectedEvent.title}". We will send details to ${regEmail} and coordinates over WhatsApp.`);
       
       // Reset form and close modal
       setRegName("");
       setRegEmail("");
       setRegPhone("");
       setSelectedEvent(null);
+
+      alert(`🎉 Registration Successful!\n\nYou have successfully registered for "${selectedEvent.title}". We are now redirecting you to our WhatsApp Channel so you can follow updates and track all our upcoming events!`);
+      
+      window.location.href = "https://whatsapp.com/channel/0029Vb7phe1InlqH13yHXU0C";
     } catch (err) {
       console.error("Error registering for green club event:", err);
       alert("Registration failed due to connection timeout. Please check network settings.");
