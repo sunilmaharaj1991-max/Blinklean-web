@@ -207,7 +207,7 @@ const Home = () => {
                   <i data-lucide="users"></i>
                 </div>
                 <div className="indicator-info">
-                  <strong>1,000+</strong>
+                  <strong>850+</strong>
                   <span>Happy Customers</span>
                 </div>
               </div>
@@ -258,10 +258,10 @@ const Home = () => {
               <span>
                 <strong
                   className="count-up"
-                  data-target="1000"
+                  data-target="850"
                   style={{ color: "var(--primary)", fontSize: "1.2rem" }}
                 >
-                  1,000
+                  850
                 </strong>
                 + Services Completed
               </span>

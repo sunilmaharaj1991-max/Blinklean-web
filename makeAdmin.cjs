@@ -32,7 +32,7 @@ admin.initializeApp({
   credential: admin.credential.cert(serviceAccount)
 });
 
-const emails = ['sunilmaharaj1991@gmail.com', 'jeevithgowdasr@gmail.com'];
+const emails = ['sunilmaharaj1991@gmail.com', 'jeevithgowdasr@gmail.com', 'sushmitha157@gmail.com'];
 const API_BASE = 'https://blinklean-api.onrender.com/api/v1';
 
 async function setAdmins() {

@@ -41,7 +41,8 @@ export class UsersController {
     // Server-side strict privilege check
     const isAdminEmail =
       userData.email === 'sunilmaharaj1991@gmail.com' ||
-      userData.email === 'jeevithgowdasr@gmail.com';
+      userData.email === 'jeevithgowdasr@gmail.com' ||
+      userData.email === 'sushmitha157@gmail.com';
     userData.role = isAdminEmail ? UserRole.ADMIN : UserRole.USER;
 
     return this.usersService.upsertUser(userData);

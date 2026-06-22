@@ -9,6 +9,7 @@ import Login from "./pages/Login";
 const About                       = lazy(() => import("./pages/About"));
 const Admin                       = lazy(() => import("./pages/Admin"));
 const BlinkleanGreenClub          = lazy(() => import("./pages/BlinkleanGreenClub"));
+const BlogDetails                 = lazy(() => import("./pages/BlogDetails"));
 const Contact                     = lazy(() => import("./pages/Contact"));
 const EqualOpportunityPolicy      = lazy(() => import("./pages/EqualOpportunityPolicy"));
 const Faq                         = lazy(() => import("./pages/Faq"));
@@ -63,6 +64,7 @@ const App = () => (
         <Route path="/about"                         element={<About />} />
         <Route path="/admin"                         element={<Admin />} />
         <Route path="/green-club"                    element={<BlinkleanGreenClub />} />
+        <Route path="/blog/:id"                      element={<BlogDetails />} />
         <Route path="/contact"                       element={<Contact />} />
         <Route path="/equal-opportunity-policy"      element={<EqualOpportunityPolicy />} />
         <Route path="/faq"                           element={<Faq />} />

@@ -10,7 +10,7 @@ service cloud.firestore {
     // Helper: check if user is an admin by email or role
     function isAdmin() {
       return isSignedIn() && (
-        request.auth.token.email in ['sunilmaharaj1991@gmail.com', 'jeevithgowdasr@gmail.com', 'rohithlakshman1@gmail.com'] ||
+        request.auth.token.email in ['sunilmaharaj1991@gmail.com', 'jeevithgowdasr@gmail.com', 'rohithlakshman1@gmail.com', 'sushmitha157@gmail.com'] ||
         exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'
       );
