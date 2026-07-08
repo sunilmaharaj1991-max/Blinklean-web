@@ -243,7 +243,7 @@ const BlinkleanGreenClub = () => {
       alert(`🎉 Registration Saved Successfully!\n\nWe are now redirecting you to our secure Razorpay payment page to complete your ₹500 Lifetime Registration. A confirmation email has been sent with direct links to our WhatsApp community channel!`);
 
       // 4. Redirect to Razorpay checkout page
-      window.location.href = "https://rzp.io/rzp/asaLrHv";
+      window.location.href = import.meta.env.VITE_GREEN_CLUB_PAYMENT_URL || "https://rzp.io/rzp/asaLrHv";
     } catch (err) {
       console.error("Error registering for green club:", err);
       alert("Registration failed due to connection timeout. Please check network settings.");
