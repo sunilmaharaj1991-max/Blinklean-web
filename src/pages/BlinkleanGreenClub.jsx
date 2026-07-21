@@ -126,9 +126,23 @@ const BlinkleanGreenClub = () => {
   const [showTermsModal, setShowTermsModal] = useState(false);
   const [tempTermsChecked, setTempTermsChecked] = useState(false);
 
+  // Payment Redirection Modal State
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [paymentRedirectUrl, setPaymentRedirectUrl] = useState("");
+  const [registeredUserName, setRegisteredUserName] = useState("");
+
+  // Payment Completion Success Modal State
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
+    // Check if user returned from successful Razorpay payment
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get("payment") === "success" || urlParams.get("status") === "paid" || urlParams.get("razorpay_payment_id")) {
+      setShowSuccessModal(true);
+    }
+
     const fetchClubData = async () => {
       try {
         // Fetch events
@@ -197,7 +211,10 @@ const BlinkleanGreenClub = () => {
         finalPhotoUrl = await uploadImage(regPhoto, "green_club_members");
       }
 
-      // 2. Save registration details in Firestore
+      const targetPaymentUrl = import.meta.env.VITE_GREEN_CLUB_PAYMENT_URL || "https://rzp.io/rzp/asaLrHv";
+
+      // 2. Save registration details in Firestore - ALWAYS creates a new document.
+      // Repeating names are NOT recognized as pre-paid or skipped.
       const payload = {
         event_id: selectedEvent.id,
         event_title: selectedEvent.title,
@@ -207,6 +224,8 @@ const BlinkleanGreenClub = () => {
         address: regAddress,
         photo_url: finalPhotoUrl,
         terms_accepted: true,
+        payment_status: "pending_payment",
+        payment_url: targetPaymentUrl,
         created_at: serverTimestamp()
       };
 
@@ -229,6 +248,8 @@ const BlinkleanGreenClub = () => {
         console.warn("API call for confirmation email failed:", err);
       });
 
+      const submittedName = regName;
+
       // Reset form states
       setRegName("");
       setRegEmail("");
@@ -240,10 +261,16 @@ const BlinkleanGreenClub = () => {
       setTempTermsChecked(false);
       setSelectedEvent(null);
 
-      alert(`🎉 Registration Saved Successfully!\n\nWe are now redirecting you to our secure Razorpay payment page to complete your ₹500 Lifetime Registration. A confirmation email has been sent with direct links to our WhatsApp community channel!`);
+      // Show payment modal leading explicitly to Razorpay payment page
+      setRegisteredUserName(submittedName);
+      setPaymentRedirectUrl(targetPaymentUrl);
+      setShowPaymentModal(true);
 
-      // 4. Redirect to Razorpay checkout page
-      window.location.href = import.meta.env.VITE_GREEN_CLUB_PAYMENT_URL || "https://rzp.io/rzp/asaLrHv";
+      // Auto redirect after 2.5s fallback
+      setTimeout(() => {
+        window.location.href = targetPaymentUrl;
+      }, 2500);
+
     } catch (err) {
       console.error("Error registering for green club:", err);
       alert("Registration failed due to connection timeout. Please check network settings.");
@@ -471,6 +498,12 @@ const BlinkleanGreenClub = () => {
             <h2>Volunteer Registration</h2>
             <p>Register to reserve your eco-kit and receive meeting coordinates for <strong>"{selectedEvent.title}"</strong>.</p>
 
+            <div style={{ background: "#f0fdf4", border: "1px solid #bbf7d0", padding: "12px 16px", borderRadius: "12px", marginBottom: "20px" }}>
+              <p style={{ margin: 0, fontSize: "0.82rem", color: "#166534", fontWeight: "700", lineHeight: "1.5" }}>
+                ℹ️ <strong>Payment Requirement:</strong> Each Green Club registration requires a ₹500 fee paid via Razorpay. Duplicate names or repeated registrations will not be recognized as pre-paid and must complete payment every time.
+              </p>
+            </div>
+
             <form onSubmit={handleRegisterSubmit}>
               {/* Full Name */}
               <div className="form-group-gc">
@@ -675,6 +708,113 @@ const BlinkleanGreenClub = () => {
                 Cancel
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Payment Redirection Modal Overlay */}
+      {showPaymentModal && (
+        <div className="modal-overlay" style={{ zIndex: 1200 }}>
+          <div className="modal-card" style={{ maxWidth: "520px", textAlign: "center", padding: "35px 25px" }}>
+            <div style={{ fontSize: "3rem", marginBottom: "12px" }}>💳</div>
+            <h2 style={{ fontSize: "1.5rem", color: "#0f172a", marginBottom: "10px" }}>
+              Complete Your Registration Payment
+            </h2>
+            <p style={{ color: "#475569", fontSize: "0.92rem", lineHeight: "1.6", marginBottom: "18px" }}>
+              Registration details received for <strong>{registeredUserName}</strong>! Every registration requires completing the ₹500 Razorpay payment.
+            </p>
+            <div style={{ background: "#fff7ed", border: "1px solid #ffedd5", padding: "14px", borderRadius: "12px", marginBottom: "22px" }}>
+              <p style={{ margin: 0, fontSize: "0.83rem", color: "#c2410c", fontWeight: "700", lineHeight: "1.5" }}>
+                ⚠️ Notice: Repeating a previously registered name does NOT count as payment. You must complete payment via Razorpay for each registration.
+              </p>
+            </div>
+
+            <a
+              href={paymentRedirectUrl}
+              className="submit-btn-gc"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "10px",
+                textDecoration: "none",
+                fontSize: "1rem",
+                padding: "15px 24px",
+                width: "100%",
+                background: "linear-gradient(135deg, #10b981 0%, #009ee3 100%)",
+                borderRadius: "14px",
+                boxShadow: "0 10px 25px rgba(16, 185, 129, 0.3)",
+                color: "white",
+                fontWeight: "700"
+              }}
+            >
+              <Lock size={18} />
+              Proceed to Razorpay Payment (₹500)
+            </a>
+            
+            <p style={{ fontSize: "0.8rem", color: "#94a3b8", marginTop: "14px" }}>
+              Redirecting automatically to Razorpay in 2 seconds...
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Payment Completion Success Modal Overlay */}
+      {showSuccessModal && (
+        <div className="modal-overlay" style={{ zIndex: 1300 }}>
+          <div className="modal-card" style={{ maxWidth: "540px", textAlign: "center", padding: "40px 28px" }}>
+            <div style={{ fontSize: "3.5rem", marginBottom: "12px" }}>🎉</div>
+            <h2 style={{ fontSize: "1.6rem", color: "#166534", marginBottom: "12px" }}>
+              Welcome to Blinklean Green Club!
+            </h2>
+            <p style={{ color: "#334155", fontSize: "1rem", lineHeight: "1.6", marginBottom: "20px" }}>
+              Thank you for completing your payment! Your ₹500 Lifetime Green Club Membership has been successfully registered.
+            </p>
+            <div style={{ background: "#f0fdf4", border: "1px solid #bbf7d0", padding: "16px", borderRadius: "14px", marginBottom: "24px", textAlign: "left" }}>
+              <p style={{ margin: "0 0 8px 0", fontWeight: "700", color: "#166534", fontSize: "0.95rem" }}>
+                ✅ What happens next?
+              </p>
+              <ul style={{ margin: 0, paddingLeft: "20px", color: "#166534", fontSize: "0.88rem", lineHeight: "1.6" }}>
+                <li>A confirmation email has been dispatched with your registration details.</li>
+                <li>Your Green Club Member ID and eco-kit allocation are being processed.</li>
+                <li>Join our official WhatsApp channel for live updates on upcoming drives!</li>
+              </ul>
+            </div>
+
+            <a
+              href="https://whatsapp.com/channel/0029Vb7phe1InlqH13yHXU0C"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="submit-btn-gc"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "10px",
+                textDecoration: "none",
+                fontSize: "1rem",
+                padding: "14px 24px",
+                width: "100%",
+                background: "#15803d",
+                borderRadius: "14px",
+                color: "white",
+                fontWeight: "700",
+                marginBottom: "12px",
+                boxShadow: "0 8px 20px rgba(21, 128, 61, 0.25)"
+              }}
+            >
+              💬 Join WhatsApp Community Channel
+            </a>
+
+            <button
+              onClick={() => {
+                setShowSuccessModal(false);
+                window.history.replaceState({}, document.title, window.location.pathname);
+              }}
+              style={{ background: "#f1f5f9", color: "#64748b", border: "none", padding: "12px", borderRadius: "12px", fontWeight: "700", width: "100%", cursor: "pointer" }}
+            >
+              Close & Explore Green Club
+            </button>
           </div>
         </div>
       )}
