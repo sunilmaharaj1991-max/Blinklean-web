@@ -50,7 +50,7 @@ const Home = () => {
     {
       question: "Will services be available through an app?",
       answer:
-        "Yes, our AI-powered mobile app is in the final stages of development. It will feature real-time tracking, service history, and one-tap rebooking for a truly frictionless experience.",
+        "Yes! Our AI-powered mobile app is live on the Google Play Store. It features real-time tracking, service history, and one-tap rebooking for a truly frictionless experience.",
     },
   ];
 
@@ -782,13 +782,19 @@ const Home = () => {
               </div>
 
               <div className="app-buttons">
-                <a href="#" className="btn btn-app-primary">
+                <a
+                  href="https://play.google.com/store/apps/details?id=com.blinklean.app"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn btn-app-primary"
+                >
                   <i data-lucide="download"></i>
-                  Get the App (Coming Soon)
+                  Get it on Google Play
                 </a>
                 <a
                   href="https://wa.me/917022803582"
                   target="_blank"
+                  rel="noopener noreferrer"
                   className="btn btn-secondary"
                 >
                   <i data-lucide="message-circle"></i>
@@ -1716,14 +1722,24 @@ const Home = () => {
               </p>
 
               <div className="app-store-buttons">
-                <a href="#" className="app-btn">
+                <a
+                  href="https://play.google.com/store/apps/details?id=com.blinklean.app"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="app-btn"
+                >
                   <img
                     src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/78/Google_Play_Store_badge_EN.svg/1200px-Google_Play_Store_badge_EN.svg.png"
                     alt="Google Play"
                     style={{ height: "48px" }}
                   />
                 </a>
-                <a href="#" className="app-btn">
+                <a
+                  href="https://play.google.com/store/apps/details?id=com.blinklean.app"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="app-btn"
+                >
                   <img
                     src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg"
                     alt="App Store"

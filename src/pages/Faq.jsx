@@ -127,9 +127,7 @@ const Faq = () => {
               </div>
               <div className="faq-content">
                 <div className="faq-content-inner">
-                  You can book any service through our website by navigating to
-                  the services section or by contacting us directly on WhatsApp
-                  at +91 70228 03582.
+                  You can book any service through our website, our mobile app on Google Play Store, or by contacting us directly on WhatsApp at +91 70228 03582.
                 </div>
               </div>
             </div>
