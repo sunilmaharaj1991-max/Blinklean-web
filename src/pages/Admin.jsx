@@ -48,7 +48,7 @@ import {
   Check,
   SlidersHorizontal,
   ChevronRight,
-  Briefcase
+  LogIn
 } from "lucide-react";
 import "../assets/css/admin-premium.css";
 
@@ -72,8 +72,8 @@ const Admin = () => {
   const [confirming,   setConfirming]   = useState(null);
   const [pickupInput,  setPickupInput]  = useState({});
   
-  // Active Navigation Tab
-  const [activeTab, setActiveTab] = useState("overview"); // overview, bookings, partners, green_club, weekly_news, content_studio, users
+  // Active Navigation Tab: 'overview' | 'bookings' | 'green_club' | 'weekly_news' | 'partners' | 'content_studio' | 'users'
+  const [activeTab, setActiveTab] = useState("overview");
 
   // Search & Filter States
   const [bookingSearch, setBookingSearch] = useState("");
@@ -89,7 +89,7 @@ const Admin = () => {
   const [gcSearchTerm,            setGcSearchTerm]            = useState("");
   const [gcFilterPhotoOnly,       setGcFilterPhotoOnly]       = useState(false);
 
-  // Weekly News & Society Gazette State
+  // Weekly News State
   const [weeklyNewsList,          setWeeklyNewsList]          = useState([]);
   const [newsTitle,               setNewsTitle]               = useState("");
   const [newsCategory,            setNewsCategory]            = useState("environment");
@@ -137,30 +137,39 @@ const Admin = () => {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      // 1. Fetch Bookings from Firestore
-      const bookQuery = query(collection(db, "scrap_bookings"), orderBy("created_at", "desc"));
-      const bookSnap  = await getDocs(bookQuery);
-      const bookList  = bookSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-      setBookings(bookList);
+      // 1. Fetch Bookings
+      try {
+        const bookQuery = query(collection(db, "scrap_bookings"), orderBy("created_at", "desc"));
+        const bookSnap  = await getDocs(bookQuery);
+        setBookings(bookSnap.docs.map(d => ({ id: d.id, ...d.data() })));
+      } catch (e) {
+        console.warn("Error fetching bookings:", e);
+      }
 
-      // 2. Fetch Partners from Firestore
-      const partQuery = query(collection(db, "partner_registrations"), orderBy("created_at", "desc"));
-      const partSnap  = await getDocs(partQuery);
-      const partList  = partSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-      setPartners(partList);
+      // 2. Fetch Partners
+      try {
+        const partQuery = query(collection(db, "partner_registrations"), orderBy("created_at", "desc"));
+        const partSnap  = await getDocs(partQuery);
+        setPartners(partSnap.docs.map(d => ({ id: d.id, ...d.data() })));
+      } catch (e) {
+        console.warn("Error fetching partners:", e);
+      }
 
-      // 3. Fetch Users from Firestore
-      const userSnap = await getDocs(collection(db, "users"));
-      const userList = userSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-      setUsers(userList);
+      // 3. Fetch Users
+      try {
+        const userSnap = await getDocs(collection(db, "users"));
+        setUsers(userSnap.docs.map(d => ({ id: d.id, ...d.data() })));
+      } catch (e) {
+        console.warn("Error fetching users:", e);
+      }
 
       // 4. Fetch Green Club Registrations
       try {
         const gcRegQuery = query(collection(db, "green_club_registrations"), orderBy("created_at", "desc"));
         const gcRegSnap = await getDocs(gcRegQuery);
         setClubRegistrations(gcRegSnap.docs.map(d => ({ id: d.id, ...d.data() })));
-      } catch (err) {
-        console.warn("Could not fetch Green Club registrations:", err);
+      } catch (e) {
+        console.warn("Error fetching Green Club registrations:", e);
       }
 
       // 5. Fetch Green Club Events
@@ -168,8 +177,8 @@ const Admin = () => {
         const gcEventQuery = query(collection(db, "green_club_events"), orderBy("created_at", "desc"));
         const gcEventSnap = await getDocs(gcEventQuery);
         setClubEvents(gcEventSnap.docs.map(d => ({ id: d.id, ...d.data() })));
-      } catch (err) {
-        console.warn("Could not fetch Green Club events:", err);
+      } catch (e) {
+        console.warn("Error fetching Green Club events:", e);
       }
 
       // 6. Fetch Green Club Blogs
@@ -177,17 +186,17 @@ const Admin = () => {
         const gcBlogQuery = query(collection(db, "green_club_blogs"), orderBy("created_at", "desc"));
         const gcBlogSnap = await getDocs(gcBlogQuery);
         setClubBlogs(gcBlogSnap.docs.map(d => ({ id: d.id, ...d.data() })));
-      } catch (err) {
-        console.warn("Could not fetch Green Club blogs:", err);
+      } catch (e) {
+        console.warn("Error fetching Green Club blogs:", e);
       }
 
-      // 7. Fetch Weekly News Articles
+      // 7. Fetch Weekly News
       try {
         const newsQuery = query(collection(db, "weekly_news"), orderBy("created_at", "desc"));
         const newsSnap = await getDocs(newsQuery);
         setWeeklyNewsList(newsSnap.docs.map(d => ({ id: d.id, ...d.data() })));
-      } catch (err) {
-        console.warn("Could not fetch Weekly News:", err);
+      } catch (e) {
+        console.warn("Error fetching Weekly News:", e);
       }
 
     } catch (err) {
@@ -199,9 +208,12 @@ const Admin = () => {
 
   useEffect(() => {
     const unsub = auth.onAuthStateChanged(async (user) => {
-      if (!user) { navigate("/login"); return; }
+      if (!user) {
+        setLoading(false);
+        setIsAuthorized(false);
+        return;
+      }
       try {
-        const userDoc = await getDoc(doc(db, "users", user.uid));
         const isAdminEmail = (
           user.email === "sunilmaharaj1991@gmail.com" || 
           user.email === "jeevithgowdasr@gmail.com" || 
@@ -209,7 +221,17 @@ const Admin = () => {
           user.email === "sushmitha157@gmail.com"
         );
         
-        if (isAdminEmail || (userDoc.exists() && userDoc.data().role === "admin")) {
+        let role = "";
+        try {
+          const userDoc = await getDoc(doc(db, "users", user.uid));
+          if (userDoc.exists()) {
+            role = userDoc.data().role || "";
+          }
+        } catch (docErr) {
+          console.warn("Could not read user doc:", docErr);
+        }
+
+        if (isAdminEmail || role === "admin") {
           setIsAuthorized(true);
           fetchData();
         } else {
@@ -223,7 +245,7 @@ const Admin = () => {
       }
     });
     return () => unsub();
-  }, [navigate, fetchData]);
+  }, [fetchData]);
 
   const handleConfirm = async (bookingId) => {
     const timing = pickupInput[bookingId];
@@ -569,8 +591,18 @@ const Admin = () => {
 
   const formatDate = (ts) => {
     if (!ts) return "N/A";
-    const d = ts.toDate ? ts.toDate() : new Date(ts);
-    return d.toLocaleString("en-IN", { day:"2-digit", month:"short", year:"numeric", hour:"2-digit", minute:"2-digit" });
+    try {
+      const d = ts?.toDate ? ts.toDate() : new Date(ts);
+      if (isNaN(d.getTime())) return typeof ts === "string" ? ts : "N/A";
+      return d.toLocaleString("en-IN", { day:"2-digit", month:"short", year:"numeric", hour:"2-digit", minute:"2-digit" });
+    } catch {
+      return "N/A";
+    }
+  };
+
+  const getCleanPhone = (phone) => {
+    if (!phone) return "";
+    return String(phone).replace(/[^0-9]/g, "").slice(-10);
   };
 
   // Filtered dataset utilities
@@ -579,10 +611,10 @@ const Admin = () => {
     if (!bookingSearch.trim()) return true;
     const q = bookingSearch.toLowerCase();
     return (
-      (b.user_name && b.user_name.toLowerCase().includes(q)) ||
-      (b.phone_number && b.phone_number.toLowerCase().includes(q)) ||
-      (b.address && b.address.toLowerCase().includes(q)) ||
-      (b.id && b.id.toLowerCase().includes(q))
+      (b.user_name && String(b.user_name).toLowerCase().includes(q)) ||
+      (b.phone_number && String(b.phone_number).toLowerCase().includes(q)) ||
+      (b.address && String(b.address).toLowerCase().includes(q)) ||
+      (b.id && String(b.id).toLowerCase().includes(q))
     );
   });
 
@@ -590,10 +622,10 @@ const Admin = () => {
     if (!partnerSearch.trim()) return true;
     const q = partnerSearch.toLowerCase();
     return (
-      (p.fullName && p.fullName.toLowerCase().includes(q)) ||
-      (p.phone && p.phone.toLowerCase().includes(q)) ||
-      (p.serviceType && p.serviceType.toLowerCase().includes(q)) ||
-      (p.location && p.location.toLowerCase().includes(q))
+      (p.fullName && String(p.fullName).toLowerCase().includes(q)) ||
+      (p.phone && String(p.phone).toLowerCase().includes(q)) ||
+      (p.serviceType && String(p.serviceType).toLowerCase().includes(q)) ||
+      (p.location && String(p.location).toLowerCase().includes(q))
     );
   });
 
@@ -605,11 +637,11 @@ const Admin = () => {
     if (!gcSearchTerm.trim()) return true;
     const q = gcSearchTerm.toLowerCase();
     return (
-      (r.user_name && r.user_name.toLowerCase().includes(q)) ||
-      (r.email && r.email.toLowerCase().includes(q)) ||
-      (r.phone && r.phone.toLowerCase().includes(q)) ||
-      (r.event_title && r.event_title.toLowerCase().includes(q)) ||
-      (r.address && r.address.toLowerCase().includes(q))
+      (r.user_name && String(r.user_name).toLowerCase().includes(q)) ||
+      (r.email && String(r.email).toLowerCase().includes(q)) ||
+      (r.phone && String(r.phone).toLowerCase().includes(q)) ||
+      (r.event_title && String(r.event_title).toLowerCase().includes(q)) ||
+      (r.address && String(r.address).toLowerCase().includes(q))
     );
   });
 
@@ -618,11 +650,11 @@ const Admin = () => {
     if (!newsSearchTerm.trim()) return true;
     const q = newsSearchTerm.toLowerCase();
     return (
-      (n.title && n.title.toLowerCase().includes(q)) ||
-      (n.summary && n.summary.toLowerCase().includes(q)) ||
-      (n.author && n.author.toLowerCase().includes(q)) ||
-      (n.edition && n.edition.toLowerCase().includes(q)) ||
-      (n.categoryLabel && n.categoryLabel.toLowerCase().includes(q))
+      (n.title && String(n.title).toLowerCase().includes(q)) ||
+      (n.summary && String(n.summary).toLowerCase().includes(q)) ||
+      (n.author && String(n.author).toLowerCase().includes(q)) ||
+      (n.edition && String(n.edition).toLowerCase().includes(q)) ||
+      (n.categoryLabel && String(n.categoryLabel).toLowerCase().includes(q))
     );
   });
 
@@ -630,10 +662,10 @@ const Admin = () => {
     if (!userSearch.trim()) return true;
     const q = userSearch.toLowerCase();
     return (
-      (u.name && u.name.toLowerCase().includes(q)) ||
-      (u.email && u.email.toLowerCase().includes(q)) ||
-      (u.phone && u.phone.toLowerCase().includes(q)) ||
-      (u.role && u.role.toLowerCase().includes(q))
+      (u.name && String(u.name).toLowerCase().includes(q)) ||
+      (u.email && String(u.email).toLowerCase().includes(q)) ||
+      (u.phone && String(u.phone).toLowerCase().includes(q)) ||
+      (u.role && String(u.role).toLowerCase().includes(q))
     );
   });
 
@@ -644,33 +676,47 @@ const Admin = () => {
 
   const pendingCount = bookings.filter(b => b.status === "PENDING_APPROVAL").length;
 
-  if (loading) return (
-    <div style={{ display:"flex", height:"100vh", alignItems:"center", justifyContent:"center", flexDirection:"column", gap:"16px", background:"#f8fafc" }}>
-      <div style={{ width: "48px", height: "48px", border: "4px solid #bae6fd", borderTopColor: "#009ee3", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
-      <p style={{ color:"#0369a1", fontWeight:700, fontSize:"1.05rem" }}>Synchronizing Blinklean Command Center...</p>
-      <style>{`@keyframes spin { to { transform:rotate(360deg); } }`}</style>
-    </div>
-  );
-
-  if (!isAuthorized) return (
-    <div style={{ minHeight:"100vh", display:"flex", alignItems:"center", justifyContent:"center", background:"#f1f5f9" }}>
-      <div style={{ background:"white", padding:"50px", borderRadius:"28px", textAlign:"center", maxWidth:"480px", boxShadow:"0 20px 60px rgba(0,0,0,0.08)", border:"1px solid #e2e8f0" }}>
-        <div style={{ width:"68px", height:"68px", borderRadius:"20px", background:"#fee2e2", color:"#ef4444", display:"flex", alignItems:"center", justifyContent:"center", margin:"0 auto 16px" }}>
-          <AlertCircle size={36} />
-        </div>
-        <h2 style={{ color:"#0f172a", margin:"10px 0 6px", fontSize:"1.6rem", fontWeight:"900" }}>Access Denied</h2>
-        <p style={{ color:"#64748b", marginBottom:"28px", fontSize:"0.95rem" }}>
-          You do not have administrative privileges to access this control portal.
-        </p>
-        <button 
-          style={{ padding:"14px 28px", background:"#009ee3", color:"white", border:"none", borderRadius:"14px", cursor:"pointer", fontWeight:"800", fontSize:"0.95rem", boxShadow:"0 4px 14px rgba(0, 158, 227, 0.3)" }} 
-          onClick={() => navigate("/")}
-        >
-          Return to Public Site
-        </button>
+  // Render Loading State
+  if (loading) {
+    return (
+      <div style={{ display:"flex", height:"100vh", alignItems:"center", justifyContent:"center", flexDirection:"column", gap:"16px", background:"#f8fafc" }}>
+        <div style={{ width: "48px", height: "48px", border: "4px solid #bae6fd", borderTopColor: "#009ee3", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
+        <p style={{ color:"#0369a1", fontWeight:700, fontSize:"1.05rem" }}>Synchronizing Blinklean Command Center...</p>
+        <style>{`@keyframes spin { to { transform:rotate(360deg); } }`}</style>
       </div>
-    </div>
-  );
+    );
+  }
+
+  // Render Access Denied or Login Required State
+  if (!isAuthorized) {
+    return (
+      <div style={{ minHeight:"100vh", display:"flex", alignItems:"center", justifyContent:"center", background:"#f1f5f9", padding:"20px" }}>
+        <div style={{ background:"white", padding:"50px 40px", borderRadius:"28px", textAlign:"center", maxWidth:"480px", width:"100%", boxShadow:"0 20px 60px rgba(0,0,0,0.08)", border:"1px solid #e2e8f0" }}>
+          <div style={{ width:"68px", height:"68px", borderRadius:"20px", background:"#fee2e2", color:"#ef4444", display:"flex", alignItems:"center", justifyContent:"center", margin:"0 auto 16px" }}>
+            <AlertCircle size={36} />
+          </div>
+          <h2 style={{ color:"#0f172a", margin:"10px 0 6px", fontSize:"1.6rem", fontWeight:"900" }}>Admin Access Required</h2>
+          <p style={{ color:"#64748b", marginBottom:"28px", fontSize:"0.95rem", lineHeight:"1.5" }}>
+            Please log in with an authorized Blinklean administrator account to access the control panel.
+          </p>
+          <div style={{ display:"flex", flexDirection:"column", gap:"10px" }}>
+            <button 
+              style={{ width:"100%", padding:"14px", background:"#009ee3", color:"white", border:"none", borderRadius:"14px", cursor:"pointer", fontWeight:"800", fontSize:"0.95rem", boxShadow:"0 4px 14px rgba(0, 158, 227, 0.3)", display:"flex", alignItems:"center", justifyContent:"center", gap:"8px" }} 
+              onClick={() => navigate("/login")}
+            >
+              <LogIn size={18} /> Sign In as Admin
+            </button>
+            <button 
+              style={{ width:"100%", padding:"12px", background:"#f1f5f9", color:"#475569", border:"none", borderRadius:"14px", cursor:"pointer", fontWeight:"700", fontSize:"0.9rem" }} 
+              onClick={() => navigate("/")}
+            >
+              Return to Home
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="admin-layout">
@@ -695,7 +741,7 @@ const Admin = () => {
             <a href="/" target="_blank" rel="noopener noreferrer" className="adm-btn-ghost">
               <Globe size={16} /> Public Website ↗
             </a>
-            <button onClick={() => auth.signOut().then(() => navigate("/"))} className="adm-btn-ghost" style={{ background:"rgba(239, 68, 68, 0.25)", borderColor:"rgba(239, 68, 68, 0.4)" }}>
+            <button onClick={() => auth.signOut().then(() => navigate("/login"))} className="adm-btn-ghost" style={{ background:"rgba(239, 68, 68, 0.25)", borderColor:"rgba(239, 68, 68, 0.4)" }}>
               <LogOut size={16} /> Logout
             </button>
           </div>
@@ -774,7 +820,7 @@ const Admin = () => {
       {/* 3. MAIN DASHBOARD CONTENT AREA */}
       <main className="adm-container animate-fade-in">
         
-        {/* STATS OVERVIEW CARDS (ALWAYS VISIBLE IN OVERVIEW TAB, OR COMPACT ON OTHERS) */}
+        {/* TAB 1: OVERVIEW */}
         {activeTab === "overview" && (
           <section>
             {/* Hero Banner */}
@@ -917,10 +963,8 @@ const Admin = () => {
           </section>
         )}
 
-        {/* =========================================================================
-            TAB 2: SCRAP PICKUPS MANAGEMENT
-           ========================================================================= */}
-        {(activeTab === "bookings" || activeTab === "overview") && (
+        {/* TAB 2: SCRAP PICKUPS MANAGEMENT */}
+        {activeTab === "bookings" && (
           <section className="adm-card animate-fade-in">
             <div className="adm-card-header">
               <h2 className="adm-card-title">
@@ -981,7 +1025,6 @@ const Admin = () => {
                       <div style={{ display:"flex", justifyContent:"space-between", flexWrap:"wrap", gap:"20px", alignItems:"flex-start" }}>
                         <div style={{ flex:1, minWidth:"280px" }}>
                           
-                          {/* Header pill & ID */}
                           <div style={{ display:"flex", alignItems:"center", gap:"10px", marginBottom:"10px" }}>
                             <span style={{ background: cfg.bg, color: cfg.color, padding:"4px 12px", borderRadius:"20px", fontSize:"0.75rem", fontWeight:"800" }}>
                               {cfg.label}
@@ -1002,7 +1045,6 @@ const Admin = () => {
                             </span>
                           </div>
 
-                          {/* Scrap Materials List */}
                           {b.items && Array.isArray(b.items) && (
                             <div style={{ marginTop:12, display:"flex", flexWrap:"wrap", gap:6 }}>
                               {b.items.map((item, idx) => (
@@ -1014,7 +1056,6 @@ const Admin = () => {
                           )}
                         </div>
 
-                        {/* Right side: Dates & Scheduling Slot */}
                         <div style={{ textAlign:"right", minWidth:"200px" }}>
                           <p style={{ margin:0, color:"#94a3b8", fontSize:"0.75rem", textTransform:"uppercase", fontWeight:"700" }}>Booked On</p>
                           <p style={{ margin:"2px 0 8px", fontWeight:"800", color:"#0f172a", fontSize:"0.88rem" }}>{formatDate(b.created_at)}</p>
@@ -1027,7 +1068,6 @@ const Admin = () => {
                         </div>
                       </div>
 
-                      {/* Confirmation / Slot Scheduling Area */}
                       {isPending ? (
                         <div style={{ marginTop:"18px", background:"#fefce8", border:"1px solid #fef08a", padding:"16px 20px", borderRadius:"14px" }}>
                           <p style={{ margin:"0 0 10px", fontSize:"0.85rem", fontWeight:"800", color:"#854d0e" }}>
@@ -1068,7 +1108,7 @@ const Admin = () => {
                           <div style={{ display:"flex", gap:"8px" }}>
                             {b.phone_number && (
                               <a 
-                                href={`https://wa.me/91${b.phone_number.replace(/[^0-9]/g, "").slice(-10)}`}
+                                href={`https://wa.me/91${getCleanPhone(b.phone_number)}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="adm-action-btn green"
@@ -1095,10 +1135,8 @@ const Admin = () => {
           </section>
         )}
 
-        {/* =========================================================================
-            TAB 3: GREEN CLUB VOLUNTEERS & PHOTO MANAGEMENT
-           ========================================================================= */}
-        {(activeTab === "green_club" || activeTab === "overview") && (
+        {/* TAB 3: GREEN CLUB VOLUNTEERS */}
+        {activeTab === "green_club" && (
           <section className="adm-card animate-fade-in">
             <div className="adm-card-header">
               <div>
@@ -1167,7 +1205,6 @@ const Admin = () => {
 
                       return (
                         <tr key={r.id}>
-                          {/* Member Photo Avatar */}
                           <td>
                             <div 
                               className="adm-avatar-thumb" 
@@ -1182,17 +1219,15 @@ const Admin = () => {
                             </div>
                           </td>
 
-                          {/* Name & Address */}
                           <td>
                             <div style={{ fontWeight:"800", color:"#0f172a", fontSize:"0.95rem" }}>
                               {r.user_name}
                             </div>
                             <div style={{ fontSize:"0.78rem", color:"#64748b", marginTop:"2px", display:"flex", alignItems:"center", gap:"4px" }}>
-                              <MapPin size={12} color="#ef4444" /> {r.address ? r.address.substring(0, 30) + "..." : "No address"}
+                              <MapPin size={12} color="#ef4444" /> {r.address ? String(r.address).substring(0, 30) + "..." : "No address"}
                             </div>
                           </td>
 
-                          {/* Contact Info */}
                           <td>
                             <div style={{ fontSize:"0.85rem", color:"#0284c7", fontWeight:"700" }}>
                               <a href={`tel:${r.phone}`} style={{ color:"inherit", textDecoration:"none" }}>{r.phone}</a>
@@ -1200,14 +1235,12 @@ const Admin = () => {
                             <div style={{ fontSize:"0.75rem", color:"#64748b" }}>{r.email}</div>
                           </td>
 
-                          {/* Selected Task */}
                           <td>
                             <span style={{ background:"#ecfdf5", color:"#059669", padding:"4px 10px", borderRadius:"12px", fontSize:"0.75rem", fontWeight:"800" }}>
                               {r.event_title || "Lifetime Member"}
                             </span>
                           </td>
 
-                          {/* Date */}
                           <td>
                             <div style={{ fontSize:"0.82rem", color:"#475569", fontWeight:"600" }}>
                               {formatDate(r.created_at)}
@@ -1224,7 +1257,6 @@ const Admin = () => {
                             </span>
                           </td>
 
-                          {/* Actions */}
                           <td style={{ textAlign:"right" }}>
                             <div style={{ display:"inline-flex", gap:"6px", alignItems:"center" }}>
                               <button 
@@ -1264,13 +1296,10 @@ const Admin = () => {
           </section>
         )}
 
-        {/* =========================================================================
-            TAB 4: WEEKLY NEWS & SOCIETY GAZETTE STUDIO
-           ========================================================================= */}
-        {(activeTab === "weekly_news" || activeTab === "overview") && (
+        {/* TAB 4: WEEKLY NEWS & SOCIETY GAZETTE */}
+        {activeTab === "weekly_news" && (
           <section className="adm-card animate-fade-in">
             
-            {/* Header Banner */}
             <div style={{ 
               background: "linear-gradient(135deg, #009ee3 0%, #0369a1 100%)", 
               padding: "26px 30px", 
@@ -1281,7 +1310,7 @@ const Admin = () => {
             }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "16px" }}>
                 <div>
-                  <span style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "rgba(255,255,255,0.2)", padding: "4px 12px", borderRadius: "20px", fontSize: "0.75rem", fontWeight: "800", textTransform: "uppercase" }}>
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "rgba(255,255,255,0.2)", padding: "4px 12px", borderRadius: "20px", fontSize:"0.75rem", fontWeight: "800", textTransform: "uppercase" }}>
                     <Sparkles size={14} /> Society Newsroom Dispatch Studio
                   </span>
                   <h2 style={{ color: "white", margin: "8px 0 4px", fontSize: "1.5rem", fontWeight: "900", display: "flex", alignItems: "center", gap: "8px" }}>
@@ -1746,10 +1775,8 @@ const Admin = () => {
           </section>
         )}
 
-        {/* =========================================================================
-            TAB 5: PARTNER ENROLLMENTS
-           ========================================================================= */}
-        {(activeTab === "partners" || activeTab === "overview") && (
+        {/* TAB 5: PARTNER ENROLLMENTS */}
+        {activeTab === "partners" && (
           <section className="adm-card animate-fade-in">
             <div className="adm-card-header">
               <h2 className="adm-card-title">
@@ -1811,7 +1838,7 @@ const Admin = () => {
                           <div style={{ display:"inline-flex", gap:"6px" }}>
                             {p.phone && (
                               <a 
-                                href={`https://wa.me/91${p.phone.replace(/[^0-9]/g, "").slice(-10)}`}
+                                href={`https://wa.me/91${getCleanPhone(p.phone)}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="adm-action-btn green"
@@ -1837,10 +1864,8 @@ const Admin = () => {
           </section>
         )}
 
-        {/* =========================================================================
-            TAB 6: WEEKEND TASKS (EVENTS) & GREEN CLUB BLOGS STUDIO
-           ========================================================================= */}
-        {(activeTab === "content_studio" || activeTab === "overview") && (
+        {/* TAB 6: WEEKEND TASKS & BLOGS */}
+        {activeTab === "content_studio" && (
           <section className="adm-card animate-fade-in">
             <div className="adm-card-header">
               <h2 className="adm-card-title">
@@ -1966,10 +1991,8 @@ const Admin = () => {
           </section>
         )}
 
-        {/* =========================================================================
-            TAB 7: REGISTERED USERS DIRECTORY
-           ========================================================================= */}
-        {(activeTab === "users" || activeTab === "overview") && (
+        {/* TAB 7: USERS DIRECTORY */}
+        {activeTab === "users" && (
           <section className="adm-card animate-fade-in">
             <div className="adm-card-header">
               <h2 className="adm-card-title">
@@ -2191,7 +2214,7 @@ const Admin = () => {
 
                 {selectedPhotoVolunteer.phone && (
                   <a 
-                    href={`https://wa.me/91${selectedPhotoVolunteer.phone.replace(/[^0-9]/g, "").slice(-10)}`}
+                    href={`https://wa.me/91${getCleanPhone(selectedPhotoVolunteer.phone)}`}
                     target="_blank" 
                     rel="noopener noreferrer"
                     style={{ 
