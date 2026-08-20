@@ -25,7 +25,22 @@ import {
   MessageCircle,
   Search,
   Image as ImageIcon,
-  X
+  X,
+  Newspaper,
+  Sparkles,
+  Images,
+  CheckCircle2,
+  FileText,
+  Tag,
+  Share2,
+  Globe,
+  Leaf,
+  Zap,
+  Building,
+  HeartPulse,
+  TrendingUp,
+  Layers,
+  Plus
 } from "lucide-react";
 import "../assets/css/style.css";
 
@@ -56,6 +71,29 @@ const Admin = () => {
   const [selectedPhotoVolunteer,  setSelectedPhotoVolunteer]  = useState(null);
   const [gcSearchTerm,            setGcSearchTerm]            = useState("");
   const [gcFilterPhotoOnly,       setGcFilterPhotoOnly]       = useState(false);
+
+  // Weekly News & Society Gazette State
+  const [weeklyNewsList,          setWeeklyNewsList]          = useState([]);
+  const [newsTitle,               setNewsTitle]               = useState("");
+  const [newsCategory,            setNewsCategory]            = useState("environment");
+  const [newsEdition,             setNewsEdition]             = useState("Week 3, August 2026");
+  const [newsDate,                setNewsDate]                = useState(new Date().toLocaleDateString("en-IN", { day:"2-digit", month:"short", year:"numeric" }));
+  const [newsAuthor,              setNewsAuthor]              = useState("Blinklean News Bureau");
+  const [newsReadTime,            setNewsReadTime]            = useState("4 min read");
+  const [newsSummary,             setNewsSummary]             = useState("");
+  const [newsContent,             setNewsContent]             = useState("");
+  const [newsCoverFile,           setNewsCoverFile]           = useState(null);
+  const [newsCoverUrl,            setNewsCoverUrl]            = useState("");
+  const [newsGalleryFiles,        setNewsGalleryFiles]        = useState([]);
+  const [newsGalleryUrls,         setNewsGalleryUrls]         = useState("");
+  const [newsTags,                setNewsTags]                = useState("CleanTech, Ecology, Society");
+  const [newsTakeaways,           setNewsTakeaways]           = useState("");
+  const [newsIsFeatured,          setNewsIsFeatured]          = useState(false);
+  const [newsUploading,           setNewsUploading]           = useState(false);
+  const [newsSearchTerm,          setNewsSearchTerm]          = useState("");
+  const [newsCategoryFilter,      setNewsCategoryFilter]      = useState("all");
+  const [selectedNewsPreview,     setSelectedNewsPreview]     = useState(null);
+  const [newsStudioTab,           setNewsStudioTab]           = useState("publish"); // 'publish' | 'manage'
 
   // Blog Upload State
   const [blogTitle,     setBlogTitle]     = useState("");
@@ -124,6 +162,15 @@ const Admin = () => {
         setClubBlogs(gcBlogSnap.docs.map(d => ({ id: d.id, ...d.data() })));
       } catch (err) {
         console.warn("Could not fetch Green Club blogs:", err);
+      }
+
+      // 7. Fetch Weekly News Articles
+      try {
+        const newsQuery = query(collection(db, "weekly_news"), orderBy("created_at", "desc"));
+        const newsSnap = await getDocs(newsQuery);
+        setWeeklyNewsList(newsSnap.docs.map(d => ({ id: d.id, ...d.data() })));
+      } catch (err) {
+        console.warn("Could not fetch Weekly News:", err);
       }
 
     } catch (err) {
@@ -314,6 +361,152 @@ const Admin = () => {
     }
   };
 
+  const compressImageToBase64 = (file, maxWidth = 900, maxHeight = 900, quality = 0.8) => {
+    return new Promise((resolve) => {
+      if (!file) { resolve(""); return; }
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const img = new Image();
+        img.onload = () => {
+          let width = img.width;
+          let height = img.height;
+          if (width > height) {
+            if (width > maxWidth) {
+              height = Math.round((height * maxWidth) / width);
+              width = maxWidth;
+            }
+          } else {
+            if (height > maxHeight) {
+              width = Math.round((width * maxHeight) / height);
+              height = maxHeight;
+            }
+          }
+          const canvas = document.createElement("canvas");
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext("2d");
+          ctx.drawImage(img, 0, 0, width, height);
+          resolve(canvas.toDataURL("image/jpeg", quality));
+        };
+        img.onerror = () => resolve(event.target.result || "");
+        img.src = event.target.result;
+      };
+      reader.onerror = () => resolve("");
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleNewsSubmit = async (e) => {
+    e.preventDefault();
+    if (!newsTitle.trim() || !newsSummary.trim() || !newsContent.trim()) {
+      alert("Please provide the news headline, summary, and full content.");
+      return;
+    }
+
+    setNewsUploading(true);
+    try {
+      // 1. Process Cover Image
+      let finalCoverUrl = newsCoverUrl.trim();
+      if (newsCoverFile) {
+        const b64 = await compressImageToBase64(newsCoverFile);
+        try {
+          finalCoverUrl = await uploadImage(newsCoverFile, "weekly_news");
+        } catch {
+          finalCoverUrl = b64;
+        }
+        if (!finalCoverUrl) finalCoverUrl = b64;
+      }
+      if (!finalCoverUrl) {
+        finalCoverUrl = "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&w=1000&q=80";
+      }
+
+      // 2. Process Gallery Images (Multiple relevant images)
+      const finalGallery = [];
+      if (newsGalleryFiles && newsGalleryFiles.length > 0) {
+        for (let i = 0; i < newsGalleryFiles.length; i++) {
+          const file = newsGalleryFiles[i];
+          const b64 = await compressImageToBase64(file);
+          let gUrl = "";
+          try {
+            gUrl = await uploadImage(file, "weekly_news");
+          } catch {
+            gUrl = b64;
+          }
+          if (gUrl || b64) finalGallery.push(gUrl || b64);
+        }
+      }
+
+      // Add manual gallery URLs if provided
+      if (newsGalleryUrls.trim()) {
+        const manualUrls = newsGalleryUrls
+          .split(/[\n,]+/)
+          .map(u => u.trim())
+          .filter(u => u.startsWith("http"));
+        finalGallery.push(...manualUrls);
+      }
+
+      // 3. Process Key Takeaways & Tags
+      const takeawaysList = newsTakeaways
+        .split("\n")
+        .map(t => t.replace(/^[•\-\*\d\.]+\s*/, "").trim())
+        .filter(Boolean);
+
+      const tagsList = newsTags
+        .split(",")
+        .map(t => t.trim().replace(/^#/, ""))
+        .filter(Boolean);
+
+      const categoryLabels = {
+        environment: "Environment & Ecology",
+        tech: "Clean-Tech & Innovation",
+        society: "Society & Civic Welfare",
+        health: "Health & Sanitation",
+        urban: "Urban Living & Sustainability",
+        economy: "Policy & Green Economy"
+      };
+
+      const payload = {
+        title: newsTitle.trim(),
+        category: newsCategory,
+        categoryLabel: categoryLabels[newsCategory] || "Society News",
+        edition: newsEdition.trim() || "Weekly Edition",
+        date: newsDate.trim() || new Date().toLocaleDateString("en-IN", { day:"2-digit", month:"short", year:"numeric" }),
+        author: newsAuthor.trim() || "Blinklean News Bureau",
+        read_time: newsReadTime.trim() || "4 min read",
+        summary: newsSummary.trim(),
+        content: newsContent.trim(),
+        cover_image: finalCoverUrl,
+        gallery_images: finalGallery,
+        key_takeaways: takeawaysList,
+        tags: tagsList,
+        is_featured: newsIsFeatured,
+        created_at: serverTimestamp()
+      };
+
+      await addDoc(collection(db, "weekly_news"), payload);
+      alert("🎉 Weekly News Bulletin published successfully to live Gazette!");
+
+      // Reset form
+      setNewsTitle("");
+      setNewsSummary("");
+      setNewsContent("");
+      setNewsCoverFile(null);
+      setNewsCoverUrl("");
+      setNewsGalleryFiles([]);
+      setNewsGalleryUrls("");
+      setNewsTakeaways("");
+      setNewsIsFeatured(false);
+      setNewsStudioTab("manage");
+
+      await fetchData();
+    } catch (err) {
+      console.error("Failed to publish weekly news:", err);
+      alert("Error publishing article: " + err.message);
+    } finally {
+      setNewsUploading(false);
+    }
+  };
+
   const handleDeleteDoc = async (collectionName, docId) => {
     if (!window.confirm("Are you sure you want to delete this item?")) return;
     try {
@@ -380,6 +573,19 @@ const Admin = () => {
     );
   });
 
+  const filteredWeeklyNews = weeklyNewsList.filter(n => {
+    if (newsCategoryFilter !== "all" && n.category !== newsCategoryFilter) return false;
+    if (!newsSearchTerm.trim()) return true;
+    const q = newsSearchTerm.toLowerCase();
+    return (
+      (n.title && n.title.toLowerCase().includes(q)) ||
+      (n.summary && n.summary.toLowerCase().includes(q)) ||
+      (n.author && n.author.toLowerCase().includes(q)) ||
+      (n.edition && n.edition.toLowerCase().includes(q)) ||
+      (n.categoryLabel && n.categoryLabel.toLowerCase().includes(q))
+    );
+  });
+
   const photoCount = clubRegistrations.filter(r => {
     const photo = r.photo_url || r.photo_base64 || r.photo;
     return !!photo && !photo.includes("unsplash.com/photo-1535713875002");
@@ -433,6 +639,7 @@ const Admin = () => {
             { label:"Scrap Bookings", value:bookings.length, color:"#1B9B3A", bg:"#dcfce7", icon:<Package /> },
             { label:"Partner Enrollments", value:partners.length, color:"#8b5cf6", bg:"#ede9fe", icon:<Handshake /> },
             { label:"New Requests", value:pendingCount, color:"#f59e0b", bg:"#fef3c7", icon:<Clock /> },
+            { label:"Weekly News Articles", value:weeklyNewsList.length, color:"#009EE3", bg:"#e0f2fe", icon:<Newspaper /> },
             { label:"Green Registrations", value:clubRegistrations.length, color:"#10b981", bg:"#f0fdf4", icon:<Users /> },
             { label:"Uploaded Photos", value:photoCount, color:"#059669", bg:"#ecfdf5", icon:<ImageIcon /> },
             { label:"Weekend Tasks", value:clubEvents.length, color:"#10b981", bg:"#f0fdf4", icon:<Calendar /> },
@@ -871,6 +1078,541 @@ const Admin = () => {
           </div>
         </section>
 
+        {/* --- WEEKLY NEWS & SOCIETY GAZETTE STUDIO SECTION --- */}
+        <section style={{ marginBottom: "50px" }}>
+          {/* Header Banner & Controls */}
+          <div style={{ 
+            background: "linear-gradient(135deg, #009ee3 0%, #0369a1 100%)", 
+            padding: "26px 30px", 
+            borderRadius: "24px", 
+            color: "white", 
+            marginBottom: "25px", 
+            boxShadow: "0 10px 30px rgba(0, 158, 227, 0.15)" 
+          }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "16px" }}>
+              <div>
+                <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "rgba(255,255,255,0.2)", padding: "4px 12px", borderRadius: "20px", fontSize: "0.75rem", fontWeight: "800", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                  <Sparkles size={14} /> Society Newsroom Dispatch Studio
+                </div>
+                <h2 style={{ color: "white", margin: "8px 0 4px", fontSize: "1.6rem", fontWeight: "800", display: "flex", alignItems: "center", gap: "10px" }}>
+                  <Newspaper size={26} color="white" /> Weekly News & Society Gazette Management
+                </h2>
+                <p style={{ color: "rgba(255,255,255,0.85)", margin: 0, fontSize: "0.88rem" }}>
+                  Compose and publish weekly bulletins covering all fields in society with cover photos, multi-image field galleries, and detailed breakdowns.
+                </p>
+              </div>
+
+              {/* View / Studio Toggle Buttons */}
+              <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+                <button
+                  onClick={() => setNewsStudioTab("publish")}
+                  style={{
+                    background: newsStudioTab === "publish" ? "white" : "rgba(255,255,255,0.15)",
+                    color: newsStudioTab === "publish" ? "#0369a1" : "white",
+                    border: "none",
+                    padding: "10px 18px",
+                    borderRadius: "12px",
+                    fontWeight: "800",
+                    fontSize: "0.85rem",
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    transition: "0.2s"
+                  }}
+                >
+                  <Plus size={16} /> Publish New Bulletin
+                </button>
+                <button
+                  onClick={() => setNewsStudioTab("manage")}
+                  style={{
+                    background: newsStudioTab === "manage" ? "white" : "rgba(255,255,255,0.15)",
+                    color: newsStudioTab === "manage" ? "#0369a1" : "white",
+                    border: "none",
+                    padding: "10px 18px",
+                    borderRadius: "12px",
+                    fontWeight: "800",
+                    fontSize: "0.85rem",
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    transition: "0.2s"
+                  }}
+                >
+                  <Layers size={16} /> Gazette Archive ({weeklyNewsList.length})
+                </button>
+                <a
+                  href="/weekly-news"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    background: "rgba(0,0,0,0.25)",
+                    color: "white",
+                    textDecoration: "none",
+                    padding: "10px 18px",
+                    borderRadius: "12px",
+                    fontWeight: "700",
+                    fontSize: "0.85rem",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "6px"
+                  }}
+                >
+                  <Globe size={16} /> Live Hub ↗
+                </a>
+              </div>
+            </div>
+          </div>
+
+          {/* TAB 1: PUBLISH STUDIO FORM */}
+          {newsStudioTab === "publish" && (
+            <div style={{ background: "white", padding: "32px", borderRadius: "24px", boxShadow: "0 10px 40px rgba(0,0,0,0.05)", border: "1px solid #e2e8f0" }}>
+              <h3 style={{ margin: "0 0 20px", fontSize: "1.25rem", fontWeight: "800", color: "#0f172a", display: "flex", alignItems: "center", gap: "8px" }}>
+                <FileText size={20} color="#009ee3" /> Weekly News Composer Studio
+              </h3>
+
+              <form onSubmit={handleNewsSubmit}>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "25px" }}>
+                  
+                  {/* Left Column: Article Metadata & Body */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                    
+                    {/* Headline */}
+                    <div>
+                      <label style={{ display: "block", fontSize: "0.75rem", fontWeight: "800", color: "#475569", marginBottom: "6px", textTransform: "uppercase" }}>
+                        Article Headline / News Title *
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="e.g. Mega Clean City Drive & Smart Segregation Launched in Bengaluru"
+                        required
+                        value={newsTitle}
+                        onChange={(e) => setNewsTitle(e.target.value)}
+                        style={{ width: "100%", padding: "12px 14px", border: "1px solid #cbd5e1", borderRadius: "12px", outline: "none", fontSize: "0.95rem", fontWeight: "600" }}
+                      />
+                    </div>
+
+                    {/* Category Selector & Edition */}
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                      <div>
+                        <label style={{ display: "block", fontSize: "0.75rem", fontWeight: "800", color: "#475569", marginBottom: "6px", textTransform: "uppercase" }}>
+                          Field in Society *
+                        </label>
+                        <select
+                          value={newsCategory}
+                          onChange={(e) => setNewsCategory(e.target.value)}
+                          style={{ width: "100%", padding: "12px 14px", border: "1px solid #cbd5e1", borderRadius: "12px", outline: "none", fontSize: "0.9rem", fontWeight: "600", background: "white" }}
+                        >
+                          <option value="environment">🌳 Environment & Ecology</option>
+                          <option value="tech">⚡ Clean-Tech & Innovation</option>
+                          <option value="society">🏛️ Society & Civic Welfare</option>
+                          <option value="health">🩺 Health & Sanitation</option>
+                          <option value="urban">🏙️ Urban Living & Sustainability</option>
+                          <option value="economy">📈 Policy & Green Economy</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label style={{ display: "block", fontSize: "0.75rem", fontWeight: "800", color: "#475569", marginBottom: "6px", textTransform: "uppercase" }}>
+                          Edition Week *
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="e.g. Week 3, August 2026"
+                          required
+                          value={newsEdition}
+                          onChange={(e) => setNewsEdition(e.target.value)}
+                          style={{ width: "100%", padding: "12px 14px", border: "1px solid #cbd5e1", borderRadius: "12px", outline: "none", fontSize: "0.9rem" }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Author, Date, Read Time */}
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "10px" }}>
+                      <div>
+                        <label style={{ display: "block", fontSize: "0.72rem", fontWeight: "800", color: "#475569", marginBottom: "6px", textTransform: "uppercase" }}>Author/Source</label>
+                        <input
+                          type="text"
+                          placeholder="Editorial Team"
+                          value={newsAuthor}
+                          onChange={(e) => setNewsAuthor(e.target.value)}
+                          style={{ width: "100%", padding: "10px 12px", border: "1px solid #cbd5e1", borderRadius: "10px", outline: "none", fontSize: "0.85rem" }}
+                        />
+                      </div>
+
+                      <div>
+                        <label style={{ display: "block", fontSize: "0.72rem", fontWeight: "800", color: "#475569", marginBottom: "6px", textTransform: "uppercase" }}>Publication Date</label>
+                        <input
+                          type="text"
+                          placeholder="Aug 20, 2026"
+                          value={newsDate}
+                          onChange={(e) => setNewsDate(e.target.value)}
+                          style={{ width: "100%", padding: "10px 12px", border: "1px solid #cbd5e1", borderRadius: "10px", outline: "none", fontSize: "0.85rem" }}
+                        />
+                      </div>
+
+                      <div>
+                        <label style={{ display: "block", fontSize: "0.72rem", fontWeight: "800", color: "#475569", marginBottom: "6px", textTransform: "uppercase" }}>Read Time</label>
+                        <input
+                          type="text"
+                          placeholder="4 min read"
+                          value={newsReadTime}
+                          onChange={(e) => setNewsReadTime(e.target.value)}
+                          style={{ width: "100%", padding: "10px 12px", border: "1px solid #cbd5e1", borderRadius: "10px", outline: "none", fontSize: "0.85rem" }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Lead Summary */}
+                    <div>
+                      <label style={{ display: "block", fontSize: "0.75rem", fontWeight: "800", color: "#475569", marginBottom: "6px", textTransform: "uppercase" }}>
+                        Lead Summary / Executive Abstract *
+                      </label>
+                      <textarea
+                        placeholder="Provide a concise 1-2 sentence lead overview highlighting the core news development..."
+                        required
+                        value={newsSummary}
+                        onChange={(e) => setNewsSummary(e.target.value)}
+                        style={{ width: "100%", height: "85px", padding: "12px 14px", border: "1px solid #cbd5e1", borderRadius: "12px", outline: "none", fontSize: "0.9rem", fontFamily: "inherit" }}
+                      />
+                    </div>
+
+                    {/* Full Content */}
+                    <div>
+                      <label style={{ display: "block", fontSize: "0.75rem", fontWeight: "800", color: "#475569", marginBottom: "6px", textTransform: "uppercase" }}>
+                        Full News Article Body * (Separate paragraphs with double Enter)
+                      </label>
+                      <textarea
+                        placeholder="Write the comprehensive news story here with detailed facts, background context, quotes, impact data, and civic outcomes..."
+                        required
+                        value={newsContent}
+                        onChange={(e) => setNewsContent(e.target.value)}
+                        style={{ width: "100%", height: "180px", padding: "14px", border: "1px solid #cbd5e1", borderRadius: "12px", outline: "none", fontSize: "0.92rem", fontFamily: "inherit", lineHeight: "1.6" }}
+                      />
+                    </div>
+
+                  </div>
+
+                  {/* Right Column: Visuals & Relevant Images & Takeaways */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                    
+                    {/* Primary Cover Image */}
+                    <div style={{ background: "#f8fafc", padding: "18px", borderRadius: "16px", border: "1px solid #e2e8f0" }}>
+                      <label style={{ display: "block", fontSize: "0.75rem", fontWeight: "800", color: "#0f172a", marginBottom: "6px", textTransform: "uppercase" }}>
+                        📷 1. Primary Feature Cover Image
+                      </label>
+                      
+                      <div style={{ border: "2px dashed #cbd5e1", padding: "14px", borderRadius: "12px", textAlign: "center", background: "white", cursor: "pointer", position: "relative", marginBottom: "10px" }}>
+                        <UploadCloud size={24} style={{ color: "#009ee3", marginBottom: "4px" }} />
+                        <p style={{ margin: 0, fontSize: "0.8rem", color: "#475569", fontWeight: "600" }}>
+                          {newsCoverFile ? newsCoverFile.name : "Choose Cover JPG / PNG file"}
+                        </p>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => setNewsCoverFile(e.target.files[0])}
+                          style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, opacity: 0, cursor: "pointer" }}
+                        />
+                      </div>
+
+                      <input
+                        type="text"
+                        placeholder="Or paste Direct Image URL Fallback (https://...)"
+                        value={newsCoverUrl}
+                        onChange={(e) => setNewsCoverUrl(e.target.value)}
+                        style={{ width: "100%", padding: "8px 12px", border: "1px solid #cbd5e1", borderRadius: "8px", outline: "none", fontSize: "0.82rem" }}
+                      />
+                    </div>
+
+                    {/* Relevant Images Gallery (Multiple Uploads) */}
+                    <div style={{ background: "#f8fafc", padding: "18px", borderRadius: "16px", border: "1px solid #e2e8f0" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
+                        <label style={{ fontSize: "0.75rem", fontWeight: "800", color: "#0f172a", textTransform: "uppercase" }}>
+                          🖼️ 2. Relevant Field Images Gallery ({newsGalleryFiles.length} Selected)
+                        </label>
+                        {newsGalleryFiles.length > 0 && (
+                          <button
+                            type="button"
+                            onClick={() => setNewsGalleryFiles([])}
+                            style={{ background: "none", border: "none", color: "#ef4444", fontSize: "0.75rem", fontWeight: "700", cursor: "pointer" }}
+                          >
+                            Clear All
+                          </button>
+                        )}
+                      </div>
+                      
+                      <div style={{ border: "2px dashed #93c5fd", padding: "14px", borderRadius: "12px", textAlign: "center", background: "#f0f9ff", cursor: "pointer", position: "relative", marginBottom: "10px" }}>
+                        <Images size={24} style={{ color: "#0284c7", marginBottom: "4px" }} />
+                        <p style={{ margin: 0, fontSize: "0.8rem", color: "#0369a1", fontWeight: "700" }}>
+                          Upload Multiple Relevant Images (Select 1 to 5 photos)
+                        </p>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          multiple
+                          onChange={(e) => {
+                            const files = Array.from(e.target.files);
+                            setNewsGalleryFiles(prev => [...prev, ...files]);
+                          }}
+                          style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, opacity: 0, cursor: "pointer" }}
+                        />
+                      </div>
+
+                      {/* Selected Gallery Files Thumbnails */}
+                      {newsGalleryFiles.length > 0 && (
+                        <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginBottom: "10px" }}>
+                          {newsGalleryFiles.map((f, idx) => (
+                            <span key={idx} style={{ background: "white", padding: "4px 8px", borderRadius: "6px", fontSize: "0.72rem", border: "1px solid #cbd5e1", display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                              {f.name.substring(0, 14)}...
+                            </span>
+                          ))}
+                        </div>
+                      )}
+
+                      <textarea
+                        placeholder="Or enter additional Image URLs (one per line or separated by comma)..."
+                        value={newsGalleryUrls}
+                        onChange={(e) => setNewsGalleryUrls(e.target.value)}
+                        style={{ width: "100%", height: "60px", padding: "8px 12px", border: "1px solid #cbd5e1", borderRadius: "8px", outline: "none", fontSize: "0.82rem", fontFamily: "inherit" }}
+                      />
+                    </div>
+
+                    {/* Key Highlights / Takeaways */}
+                    <div>
+                      <label style={{ display: "block", fontSize: "0.75rem", fontWeight: "800", color: "#475569", marginBottom: "6px", textTransform: "uppercase" }}>
+                        📌 Key Highlights / Takeaways (One per line)
+                      </label>
+                      <textarea
+                        placeholder="• Over 25,000 volunteers adopted green corridors&#10;• Smart real-time water quality sensors deployed&#10;• Significant reduction in municipal landfill waste"
+                        value={newsTakeaways}
+                        onChange={(e) => setNewsTakeaways(e.target.value)}
+                        style={{ width: "100%", height: "80px", padding: "10px 12px", border: "1px solid #cbd5e1", borderRadius: "10px", outline: "none", fontSize: "0.85rem", fontFamily: "inherit" }}
+                      />
+                    </div>
+
+                    {/* Tags & Featured Checkbox */}
+                    <div style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr", gap: "10px", alignItems: "center" }}>
+                      <div>
+                        <label style={{ display: "block", fontSize: "0.72rem", fontWeight: "800", color: "#475569", marginBottom: "4px", textTransform: "uppercase" }}>
+                          Topic Tags (Comma Separated)
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="Ecology, MicroForest, Bengaluru"
+                          value={newsTags}
+                          onChange={(e) => setNewsTags(e.target.value)}
+                          style={{ width: "100%", padding: "10px 12px", border: "1px solid #cbd5e1", borderRadius: "10px", outline: "none", fontSize: "0.85rem" }}
+                        />
+                      </div>
+
+                      <div style={{ background: "#f8fafc", padding: "10px 12px", borderRadius: "10px", border: "1px solid #e2e8f0", marginTop: "16px" }}>
+                        <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer", fontSize: "0.82rem", fontWeight: "700", color: "#0f172a", margin: 0 }}>
+                          <input
+                            type="checkbox"
+                            checked={newsIsFeatured}
+                            onChange={(e) => setNewsIsFeatured(e.target.checked)}
+                            style={{ width: "16px", height: "16px", accentColor: "#009ee3" }}
+                          />
+                          ⭐ Spotlight Story
+                        </label>
+                      </div>
+                    </div>
+
+                    {/* Submit Button */}
+                    <button
+                      type="submit"
+                      disabled={newsUploading}
+                      style={{
+                        width: "100%",
+                        background: "linear-gradient(135deg, #009ee3 0%, #0284c7 100%)",
+                        color: "white",
+                        border: "none",
+                        padding: "15px 24px",
+                        borderRadius: "14px",
+                        fontWeight: "800",
+                        fontSize: "1rem",
+                        cursor: "pointer",
+                        boxShadow: "0 8px 24px rgba(0, 158, 227, 0.3)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: "8px",
+                        marginTop: "10px"
+                      }}
+                    >
+                      <Newspaper size={18} />
+                      {newsUploading ? "Publishing Bulletin & Processing Visuals..." : "Publish Weekly News Bulletin"}
+                    </button>
+
+                  </div>
+
+                </div>
+              </form>
+            </div>
+          )}
+
+          {/* TAB 2: GAZETTE ARCHIVE & RELEVANT IMAGES MANAGEMENT */}
+          {newsStudioTab === "manage" && (
+            <div style={{ background: "white", borderRadius: "24px", padding: "28px", boxShadow: "0 10px 40px rgba(0,0,0,0.05)", border: "1px solid #e2e8f0" }}>
+              
+              {/* Archive Search & Filter Bar */}
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "14px", marginBottom: "24px" }}>
+                <div style={{ position: "relative", minWidth: "260px" }}>
+                  <Search size={16} style={{ position: "absolute", left: "14px", top: "12px", color: "#94a3b8" }} />
+                  <input
+                    type="text"
+                    placeholder="Search archive by title, author, tag..."
+                    value={newsSearchTerm}
+                    onChange={(e) => setNewsSearchTerm(e.target.value)}
+                    style={{ width: "100%", padding: "10px 14px 10px 38px", borderRadius: "12px", border: "1px solid #cbd5e1", outline: "none", fontSize: "0.85rem" }}
+                  />
+                </div>
+
+                <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                  {["all", "environment", "tech", "society", "health", "urban", "economy"].map(catKey => (
+                    <button
+                      key={catKey}
+                      onClick={() => setNewsCategoryFilter(catKey)}
+                      style={{
+                        padding: "6px 14px",
+                        borderRadius: "20px",
+                        border: newsCategoryFilter === catKey ? "1px solid #009ee3" : "1px solid #e2e8f0",
+                        background: newsCategoryFilter === catKey ? "#e0f2fe" : "white",
+                        color: newsCategoryFilter === catKey ? "#0369a1" : "#64748b",
+                        fontSize: "0.75rem",
+                        fontWeight: "700",
+                        cursor: "pointer"
+                      }}
+                    >
+                      {catKey.charAt(0).toUpperCase() + catKey.slice(1)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Archive Grid */}
+              {filteredWeeklyNews.length === 0 ? (
+                <div style={{ textAlign: "center", padding: "40px", color: "#94a3b8" }}>
+                  <Newspaper size={40} style={{ margin: "0 auto 10px" }} />
+                  <p style={{ margin: 0 }}>No news bulletins match your criteria.</p>
+                </div>
+              ) : (
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: "20px" }}>
+                  {filteredWeeklyNews.map(item => (
+                    <div
+                      key={item.id}
+                      style={{
+                        background: "#f8fafc",
+                        borderRadius: "18px",
+                        border: "1px solid #e2e8f0",
+                        overflow: "hidden",
+                        display: "flex",
+                        flexDirection: "column",
+                        justifyContent: "space-between",
+                        boxShadow: "0 2px 10px rgba(0,0,0,0.02)"
+                      }}
+                    >
+                      <div>
+                        {/* Cover Image */}
+                        <div style={{ height: "160px", position: "relative", overflow: "hidden", background: "#e2e8f0" }}>
+                          <img
+                            src={item.cover_image || "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&w=800&q=80"}
+                            alt={item.title}
+                            style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                          />
+                          <span style={{ position: "absolute", top: "10px", left: "10px", background: "rgba(15, 23, 42, 0.8)", color: "white", padding: "3px 10px", borderRadius: "10px", fontSize: "0.68rem", fontWeight: "800", textTransform: "uppercase" }}>
+                            {item.categoryLabel || item.category}
+                          </span>
+                          {item.gallery_images && item.gallery_images.length > 0 && (
+                            <span style={{ position: "absolute", top: "10px", right: "10px", background: "rgba(0, 158, 227, 0.9)", color: "white", padding: "3px 8px", borderRadius: "8px", fontSize: "0.68rem", fontWeight: "700", display: "flex", alignItems: "center", gap: "4px" }}>
+                              <Images size={11} /> +{item.gallery_images.length}
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Card Content */}
+                        <div style={{ padding: "16px" }}>
+                          <div style={{ fontSize: "0.72rem", color: "#94a3b8", fontWeight: "700", marginBottom: "4px" }}>
+                            {item.edition || "Weekly"} • {item.date}
+                          </div>
+                          <h4 style={{ margin: "0 0 8px", fontSize: "1rem", fontWeight: "800", color: "#0f172a", lineHeight: "1.35", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+                            {item.title}
+                          </h4>
+                          <p style={{ margin: 0, fontSize: "0.82rem", color: "#64748b", lineHeight: "1.5", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+                            {item.summary}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Card Actions Footer */}
+                      <div style={{ padding: "12px 16px", background: "white", borderTop: "1px solid #f1f5f9", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <button
+                          onClick={() => setSelectedNewsPreview(item)}
+                          style={{
+                            background: "#e0f2fe",
+                            color: "#0369a1",
+                            border: "none",
+                            padding: "6px 12px",
+                            borderRadius: "8px",
+                            fontSize: "0.78rem",
+                            fontWeight: "700",
+                            cursor: "pointer",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "4px"
+                          }}
+                        >
+                          <Eye size={13} /> Preview
+                        </button>
+
+                        <div style={{ display: "flex", gap: "6px" }}>
+                          <a
+                            href={`/weekly-news/${item.id}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{
+                              background: "#f1f5f9",
+                              color: "#475569",
+                              textDecoration: "none",
+                              padding: "6px 10px",
+                              borderRadius: "8px",
+                              fontSize: "0.78rem",
+                              fontWeight: "700",
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: "4px"
+                            }}
+                            title="Open in Public Gazette"
+                          >
+                            <ExternalLink size={13} />
+                          </a>
+
+                          <button
+                            onClick={() => handleDeleteDoc("weekly_news", item.id)}
+                            style={{
+                              background: "#fee2e2",
+                              color: "#ef4444",
+                              border: "none",
+                              padding: "6px 10px",
+                              borderRadius: "8px",
+                              cursor: "pointer"
+                            }}
+                            title="Delete Article"
+                          >
+                            <Trash2 size={13} />
+                          </button>
+                        </div>
+                      </div>
+
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </section>
+
         {/* --- GREEN CLUB EVENT & BLOGS UPLOAD MANAGEMENT --- */}
         <section style={{ marginBottom:"50px" }}>
           <h2 style={{ marginBottom:"20px", display:"flex", alignItems:"center", gap:"10px" }}><PlusCircle color="#10b981" /> Green Club Content Uploads</h2>
@@ -1235,6 +1977,126 @@ const Admin = () => {
               </button>
             </div>
 
+          </div>
+        </div>
+      )}
+
+      {/* --- WEEKLY NEWS ARTICLE ADMIN PREVIEW MODAL --- */}
+      {selectedNewsPreview && (
+        <div
+          className="modal-overlay"
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: "rgba(15, 23, 42, 0.8)",
+            backdropFilter: "blur(6px)",
+            zIndex: 9999,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "20px"
+          }}
+          onClick={() => setSelectedNewsPreview(null)}
+        >
+          <div
+            style={{
+              background: "white",
+              borderRadius: "24px",
+              maxWidth: "760px",
+              width: "100%",
+              maxHeight: "90vh",
+              overflowY: "auto",
+              boxShadow: "0 25px 60px rgba(0,0,0,0.3)",
+              position: "relative"
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div style={{ padding: "20px 24px", background: "linear-gradient(135deg, #009ee3 0%, #0369a1 100%)", color: "white", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                <Newspaper size={22} color="white" />
+                <h3 style={{ margin: 0, fontSize: "1.2rem", fontWeight: "800", color: "white" }}>Weekly News Story Preview</h3>
+              </div>
+              <button
+                onClick={() => setSelectedNewsPreview(null)}
+                style={{ background: "rgba(255,255,255,0.2)", border: "none", borderRadius: "50%", width: "32px", height: "32px", display: "flex", alignItems: "center", justifyContent: "center", color: "white", cursor: "pointer" }}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div style={{ padding: "28px 24px" }}>
+              <div style={{ display: "flex", gap: "10px", alignItems: "center", marginBottom: "10px" }}>
+                <span style={{ background: "#e0f2fe", color: "#0369a1", padding: "4px 10px", borderRadius: "12px", fontSize: "0.75rem", fontWeight: "800" }}>
+                  {selectedNewsPreview.categoryLabel || selectedNewsPreview.category}
+                </span>
+                <span style={{ fontSize: "0.8rem", color: "#64748b", fontWeight: "600" }}>
+                  {selectedNewsPreview.edition} • {selectedNewsPreview.date}
+                </span>
+              </div>
+
+              <h2 style={{ fontSize: "1.5rem", fontWeight: "900", color: "#0f172a", lineHeight: "1.3", marginBottom: "14px" }}>
+                {selectedNewsPreview.title}
+              </h2>
+
+              {selectedNewsPreview.cover_image && (
+                <div style={{ borderRadius: "16px", overflow: "hidden", maxHeight: "320px", marginBottom: "20px", background: "#f1f5f9" }}>
+                  <img src={selectedNewsPreview.cover_image} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                </div>
+              )}
+
+              {selectedNewsPreview.summary && (
+                <blockquote style={{ background: "#f0f9ff", borderLeft: "4px solid #009ee3", padding: "14px 16px", borderRadius: "8px", margin: "0 0 20px", fontSize: "0.95rem", fontStyle: "italic", color: "#0369a1" }}>
+                  "{selectedNewsPreview.summary}"
+                </blockquote>
+              )}
+
+              {/* Full Content */}
+              <div style={{ fontSize: "0.95rem", lineHeight: "1.7", color: "#334155", marginBottom: "24px" }}>
+                {selectedNewsPreview.content && selectedNewsPreview.content.split("\n\n").map((p, idx) => (
+                  <p key={idx} style={{ marginBottom: "14px" }}>{p}</p>
+                ))}
+              </div>
+
+              {/* Gallery Images in Preview */}
+              {selectedNewsPreview.gallery_images && selectedNewsPreview.gallery_images.length > 0 && (
+                <div style={{ borderTop: "1px solid #e2e8f0", paddingTop: "20px", marginBottom: "20px" }}>
+                  <h4 style={{ margin: "0 0 12px", fontSize: "0.95rem", fontWeight: "800", color: "#0f172a", display: "flex", alignItems: "center", gap: "6px" }}>
+                    <Images size={16} color="#009ee3" /> Relevant Field Images Gallery ({selectedNewsPreview.gallery_images.length})
+                  </h4>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))", gap: "10px" }}>
+                    {selectedNewsPreview.gallery_images.map((g, i) => (
+                      <div key={i} style={{ borderRadius: "10px", overflow: "hidden", height: "100px", border: "1px solid #cbd5e1" }}>
+                        <img src={typeof g === "string" ? g : g.url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Footer Actions */}
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid #f1f5f9", paddingTop: "18px" }}>
+                <a
+                  href={`/weekly-news/${selectedNewsPreview.id}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ background: "#009ee3", color: "white", textDecoration: "none", padding: "10px 18px", borderRadius: "10px", fontWeight: "700", fontSize: "0.85rem", display: "inline-flex", alignItems: "center", gap: "6px" }}
+                >
+                  <ExternalLink size={14} /> Open Live Article Page
+                </a>
+                <button
+                  onClick={() => setSelectedNewsPreview(null)}
+                  style={{ background: "#f1f5f9", color: "#64748b", border: "none", padding: "10px 18px", borderRadius: "10px", fontWeight: "700", cursor: "pointer" }}
+                >
+                  Close Preview
+                </button>
+              </div>
+
+            </div>
           </div>
         </div>
       )}

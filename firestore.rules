@@ -57,5 +57,12 @@ service cloud.firestore {
       allow read: if true; // Publicly viewable
       allow write: if isAdmin();
     }
+
+    // Weekly News across society fields
+    match /weekly_news/{newsId} {
+      allow read: if true; // Publicly viewable
+      allow write: if isAdmin();
+    }
   }
 }
+

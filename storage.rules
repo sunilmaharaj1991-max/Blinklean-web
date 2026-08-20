@@ -33,6 +33,12 @@ service firebase.storage {
       allow write: if isAdmin();
     }
 
+    // Weekly News images (cover and multiple relevant images)
+    match /weekly_news/{allPaths=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
     // Default catch-all for authorized storage access
     match /{allPaths=**} {
       allow read: if true;

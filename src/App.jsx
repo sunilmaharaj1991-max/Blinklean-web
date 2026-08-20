@@ -28,6 +28,8 @@ const Services                    = lazy(() => import("./pages/Services"));
 const TermsAndConditions          = lazy(() => import("./pages/TermsAndConditions"));
 const VehicleCleaning             = lazy(() => import("./pages/VehicleCleaning"));
 const VulnerabilityDisclosurePolicy = lazy(() => import("./pages/VulnerabilityDisclosurePolicy"));
+const WeeklyNews                  = lazy(() => import("./pages/WeeklyNews"));
+const NewsArticleDetails          = lazy(() => import("./pages/NewsArticleDetails"));
 
 /* ---- Minimal inline fallback — avoids layout shift ---- */
 const PageFallback = () => (
@@ -65,6 +67,10 @@ const App = () => (
         <Route path="/admin"                         element={<Admin />} />
         <Route path="/green-club"                    element={<BlinkleanGreenClub />} />
         <Route path="/blog/:id"                      element={<BlogDetails />} />
+        <Route path="/weekly-news"                   element={<WeeklyNews />} />
+        <Route path="/weekly-news/:id"               element={<NewsArticleDetails />} />
+        <Route path="/news"                          element={<WeeklyNews />} />
+        <Route path="/news/:id"                      element={<NewsArticleDetails />} />
         <Route path="/contact"                       element={<Contact />} />
         <Route path="/equal-opportunity-policy"      element={<EqualOpportunityPolicy />} />
         <Route path="/faq"                           element={<Faq />} />

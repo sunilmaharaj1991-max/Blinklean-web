@@ -34,6 +34,7 @@ const Header = () => {
           <Link to="/services#laundry">Laundry</Link>
           <Link to="/scrap-booking">Scrap & Recycling</Link>
           <Link to="/green-club">Green Club</Link>
+          <Link to="/weekly-news">Weekly News</Link>
           <Link to="/partner">Partner With Us</Link>
           
           {user ? (
