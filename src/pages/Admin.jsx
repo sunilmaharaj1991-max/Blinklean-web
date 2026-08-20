@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { auth, db, storage } from "../firebase";
 import { collection, getDocs, getDoc, doc, query, orderBy, updateDoc, addDoc, deleteDoc, serverTimestamp } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { 
   Users, 
   Package, 
@@ -40,17 +40,25 @@ import {
   HeartPulse,
   TrendingUp,
   Layers,
-  Plus
+  Plus,
+  ShieldCheck,
+  Activity,
+  ArrowUpRight,
+  Filter,
+  Check,
+  SlidersHorizontal,
+  ChevronRight,
+  Briefcase
 } from "lucide-react";
-import "../assets/css/style.css";
+import "../assets/css/admin-premium.css";
 
 const STATUS_COLORS = {
-  PENDING_APPROVAL: { bg: "#fef3c7", color: "#f59e0b", label: "Pending Approval" },
-  CONFIRMED:        { bg: "#dcfce7", color: "#1B9B3A", label: "Confirmed" },
-  PICKUP_SCHEDULED: { bg: "#e0f2fe", color: "#009EE3", label: "Pickup Scheduled" },
-  COLLECTED:        { bg: "#ede9fe", color: "#8b5cf6", label: "Collected" },
-  COMPLETED:        { bg: "#f0fdf4", color: "#16a34a", label: "Completed" },
-  CANCELLED:        { bg: "#fee2e2", color: "#ef4444", label: "Cancelled" },
+  PENDING_APPROVAL: { bg: "#fef3c7", color: "#d97706", border: "#fde68a", label: "Pending Approval" },
+  CONFIRMED:        { bg: "#dcfce7", color: "#16a34a", border: "#bbf7d0", label: "Confirmed" },
+  PICKUP_SCHEDULED: { bg: "#e0f2fe", color: "#0284c7", border: "#bae6fd", label: "Pickup Scheduled" },
+  COLLECTED:        { bg: "#ede9fe", color: "#7c3aed", border: "#ddd6fe", label: "Collected" },
+  COMPLETED:        { bg: "#f0fdf4", color: "#15803d", border: "#bbf7d0", label: "Completed" },
+  CANCELLED:        { bg: "#fee2e2", color: "#dc2626", border: "#fecaca", label: "Cancelled" },
 };
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "https://blinklean-api.onrender.com/api/v1";
@@ -64,6 +72,15 @@ const Admin = () => {
   const [confirming,   setConfirming]   = useState(null);
   const [pickupInput,  setPickupInput]  = useState({});
   
+  // Active Navigation Tab
+  const [activeTab, setActiveTab] = useState("overview"); // overview, bookings, partners, green_club, weekly_news, content_studio, users
+
+  // Search & Filter States
+  const [bookingSearch, setBookingSearch] = useState("");
+  const [bookingStatusFilter, setBookingStatusFilter] = useState("ALL");
+  const [partnerSearch, setPartnerSearch] = useState("");
+  const [userSearch, setUserSearch] = useState("");
+
   // Green Club State
   const [clubRegistrations,       setClubRegistrations]       = useState([]);
   const [clubEvents,              setClubEvents]              = useState([]);
@@ -184,9 +201,13 @@ const Admin = () => {
     const unsub = auth.onAuthStateChanged(async (user) => {
       if (!user) { navigate("/login"); return; }
       try {
-        // Double-check Role in Firestore OR check by hardcoded admin emails
         const userDoc = await getDoc(doc(db, "users", user.uid));
-        const isAdminEmail = (user.email === "sunilmaharaj1991@gmail.com" || user.email === "jeevithgowdasr@gmail.com" || user.email === "rohithlakshman1@gmail.com" || user.email === "sushmitha157@gmail.com");
+        const isAdminEmail = (
+          user.email === "sunilmaharaj1991@gmail.com" || 
+          user.email === "jeevithgowdasr@gmail.com" || 
+          user.email === "rohithlakshman1@gmail.com" || 
+          user.email === "sushmitha157@gmail.com"
+        );
         
         if (isAdminEmail || (userDoc.exists() && userDoc.data().role === "admin")) {
           setIsAuthorized(true);
@@ -205,25 +226,27 @@ const Admin = () => {
   }, [navigate, fetchData]);
 
   const handleConfirm = async (bookingId) => {
-    const timing = pickupInput[bookingId] || "10:00 AM – 1:00 PM Tomorrow";
+    const timing = pickupInput[bookingId];
+    if (!timing || !timing.trim()) {
+      alert("Please specify a pickup timing slot (e.g., 'Today 3:00 PM - 4:00 PM').");
+      return;
+    }
+
     setConfirming(bookingId);
     try {
-      // 1. Update Firestore Status (Source of Truth)
       const bookingRef = doc(db, "scrap_bookings", bookingId);
       await updateDoc(bookingRef, {
         status: "CONFIRMED",
-        pickup_timing: timing
+        pickup_timing: timing.trim()
       });
 
-      // 2. Notify Backend API (Sync side effects like SMS)
-      // We pass the timing in the body so the backend can include it in the notification
       fetch(`${API_BASE}/scrap/booking/${bookingId}/confirm`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ pickupTiming: timing })
-      }).catch(err => console.warn("Backend confirmation notify failed, but record is safe in Firestore.", err));
+      }).catch(err => console.warn("Backend confirmation notify sync:", err));
 
-      alert(`✅ Booking CONFIRMED!\n\nPickup Status Updated to: ${timing}`);
+      alert(`✅ Booking CONFIRMED!\n\nPickup Scheduled Slot: ${timing}`);
       await fetchData();
     } catch (err) {
       alert("Failed to confirm booking.");
@@ -235,129 +258,20 @@ const Admin = () => {
 
   const handleUpdateStatus = async (bookingId, newStatus) => {
     try {
-      // 1. Update Firestore
       const bookingRef = doc(db, "scrap_bookings", bookingId);
       await updateDoc(bookingRef, { status: newStatus });
 
-      // 2. Update API
       fetch(`${API_BASE}/scrap/booking/${bookingId}/status`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: newStatus })
-      }).catch(err => console.warn("API Status Sync Failed:", err));
+      }).catch(err => console.warn("API Status Sync:", err));
 
       alert(`Status updated to: ${newStatus}`);
       await fetchData();
     } catch (err) {
       alert("Failed to update status.");
       console.error(err);
-    }
-  };
-
-  const uploadImage = async (file, folder) => {
-    if (!file) return "";
-    try {
-      const storageRef = ref(storage, `${folder}/${Date.now()}_${file.name}`);
-      const snapshot = await uploadBytes(storageRef, file);
-      const downloadUrl = await getDownloadURL(snapshot.ref);
-      return downloadUrl;
-    } catch (err) {
-      console.error("Firebase Storage Upload Error:", err);
-      throw new Error("Storage upload failed. Please verify storage permissions or use a direct URL fallback.");
-    }
-  };
-
-  const handleBlogSubmit = async (e) => {
-    e.preventDefault();
-    setBlogUploading(true);
-    try {
-      let finalUrl = blogImageUrl;
-      if (blogImageFile) {
-        try {
-          finalUrl = await uploadImage(blogImageFile, "green_club_blogs");
-        } catch (err) {
-          alert(err.message + " Attempting to fallback to text image url or placeholder.");
-        }
-      }
-      
-      if (!finalUrl) {
-        finalUrl = "https://images.unsplash.com/photo-1473448912268-2022ce9509d8?auto=format&fit=crop&w=800&q=80";
-      }
-
-      const payload = {
-        title: blogTitle,
-        summary: blogSummary,
-        content: blogContent,
-        date: blogDate || new Date().toLocaleDateString("en-IN", { day:"2-digit", month:"short", year:"numeric" }),
-        author: blogAuthor || "Blinklean Green Club",
-        image_url: finalUrl,
-        created_at: serverTimestamp()
-      };
-
-      await addDoc(collection(db, "green_club_blogs"), payload);
-      alert("✅ Blog uploaded successfully!");
-      
-      setBlogTitle("");
-      setBlogSummary("");
-      setBlogContent("");
-      setBlogDate("");
-      setBlogAuthor("");
-      setBlogImageFile(null);
-      setBlogImageUrl("");
-      
-      await fetchData();
-    } catch (err) {
-      console.error("Failed to add blog:", err);
-      alert("Error adding blog: " + err.message);
-    } finally {
-      setBlogUploading(false);
-    }
-  };
-
-  const handleEventSubmit = async (e) => {
-    e.preventDefault();
-    setEventUploading(true);
-    try {
-      let finalUrl = eventImageUrl;
-      if (eventImageFile) {
-        try {
-          finalUrl = await uploadImage(eventImageFile, "green_club_events");
-        } catch (err) {
-          alert(err.message + " Attempting to fallback to text image url or placeholder.");
-        }
-      }
-      
-      if (!finalUrl) {
-        finalUrl = "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&w=800&q=80";
-      }
-
-      const payload = {
-        title: eventTitle,
-        description: eventDescription,
-        date: eventDate,
-        location: eventLocation,
-        tag: eventTag || "Eco-Task",
-        image_url: finalUrl,
-        created_at: serverTimestamp()
-      };
-
-      await addDoc(collection(db, "green_club_events"), payload);
-      alert("✅ Weekend task event added successfully!");
-
-      setEventTitle("");
-      setEventDescription("");
-      setEventDate("");
-      setEventLocation("");
-      setEventTag("");
-      setEventImageFile(null);
-      setEventImageUrl("");
-
-      await fetchData();
-    } catch (err) {
-      console.error("Failed to add event:", err);
-      alert("Error adding event: " + err.message);
-    } finally {
-      setEventUploading(false);
     }
   };
 
@@ -396,6 +310,19 @@ const Admin = () => {
     });
   };
 
+  const uploadImage = async (file, folder) => {
+    if (!file) return "";
+    try {
+      const storageRef = ref(storage, `${folder}/${Date.now()}_${file.name}`);
+      const snapshot = await uploadBytes(storageRef, file);
+      const downloadUrl = await getDownloadURL(snapshot.ref);
+      return downloadUrl;
+    } catch (err) {
+      console.error("Firebase Storage Upload Error:", err);
+      throw new Error("Storage upload failed. Please verify storage permissions or use a direct URL fallback.");
+    }
+  };
+
   const handleNewsSubmit = async (e) => {
     e.preventDefault();
     if (!newsTitle.trim() || !newsSummary.trim() || !newsContent.trim()) {
@@ -405,7 +332,6 @@ const Admin = () => {
 
     setNewsUploading(true);
     try {
-      // 1. Process Cover Image
       let finalCoverUrl = newsCoverUrl.trim();
       if (newsCoverFile) {
         const b64 = await compressImageToBase64(newsCoverFile);
@@ -420,7 +346,6 @@ const Admin = () => {
         finalCoverUrl = "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&w=1000&q=80";
       }
 
-      // 2. Process Gallery Images (Multiple relevant images)
       const finalGallery = [];
       if (newsGalleryFiles && newsGalleryFiles.length > 0) {
         for (let i = 0; i < newsGalleryFiles.length; i++) {
@@ -436,7 +361,6 @@ const Admin = () => {
         }
       }
 
-      // Add manual gallery URLs if provided
       if (newsGalleryUrls.trim()) {
         const manualUrls = newsGalleryUrls
           .split(/[\n,]+/)
@@ -445,7 +369,6 @@ const Admin = () => {
         finalGallery.push(...manualUrls);
       }
 
-      // 3. Process Key Takeaways & Tags
       const takeawaysList = newsTakeaways
         .split("\n")
         .map(t => t.replace(/^[•\-\*\d\.]+\s*/, "").trim())
@@ -486,7 +409,6 @@ const Admin = () => {
       await addDoc(collection(db, "weekly_news"), payload);
       alert("🎉 Weekly News Bulletin published successfully to live Gazette!");
 
-      // Reset form
       setNewsTitle("");
       setNewsSummary("");
       setNewsContent("");
@@ -507,11 +429,105 @@ const Admin = () => {
     }
   };
 
+  const handleBlogSubmit = async (e) => {
+    e.preventDefault();
+    setBlogUploading(true);
+    try {
+      let finalUrl = blogImageUrl;
+      if (blogImageFile) {
+        try {
+          finalUrl = await uploadImage(blogImageFile, "green_club_blogs");
+        } catch {
+          finalUrl = await compressImageToBase64(blogImageFile);
+        }
+      }
+      
+      if (!finalUrl) {
+        finalUrl = "https://images.unsplash.com/photo-1473448912268-2022ce9509d8?auto=format&fit=crop&w=800&q=80";
+      }
+
+      const payload = {
+        title: blogTitle,
+        summary: blogSummary,
+        content: blogContent,
+        date: blogDate || new Date().toLocaleDateString("en-IN", { day:"2-digit", month:"short", year:"numeric" }),
+        author: blogAuthor || "Blinklean Green Club",
+        image_url: finalUrl,
+        created_at: serverTimestamp()
+      };
+
+      await addDoc(collection(db, "green_club_blogs"), payload);
+      alert("✅ Blog article uploaded successfully!");
+      
+      setBlogTitle("");
+      setBlogSummary("");
+      setBlogContent("");
+      setBlogDate("");
+      setBlogAuthor("");
+      setBlogImageFile(null);
+      setBlogImageUrl("");
+      
+      await fetchData();
+    } catch (err) {
+      console.error("Failed to add blog:", err);
+      alert("Error adding blog: " + err.message);
+    } finally {
+      setBlogUploading(false);
+    }
+  };
+
+  const handleEventSubmit = async (e) => {
+    e.preventDefault();
+    setEventUploading(true);
+    try {
+      let finalUrl = eventImageUrl;
+      if (eventImageFile) {
+        try {
+          finalUrl = await uploadImage(eventImageFile, "green_club_events");
+        } catch {
+          finalUrl = await compressImageToBase64(eventImageFile);
+        }
+      }
+      
+      if (!finalUrl) {
+        finalUrl = "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&w=800&q=80";
+      }
+
+      const payload = {
+        title: eventTitle,
+        description: eventDescription,
+        date: eventDate,
+        location: eventLocation,
+        tag: eventTag || "Eco-Task",
+        image_url: finalUrl,
+        created_at: serverTimestamp()
+      };
+
+      await addDoc(collection(db, "green_club_events"), payload);
+      alert("✅ Weekend task event added successfully!");
+
+      setEventTitle("");
+      setEventDescription("");
+      setEventDate("");
+      setEventLocation("");
+      setEventTag("");
+      setEventImageFile(null);
+      setEventImageUrl("");
+
+      await fetchData();
+    } catch (err) {
+      console.error("Failed to add event:", err);
+      alert("Error adding event: " + err.message);
+    } finally {
+      setEventUploading(false);
+    }
+  };
+
   const handleDeleteDoc = async (collectionName, docId) => {
-    if (!window.confirm("Are you sure you want to delete this item?")) return;
+    if (!window.confirm("Are you sure you want to delete this record? This action cannot be undone.")) return;
     try {
       await deleteDoc(doc(db, collectionName, docId));
-      alert("Deleted successfully!");
+      alert("Record deleted successfully!");
       await fetchData();
     } catch (err) {
       console.error("Delete failed:", err);
@@ -546,7 +562,7 @@ const Admin = () => {
         setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
       }
     } catch (err) {
-      console.warn("Direct download fallback to new tab:", err);
+      console.warn("Direct download fallback:", err);
       window.open(photoUrl, "_blank");
     }
   };
@@ -556,6 +572,30 @@ const Admin = () => {
     const d = ts.toDate ? ts.toDate() : new Date(ts);
     return d.toLocaleString("en-IN", { day:"2-digit", month:"short", year:"numeric", hour:"2-digit", minute:"2-digit" });
   };
+
+  // Filtered dataset utilities
+  const filteredBookings = bookings.filter(b => {
+    if (bookingStatusFilter !== "ALL" && b.status !== bookingStatusFilter) return false;
+    if (!bookingSearch.trim()) return true;
+    const q = bookingSearch.toLowerCase();
+    return (
+      (b.user_name && b.user_name.toLowerCase().includes(q)) ||
+      (b.phone_number && b.phone_number.toLowerCase().includes(q)) ||
+      (b.address && b.address.toLowerCase().includes(q)) ||
+      (b.id && b.id.toLowerCase().includes(q))
+    );
+  });
+
+  const filteredPartners = partners.filter(p => {
+    if (!partnerSearch.trim()) return true;
+    const q = partnerSearch.toLowerCase();
+    return (
+      (p.fullName && p.fullName.toLowerCase().includes(q)) ||
+      (p.phone && p.phone.toLowerCase().includes(q)) ||
+      (p.serviceType && p.serviceType.toLowerCase().includes(q)) ||
+      (p.location && p.location.toLowerCase().includes(q))
+    );
+  });
 
   const filteredClubRegistrations = clubRegistrations.filter(r => {
     const photo = r.photo_url || r.photo_base64 || r.photo;
@@ -586,485 +626,631 @@ const Admin = () => {
     );
   });
 
+  const filteredUsers = users.filter(u => {
+    if (!userSearch.trim()) return true;
+    const q = userSearch.toLowerCase();
+    return (
+      (u.name && u.name.toLowerCase().includes(q)) ||
+      (u.email && u.email.toLowerCase().includes(q)) ||
+      (u.phone && u.phone.toLowerCase().includes(q)) ||
+      (u.role && u.role.toLowerCase().includes(q))
+    );
+  });
+
   const photoCount = clubRegistrations.filter(r => {
     const photo = r.photo_url || r.photo_base64 || r.photo;
     return !!photo && !photo.includes("unsplash.com/photo-1535713875002");
   }).length;
 
+  const pendingCount = bookings.filter(b => b.status === "PENDING_APPROVAL").length;
+
   if (loading) return (
-    <div style={{ display:"flex", height:"100vh", alignItems:"center", justifyContent:"center", flexDirection:"column", gap:"16px" }}>
-      <RefreshCw size={44} style={{ color:"#009EE3", animation:"spin 1s linear infinite" }} />
-      <p style={{ color:"#64748b", fontWeight:600 }}>Syncing with Database...</p>
+    <div style={{ display:"flex", height:"100vh", alignItems:"center", justifyContent:"center", flexDirection:"column", gap:"16px", background:"#f8fafc" }}>
+      <div style={{ width: "48px", height: "48px", border: "4px solid #bae6fd", borderTopColor: "#009ee3", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
+      <p style={{ color:"#0369a1", fontWeight:700, fontSize:"1.05rem" }}>Synchronizing Blinklean Command Center...</p>
       <style>{`@keyframes spin { to { transform:rotate(360deg); } }`}</style>
     </div>
   );
 
   if (!isAuthorized) return (
-    <div style={{ minHeight:"100vh", display:"flex", alignItems:"center", justifyContent:"center", background:"#f8fafc" }}>
-      <div style={{ background:"white", padding:"50px", borderRadius:"24px", textAlign:"center", maxWidth:"500px", boxShadow:"0 20px 60px rgba(0,0,0,0.1)" }}>
-        <AlertCircle size={64} color="#ef4444" style={{ marginBottom: "16px", margin: "0 auto" }} />
-        <h2 style={{ color:"#ef4444", margin:"10px 0" }}>Access Denied</h2>
-        <p style={{ color:"#64748b", marginBottom:"30px" }}>Only authorized admins can access this portal.</p>
-        <button style={{ padding:"12px 28px", background:"#009EE3", color:"white", border:"none", borderRadius:"12px", cursor:"pointer", fontWeight:"700" }} onClick={() => navigate("/")}>Go Home</button>
+    <div style={{ minHeight:"100vh", display:"flex", alignItems:"center", justifyContent:"center", background:"#f1f5f9" }}>
+      <div style={{ background:"white", padding:"50px", borderRadius:"28px", textAlign:"center", maxWidth:"480px", boxShadow:"0 20px 60px rgba(0,0,0,0.08)", border:"1px solid #e2e8f0" }}>
+        <div style={{ width:"68px", height:"68px", borderRadius:"20px", background:"#fee2e2", color:"#ef4444", display:"flex", alignItems:"center", justifyContent:"center", margin:"0 auto 16px" }}>
+          <AlertCircle size={36} />
+        </div>
+        <h2 style={{ color:"#0f172a", margin:"10px 0 6px", fontSize:"1.6rem", fontWeight:"900" }}>Access Denied</h2>
+        <p style={{ color:"#64748b", marginBottom:"28px", fontSize:"0.95rem" }}>
+          You do not have administrative privileges to access this control portal.
+        </p>
+        <button 
+          style={{ padding:"14px 28px", background:"#009ee3", color:"white", border:"none", borderRadius:"14px", cursor:"pointer", fontWeight:"800", fontSize:"0.95rem", boxShadow:"0 4px 14px rgba(0, 158, 227, 0.3)" }} 
+          onClick={() => navigate("/")}
+        >
+          Return to Public Site
+        </button>
       </div>
     </div>
   );
 
-  const pendingCount = bookings.filter(b => b.status === "PENDING_APPROVAL").length;
-
   return (
-    <div style={{ minHeight:"100vh", background:"#f4fbff", fontFamily:"Inter, sans-serif" }}>
+    <div className="admin-layout">
       
-      <div style={{ background:"linear-gradient(135deg, #009EE3, #1B9B3A)", padding:"28px 40px", display:"flex", justifyContent:"space-between", alignItems:"center", flexWrap:"wrap", gap:"16px" }}>
-        <div>
-          <span style={{ background:"rgba(255,255,255,0.2)", color:"white", padding:"4px 12px", borderRadius:"20px", fontSize:"0.75rem", fontWeight:"700" }}>🔒 SECURE CLOUD STORAGE LOGGED</span>
-          <h1 style={{ color:"white", marginTop:"8px", marginBottom:"4px", fontSize:"1.8rem", fontWeight:"800" }}>Blinklean Dashboard</h1>
-          <p style={{ color:"rgba(255,255,255,0.8)", margin:0, fontSize:"0.9rem" }}>{auth.currentUser?.email}</p>
-        </div>
-        <div style={{ display:"flex", gap:"10px" }}>
-          <button onClick={fetchData} style={{ display:"flex", alignItems:"center", gap:"8px", background:"white", color:"#009EE3", padding:"10px 20px", borderRadius:"12px", border:"none", cursor:"pointer", fontWeight:"600" }}>
-            <RefreshCw size={18} /> Sync Cloud
-          </button>
-          <button onClick={() => auth.signOut().then(() => navigate("/"))} style={{ display:"flex", alignItems:"center", gap:"8px", background:"rgba(0,0,0,0.1)", color:"white", padding:"10px 20px", borderRadius:"12px", border:"none", cursor:"pointer", fontWeight:"600" }}>
-            <LogOut size={18} /> Logout
-          </button>
-        </div>
-      </div>
+      {/* 1. TOP COMMAND HEADER */}
+      <header className="adm-header">
+        <div className="adm-header-inner">
+          <div>
+            <div className="adm-brand-tag">
+              <span className="adm-pulse-dot" /> Live Firebase Production
+            </div>
+            <h1 className="adm-title">Blinklean Command Studio</h1>
+            <p style={{ color:"rgba(255,255,255,0.85)", margin:0, fontSize:"0.85rem", fontWeight:"600", display:"flex", alignItems:"center", gap:"6px" }}>
+              <ShieldCheck size={15} /> Super Admin: <strong>{auth.currentUser?.email}</strong>
+            </p>
+          </div>
 
-      <div style={{ maxWidth:"1200px", margin:"0 auto", padding:"32px 24px" }}>
+          <div className="adm-header-actions">
+            <button onClick={fetchData} className="adm-btn-light" title="Refresh Live Records">
+              <RefreshCw size={16} /> Sync Database
+            </button>
+            <a href="/" target="_blank" rel="noopener noreferrer" className="adm-btn-ghost">
+              <Globe size={16} /> Public Website ↗
+            </a>
+            <button onClick={() => auth.signOut().then(() => navigate("/"))} className="adm-btn-ghost" style={{ background:"rgba(239, 68, 68, 0.25)", borderColor:"rgba(239, 68, 68, 0.4)" }}>
+              <LogOut size={16} /> Logout
+            </button>
+          </div>
+        </div>
+      </header>
 
-        <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit, minmax(180px, 1fr))", gap:"20px", marginBottom:"40px" }}>
-          {[
-            { label:"Total Users", value:users.length, color:"#009EE3", bg:"#e0f2fe", icon:<Users /> },
-            { label:"Scrap Bookings", value:bookings.length, color:"#1B9B3A", bg:"#dcfce7", icon:<Package /> },
-            { label:"Partner Enrollments", value:partners.length, color:"#8b5cf6", bg:"#ede9fe", icon:<Handshake /> },
-            { label:"New Requests", value:pendingCount, color:"#f59e0b", bg:"#fef3c7", icon:<Clock /> },
-            { label:"Weekly News Articles", value:weeklyNewsList.length, color:"#009EE3", bg:"#e0f2fe", icon:<Newspaper /> },
-            { label:"Green Registrations", value:clubRegistrations.length, color:"#10b981", bg:"#f0fdf4", icon:<Users /> },
-            { label:"Uploaded Photos", value:photoCount, color:"#059669", bg:"#ecfdf5", icon:<ImageIcon /> },
-            { label:"Weekend Tasks", value:clubEvents.length, color:"#10b981", bg:"#f0fdf4", icon:<Calendar /> },
-          ].map((stat, i) => (
-            <div key={i} style={{ background:"white", borderRadius:"20px", padding:"20px", boxShadow:`0 4px 20px rgba(0,0,0,0.05)`, borderTop:`5px solid ${stat.color}` }}>
-              <div style={{ display:"flex", justifyContent:"space-between" }}>
-                <div>
-                  <p style={{ margin:"0 0 6px", fontSize:"0.7rem", fontWeight:"700", color:"#94a3b8", textTransform:"uppercase" }}>{stat.label}</p>
-                  <div style={{ fontSize:"2rem", fontWeight:"900", color:stat.color }}>{stat.value}</div>
+      {/* 2. MODERN TAB NAVIGATION BAR */}
+      <nav className="adm-nav-bar">
+        <div className="adm-nav-inner">
+          <button 
+            className={`adm-tab-btn ${activeTab === "overview" ? "active" : ""}`}
+            onClick={() => setActiveTab("overview")}
+          >
+            <Activity size={16} />
+            <span>Dashboard Overview</span>
+          </button>
+
+          <button 
+            className={`adm-tab-btn ${activeTab === "bookings" ? "active" : ""}`}
+            onClick={() => setActiveTab("bookings")}
+          >
+            <Package size={16} />
+            <span>Scrap Pickups</span>
+            <span className={`adm-tab-badge ${pendingCount > 0 ? "warning" : ""}`}>
+              {bookings.length} {pendingCount > 0 ? `(${pendingCount} new)` : ""}
+            </span>
+          </button>
+
+          <button 
+            className={`adm-tab-btn ${activeTab === "green_club" ? "active" : ""}`}
+            onClick={() => setActiveTab("green_club")}
+          >
+            <Leaf size={16} />
+            <span>Green Club Volunteers</span>
+            <span className="adm-tab-badge">{clubRegistrations.length}</span>
+          </button>
+
+          <button 
+            className={`adm-tab-btn ${activeTab === "weekly_news" ? "active" : ""}`}
+            onClick={() => setActiveTab("weekly_news")}
+          >
+            <Newspaper size={16} />
+            <span>Weekly News Gazette</span>
+            <span className="adm-tab-badge">{weeklyNewsList.length}</span>
+          </button>
+
+          <button 
+            className={`adm-tab-btn ${activeTab === "partners" ? "active" : ""}`}
+            onClick={() => setActiveTab("partners")}
+          >
+            <Handshake size={16} />
+            <span>Partners</span>
+            <span className="adm-tab-badge">{partners.length}</span>
+          </button>
+
+          <button 
+            className={`adm-tab-btn ${activeTab === "content_studio" ? "active" : ""}`}
+            onClick={() => setActiveTab("content_studio")}
+          >
+            <Calendar size={16} />
+            <span>Weekend Tasks & Blogs</span>
+            <span className="adm-tab-badge">{clubEvents.length + clubBlogs.length}</span>
+          </button>
+
+          <button 
+            className={`adm-tab-btn ${activeTab === "users" ? "active" : ""}`}
+            onClick={() => setActiveTab("users")}
+          >
+            <Users size={16} />
+            <span>Users Directory</span>
+            <span className="adm-tab-badge">{users.length}</span>
+          </button>
+        </div>
+      </nav>
+
+      {/* 3. MAIN DASHBOARD CONTENT AREA */}
+      <main className="adm-container animate-fade-in">
+        
+        {/* STATS OVERVIEW CARDS (ALWAYS VISIBLE IN OVERVIEW TAB, OR COMPACT ON OTHERS) */}
+        {activeTab === "overview" && (
+          <section>
+            {/* Hero Banner */}
+            <div className="adm-hero-banner">
+              <div>
+                <span style={{ display:"inline-flex", alignItems:"center", gap:"6px", background:"rgba(56, 189, 248, 0.15)", color:"#38bdf8", padding:"4px 12px", borderRadius:"20px", fontSize:"0.75rem", fontWeight:"800", textTransform:"uppercase" }}>
+                  <Sparkles size={14} /> Operations Snapshot
+                </span>
+                <h2 style={{ fontSize:"1.65rem", fontWeight:"900", margin:"10px 0 6px", color:"white" }}>
+                  Blinklean Unified Control Center
+                </h2>
+                <p style={{ color:"#94a3b8", fontSize:"0.9rem", margin:0, maxWidth:"600px" }}>
+                  Real-time synchronization for doorstep scrap requests, green club registrations with direct member photo inspection, and weekly society gazette publications.
+                </p>
+              </div>
+
+              <div className="adm-hero-stats">
+                <div className="adm-hero-stat-item">
+                  <span className="val">{bookings.length}</span>
+                  <span className="lbl">Total Pickups</span>
                 </div>
-                <div style={{ color: stat.color }}>{stat.icon}</div>
+                <div className="adm-hero-stat-item">
+                  <span className="val" style={{ color:"#4ade80" }}>{clubRegistrations.length}</span>
+                  <span className="lbl">Volunteers</span>
+                </div>
+                <div className="adm-hero-stat-item">
+                  <span className="val" style={{ color:"#a78bfa" }}>{weeklyNewsList.length}</span>
+                  <span className="lbl">Gazette Stories</span>
+                </div>
               </div>
             </div>
-          ))}
-        </div>
 
-        {/* --- BOOKINGS SECTION --- */}
-        <section style={{ marginBottom:"50px" }}>
-          <h2 style={{ marginBottom:"20px", display:"flex", alignItems:"center", gap:"10px" }}><Package color="#1B9B3A" /> Scrap Collection Requests</h2>
-          <div style={{ display:"grid", gap:"16px" }}>
-            {bookings.length === 0 ? <div style={{ background:"white", padding:"40px", borderRadius:"20px", textAlign:"center", color:"#94a3b8" }}>No records found in cloud database.</div> : 
-              bookings.map(b => {
-                const cfg = STATUS_COLORS[b.status] || { bg:"#f1f5f9", color:"#94a3b8", label: b.status };
-                const isPending = b.status === "PENDING_APPROVAL";
-                return (
-                  <div key={b.id} style={{ background:"white", borderRadius:"20px", padding:"24px", boxShadow:"0 4px 15px rgba(0,0,0,0.03)", borderLeft:`6px solid ${cfg.color}` }}>
-                    <div style={{ display:"flex", justifyContent:"space-between", flexWrap:"wrap", gap:"20px" }}>
-                      <div style={{ flex:1 }}>
-                        <div style={{ display:"flex", alignItems:"center", gap:"12px", marginBottom:"14px" }}>
-                          <span style={{ fontSize:"0.7rem", fontWeight:"800", color:"#94a3b8" }}>ID: {b.id.substring(0,6)}...</span>
-                          <span style={{ padding:"4px 12px", borderRadius:"20px", fontSize:"0.7rem", fontWeight:"800", background:cfg.bg, color:cfg.color }}>{cfg.label}</span>
-                        </div>
-                        <h3 style={{ margin:"0 0 4px", fontSize:"1.2rem" }}>{b.user_name}</h3>
-                        <p style={{ margin:"0 0 8px", color:"#009EE3", fontWeight:"600" }}><Phone size={14} style={{ display:"inline", marginRight:6 }} /> {b.phone_number}</p>
-                        <p style={{ margin:0, color:"#475569", fontSize:"0.95rem" }}><MapPin size={14} style={{ display:"inline", marginRight:6 }} /> {b.address}, {b.pincode}</p>
-                        
-                        {/* Material List Display */}
-                        {b.items && Array.isArray(b.items) && (
-                          <div style={{ marginTop:16, display:"flex", flexWrap:"wrap", gap:8 }}>
-                            {b.items.map((item, idx) => (
-                              <span key={idx} style={{ background:"#f8fafc", padding:"4px 10px", borderRadius:6, fontSize:"0.8rem", border:"1px solid #e2e8f0" }}>
-                                <strong>{item.material_name}</strong>: {item.estimated_weight}kg
-                              </span>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                      <div style={{ textAlign:"right" }}>
-                        <p style={{ margin:0, color:"#94a3b8", fontSize:"0.8rem" }}>Request Date</p>
-                        <p style={{ margin:0, fontWeight:"700" }}>{formatDate(b.created_at)}</p>
-                        {b.pickup_timing && (
-                          <div style={{ marginTop:10, color:"#1B9B3A", fontWeight:"700", fontSize:"0.85rem" }}>
-                            Scheduled for: {b.pickup_timing}
-                          </div>
-                        )}
-                      </div>
+            {/* 8 Glowing Metric Tiles */}
+            <div className="adm-stats-grid">
+              {[
+                { label:"Total Users", value:users.length, color:"#009ee3", bg:"#e0f2fe", icon:<Users size={22} />, tab:"users" },
+                { label:"Scrap Bookings", value:bookings.length, color:"#10b981", bg:"#dcfce7", icon:<Package size={22} />, tab:"bookings" },
+                { label:"Pending Pickups", value:pendingCount, color:"#f59e0b", bg:"#fef3c7", icon:<Clock size={22} />, tab:"bookings" },
+                { label:"Green Registrations", value:clubRegistrations.length, color:"#059669", bg:"#ecfdf5", icon:<Leaf size={22} />, tab:"green_club" },
+                { label:"Uploaded Photos", value:photoCount, color:"#0d9488", bg:"#ccfbf1", icon:<ImageIcon size={22} />, tab:"green_club" },
+                { label:"Weekly News", value:weeklyNewsList.length, color:"#0284c7", bg:"#e0f2fe", icon:<Newspaper size={22} />, tab:"weekly_news" },
+                { label:"Partner Enrollments", value:partners.length, color:"#8b5cf6", bg:"#ede9fe", icon:<Handshake size={22} />, tab:"partners" },
+                { label:"Weekend Tasks", value:clubEvents.length, color:"#ec4899", bg:"#fce7f3", icon:<Calendar size={22} />, tab:"content_studio" },
+              ].map((stat, i) => (
+                <div 
+                  key={i} 
+                  className="adm-stat-card" 
+                  onClick={() => setActiveTab(stat.tab)}
+                  style={{ cursor:"pointer" }}
+                >
+                  <div className="adm-stat-glow" style={{ background: stat.color }} />
+                  <div className="adm-stat-header">
+                    <p className="adm-stat-label">{stat.label}</p>
+                    <div className="adm-stat-icon-wrap" style={{ background: stat.bg, color: stat.color }}>
+                      {stat.icon}
                     </div>
-                    
-                    {isPending ? (
-                       <div style={{ marginTop:"20px", background:"#fefce8", border:"1px solid #fef08a", padding:"16px", borderRadius:"15px" }}>
-                         <div style={{ display:"flex", gap:"10px", alignItems:"center" }}>
-                           <Clock size={18} style={{ color:"#f59e0b" }} />
-                           <input 
-                             type="text" 
-                             placeholder="Set Pickup Time (e.g. 2 PM Today)" 
-                             style={{ flex:1, padding:"12px", borderRadius:"10px", border:"1px solid #fde68a", outline:"none" }}
-                             value={pickupInput[b.id] || ""}
-                             onChange={(e) => setPickupInput({...pickupInput, [b.id]: e.target.value})}
-                           />
-                           <button 
-                             onClick={() => handleConfirm(b.id)}
-                             disabled={confirming === b.id}
-                             style={{ background:"#1B9B3A", color:"white", border:"none", padding:"12px 28px", borderRadius:"12px", fontWeight:"700", cursor:"pointer", transition:"0.2s" }}
-                           >
-                             {confirming === b.id ? "..." : "Approve & Notify"}
-                           </button>
-                         </div>
-                       </div>
-                    ) : (
-                        <div style={{ marginTop: "16px", display: "flex", gap: "10px", alignItems: "center" }}>
-                          <span style={{ fontSize: "0.85rem", color: "#64748b" }}>Update Status:</span>
-                          <select 
-                            style={{ padding: "6px 12px", borderRadius: "8px", border: "1px solid #cbd5e1", outline: "none", fontSize: "0.85rem" }}
-                            value={b.status}
-                            onChange={(e) => handleUpdateStatus(b.id, e.target.value)}
-                          >
-                            {Object.keys(STATUS_COLORS).map(statusKey => (
-                              <option key={statusKey} value={statusKey}>{STATUS_COLORS[statusKey].label}</option>
-                            ))}
-                          </select>
-                        </div>
-                      )}
                   </div>
-                );
-              })
-            }
-          </div>
-        </section>
-
-        {/* --- PARTNERS SECTION --- */}
-        <section style={{ marginBottom:"50px" }}>
-          <h2 style={{ marginBottom:"20px", display:"flex", alignItems:"center", gap:"10px" }}><Handshake color="#8b5cf6" /> Professional Enrollments</h2>
-          <div style={{ background:"white", borderRadius:"24px", overflow:"hidden", boxShadow:"0 10px 40px rgba(0,0,0,0.05)" }}>
-            <table style={{ width:"100%", borderCollapse:"collapse" }}>
-              <thead style={{ background:"#f8fafc" }}>
-                <tr>
-                  <th style={{ padding:"18px 24px", textAlign:"left", fontSize:"0.75rem", color:"#94a3b8", textTransform:"uppercase" }}>Partner</th>
-                  <th style={{ padding:"18px 24px", textAlign:"left", fontSize:"0.75rem", color:"#94a3b8", textTransform:"uppercase" }}>Service</th>
-                  <th style={{ padding:"18px 24px", textAlign:"left", fontSize:"0.75rem", color:"#94a3b8", textTransform:"uppercase" }}>Experience</th>
-                  <th style={{ padding:"18px 24px", textAlign:"left", fontSize:"0.75rem", color:"#94a3b8", textTransform:"uppercase" }}>Location</th>
-                </tr>
-              </thead>
-              <tbody>
-                {partners.length === 0 ? <tr><td colSpan={4} style={{ padding:"40px", textAlign:"center", color:"#94a3b8" }}>No partner requests yet.</td></tr> : 
-                  partners.map(p => (
-                    <tr key={p.id} style={{ borderBottom:"1px solid #f1f5f9" }}>
-                      <td style={{ padding:"18px 24px" }}>
-                        <div style={{ fontWeight:"700" }}>{p.fullName}</div>
-                        <div style={{ fontSize:"0.8rem", color:"#94a3b8" }}>{p.phone}</div>
-                        <div style={{ fontSize:"0.7rem", color:"#cbd5e1" }}>{formatDate(p.created_at)}</div>
-                      </td>
-                      <td style={{ padding:"18px 24px" }}>
-                        <span style={{ background:"#f5f3ff", color:"#7c3aed", padding:"4px 10px", borderRadius:"12px", fontSize:"0.7rem", fontWeight:"700" }}>{p.serviceType}</span>
-                      </td>
-                      <td style={{ padding:"18px 24px" }}>
-                         <div style={{ fontSize:"0.85rem", color:"#1b9b3a", fontWeight:"600" }}>{p.experience} Years</div>
-                      </td>
-                      <td style={{ padding:"18px 24px", fontSize:"0.9rem" }}>{p.location}</td>
-                    </tr>
-                  ))
-                }
-              </tbody>
-            </table>
-          </div>
-        </section>
-
-        {/* --- USERS SECTION --- */}
-        <section>
-          <h2 style={{ marginBottom:"20px", display:"flex", alignItems:"center", gap:"10px" }}><Users color="#009EE3" /> Registered Cloud Users</h2>
-          <div style={{ background:"white", borderRadius:"24px", overflow:"hidden", boxShadow:"0 10px 40px rgba(0,0,0,0.05)" }}>
-            <table style={{ width:"100%", borderCollapse:"collapse" }}>
-              <thead>
-                <tr style={{ background:"#f8fafc", borderBottom:"1px solid #f1f5f9" }}>
-                  <th style={{ padding:"18px 24px", textAlign:"left", fontSize:"0.75rem", color:"#94a3b8", textTransform:"uppercase" }}>User Details</th>
-                  <th style={{ padding:"18px 24px", textAlign:"left", fontSize:"0.75rem", color:"#94a3b8", textTransform:"uppercase" }}>Contact Info</th>
-                  <th style={{ padding:"18px 24px", textAlign:"left", fontSize:"0.75rem", color:"#94a3b8", textTransform:"uppercase" }}>Join Date</th>
-                  <th style={{ padding:"18px 24px", textAlign:"left", fontSize:"0.75rem", color:"#94a3b8", textTransform:"uppercase" }}>Access</th>
-                </tr>
-              </thead>
-              <tbody>
-                {users.length === 0 ? <tr><td colSpan={4} style={{ padding:40, textAlign:"center", color:"#94a3b8" }}>No users registered in records.</td></tr> :
-                  users.map(u => (
-                    <tr key={u.id} style={{ borderBottom:"1px solid #f1f5f9" }}>
-                      <td style={{ padding:"18px 24px" }}>
-                        <div style={{ display:"flex", alignItems:"center", gap:12 }}>
-                          {u.photo_url ? <img src={u.photo_url} style={{ width:32, height:32, borderRadius:50 }} alt="" /> : <div style={{ width:32, height:32, background:"#e2e8f0", borderRadius:50 }} />}
-                          <div style={{ fontWeight:"700" }}>{u.name || "New Customer"}</div>
-                        </div>
-                      </td>
-                      <td style={{ padding:"18px 24px" }}>
-                        <div style={{ fontSize:"0.9rem", color:"#475569" }}><Mail size={14} style={{ display:"inline", marginRight:6 }} /> {u.email || "N/A"}</div>
-                        <div style={{ fontSize:"0.85rem", color:"#94a3b8", marginTop:4 }}><Phone size={14} style={{ display:"inline", marginRight:6 }} /> {u.phone_number || "No Phone"}</div>
-                      </td>
-                      <td style={{ padding:"18px 24px", fontSize:"0.85rem", color:"#64748b" }}>
-                        {formatDate(u.created_at)}
-                      </td>
-                      <td style={{ padding:"18px 24px" }}>
-                        <span style={{ padding:"4px 12px", borderRadius:"20px", fontSize:"0.65rem", fontWeight:"800", background: u.role === "admin" ? "#dcfce7" : "#f1f5f9", color: u.role === "admin" ? "#16a34a" : "#64748b" }}>
-                          {(u.role || "user").toUpperCase()}
-                        </span>
-                      </td>
-                    </tr>
-                  ))
-                }
-              </tbody>
-            </table>
-          </div>
-        </section>
-
-        {/* --- GREEN CLUB REGISTRATIONS SECTION --- */}
-        <section style={{ marginBottom:"50px", marginTop:"50px" }}>
-          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", flexWrap:"wrap", gap:"14px", marginBottom:"20px" }}>
-            <div>
-              <h2 style={{ margin:0, display:"flex", alignItems:"center", gap:"10px", fontSize:"1.4rem", fontWeight:"800", color:"#0f172a" }}>
-                <Users color="#10b981" /> Blinklean Green Club Registrations
-              </h2>
-              <p style={{ margin:"4px 0 0", color:"#64748b", fontSize:"0.85rem" }}>
-                Directly access uploaded member photos, contact numbers, residential addresses, and membership details.
-              </p>
+                  <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-end" }}>
+                    <span className="adm-stat-number">{stat.value}</span>
+                    <span style={{ fontSize:"0.75rem", color: stat.color, fontWeight:"800", display:"flex", alignItems:"center", gap:"2px" }}>
+                      Manage <ArrowUpRight size={13} />
+                    </span>
+                  </div>
+                </div>
+              ))}
             </div>
-            
-            <div style={{ display:"flex", alignItems:"center", gap:"12px", flexWrap:"wrap" }}>
-              {/* Search Box */}
-              <div style={{ position:"relative", minWidth:"240px" }}>
-                <Search size={16} style={{ position:"absolute", left:"12px", top:"12px", color:"#94a3b8" }} />
-                <input 
-                  type="text" 
-                  placeholder="Search name, phone, email, task..." 
-                  value={gcSearchTerm}
-                  onChange={(e) => setGcSearchTerm(e.target.value)}
-                  style={{ width:"100%", padding:"10px 14px 10px 36px", borderRadius:"12px", border:"1px solid #cbd5e1", outline:"none", fontSize:"0.85rem", background:"white" }}
+
+            {/* Quick Action Matrix */}
+            <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit, minmax(320px, 1fr))", gap:"24px", marginBottom:"35px" }}>
+              
+              {/* Quick Card 1: Pending Scrap Requests */}
+              <div className="adm-card" style={{ marginBottom:0 }}>
+                <div className="adm-card-header">
+                  <h3 className="adm-card-title">
+                    <Package size={20} color="#10b981" /> Urgent Scrap Pickups ({pendingCount})
+                  </h3>
+                  <button onClick={() => setActiveTab("bookings")} className="adm-action-btn view">
+                    View All <ChevronRight size={14} />
+                  </button>
+                </div>
+                {bookings.filter(b => b.status === "PENDING_APPROVAL").slice(0, 3).length === 0 ? (
+                  <p style={{ color:"#94a3b8", fontSize:"0.9rem", textAlign:"center", padding:"20px 0" }}>
+                    🎉 No pending requests awaiting confirmation!
+                  </p>
+                ) : (
+                  <div style={{ display:"flex", flexDirection:"column", gap:"12px" }}>
+                    {bookings.filter(b => b.status === "PENDING_APPROVAL").slice(0, 3).map(b => (
+                      <div key={b.id} style={{ background:"#f8fafc", padding:"14px", borderRadius:"12px", border:"1px solid #e2e8f0", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+                        <div>
+                          <h4 style={{ margin:"0 0 2px", fontSize:"0.95rem", fontWeight:"800", color:"#0f172a" }}>{b.user_name}</h4>
+                          <span style={{ fontSize:"0.78rem", color:"#64748b" }}>{b.phone_number} • {b.address}</span>
+                        </div>
+                        <span style={{ background:"#fef3c7", color:"#d97706", padding:"4px 10px", borderRadius:"10px", fontSize:"0.72rem", fontWeight:"800" }}>
+                          Needs Timing Slot
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Quick Card 2: Recent Green Club Registrations */}
+              <div className="adm-card" style={{ marginBottom:0 }}>
+                <div className="adm-card-header">
+                  <h3 className="adm-card-title">
+                    <Leaf size={20} color="#059669" /> Recent Green Volunteers ({clubRegistrations.length})
+                  </h3>
+                  <button onClick={() => setActiveTab("green_club")} className="adm-action-btn green">
+                    Inspect Photos <ChevronRight size={14} />
+                  </button>
+                </div>
+                {clubRegistrations.slice(0, 3).length === 0 ? (
+                  <p style={{ color:"#94a3b8", fontSize:"0.9rem", textAlign:"center", padding:"20px 0" }}>No volunteers registered yet.</p>
+                ) : (
+                  <div style={{ display:"flex", flexDirection:"column", gap:"12px" }}>
+                    {clubRegistrations.slice(0, 3).map(r => {
+                      const photo = r.photo_url || r.photo_base64 || r.photo;
+                      return (
+                        <div key={r.id} style={{ background:"#f8fafc", padding:"12px 14px", borderRadius:"12px", border:"1px solid #e2e8f0", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+                          <div style={{ display:"flex", alignItems:"center", gap:"10px" }}>
+                            <div className="adm-avatar-thumb" onClick={() => setSelectedPhotoVolunteer(r)}>
+                              {photo ? <img src={photo} alt="" /> : <ImageIcon size={18} color="#94a3b8" />}
+                            </div>
+                            <div>
+                              <h4 style={{ margin:"0 0 2px", fontSize:"0.92rem", fontWeight:"800", color:"#0f172a" }}>{r.user_name}</h4>
+                              <span style={{ fontSize:"0.75rem", color:"#059669", fontWeight:"600" }}>{r.event_title || "Member"}</span>
+                            </div>
+                          </div>
+                          <button onClick={() => setSelectedPhotoVolunteer(r)} className="adm-action-btn view" style={{ padding:"4px 8px", fontSize:"0.72rem" }}>
+                            View Photo
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+            </div>
+          </section>
+        )}
+
+        {/* =========================================================================
+            TAB 2: SCRAP PICKUPS MANAGEMENT
+           ========================================================================= */}
+        {(activeTab === "bookings" || activeTab === "overview") && (
+          <section className="adm-card animate-fade-in">
+            <div className="adm-card-header">
+              <h2 className="adm-card-title">
+                <Package size={24} color="#10b981" /> Scrap Collection & Recycling Bookings ({bookings.length})
+              </h2>
+            </div>
+
+            {/* Toolbar */}
+            <div className="adm-toolbar">
+              <div className="adm-search-box">
+                <Search size={16} className="adm-search-icon" />
+                <input
+                  type="text"
+                  className="adm-search-input"
+                  placeholder="Search by customer name, phone, address, or ID..."
+                  value={bookingSearch}
+                  onChange={(e) => setBookingSearch(e.target.value)}
                 />
               </div>
 
-              {/* Photo Filter Toggle */}
-              <button 
-                onClick={() => setGcFilterPhotoOnly(!gcFilterPhotoOnly)}
-                style={{
-                  display:"flex",
-                  alignItems:"center",
-                  gap:"6px",
-                  padding:"10px 16px",
-                  borderRadius:"12px",
-                  border: gcFilterPhotoOnly ? "1px solid #10b981" : "1px solid #cbd5e1",
-                  background: gcFilterPhotoOnly ? "#ecfdf5" : "white",
-                  color: gcFilterPhotoOnly ? "#059669" : "#475569",
-                  fontWeight:"700",
-                  fontSize:"0.82rem",
-                  cursor:"pointer",
-                  transition:"0.2s"
-                }}
-              >
-                <ImageIcon size={16} color={gcFilterPhotoOnly ? "#059669" : "#94a3b8"} />
-                {gcFilterPhotoOnly ? `Photos Only (${filteredClubRegistrations.length})` : `All Members (${clubRegistrations.length})`}
-              </button>
+              <div className="adm-chip-group">
+                {["ALL", "PENDING_APPROVAL", "CONFIRMED", "PICKUP_SCHEDULED", "COLLECTED", "COMPLETED", "CANCELLED"].map(st => (
+                  <button
+                    key={st}
+                    className={`adm-chip ${bookingStatusFilter === st ? "active" : ""}`}
+                    onClick={() => setBookingStatusFilter(st)}
+                  >
+                    {st === "ALL" ? "All Bookings" : STATUS_COLORS[st]?.label || st}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
 
-          <div style={{ background:"white", borderRadius:"24px", overflow:"hidden", boxShadow:"0 10px 40px rgba(0,0,0,0.05)" }}>
-            <div style={{ overflowX:"auto" }}>
-              <table style={{ width:"100%", borderCollapse:"collapse", minWidth:"920px" }}>
-                <thead style={{ background:"#f8fafc" }}>
+            {/* Bookings Stream */}
+            {filteredBookings.length === 0 ? (
+              <div style={{ textAlign:"center", padding:"40px", color:"#94a3b8" }}>
+                <Package size={44} style={{ margin:"0 auto 10px" }} />
+                <p>No scrap collection bookings match the selected filter.</p>
+              </div>
+            ) : (
+              <div style={{ display:"grid", gap:"18px" }}>
+                {filteredBookings.map(b => {
+                  const cfg = STATUS_COLORS[b.status] || { bg:"#f1f5f9", color:"#94a3b8", border:"#e2e8f0", label: b.status };
+                  const isPending = b.status === "PENDING_APPROVAL";
+
+                  return (
+                    <div 
+                      key={b.id} 
+                      style={{ 
+                        background:"#ffffff", 
+                        borderRadius:"18px", 
+                        padding:"24px", 
+                        border:`1.5px solid ${cfg.border}`, 
+                        boxShadow:"0 4px 16px rgba(0,0,0,0.03)",
+                        borderLeft:`6px solid ${cfg.color}`
+                      }}
+                    >
+                      <div style={{ display:"flex", justifyContent:"space-between", flexWrap:"wrap", gap:"20px", alignItems:"flex-start" }}>
+                        <div style={{ flex:1, minWidth:"280px" }}>
+                          
+                          {/* Header pill & ID */}
+                          <div style={{ display:"flex", alignItems:"center", gap:"10px", marginBottom:"10px" }}>
+                            <span style={{ background: cfg.bg, color: cfg.color, padding:"4px 12px", borderRadius:"20px", fontSize:"0.75rem", fontWeight:"800" }}>
+                              {cfg.label}
+                            </span>
+                            <span style={{ fontSize:"0.72rem", color:"#94a3b8", fontWeight:"700" }}>ID: {b.id}</span>
+                          </div>
+
+                          <h3 style={{ margin:"0 0 6px", fontSize:"1.25rem", fontWeight:"900", color:"#0f172a" }}>
+                            {b.user_name}
+                          </h3>
+
+                          <div style={{ display:"flex", flexWrap:"wrap", gap:"16px", fontSize:"0.88rem", color:"#475569", margin:"8px 0" }}>
+                            <a href={`tel:${b.phone_number}`} style={{ display:"flex", alignItems:"center", gap:"5px", color:"#0284c7", textDecoration:"none", fontWeight:"700" }}>
+                              <Phone size={14} /> {b.phone_number}
+                            </a>
+                            <span style={{ display:"flex", alignItems:"center", gap:"5px" }}>
+                              <MapPin size={14} color="#ef4444" /> {b.address}, {b.pincode}
+                            </span>
+                          </div>
+
+                          {/* Scrap Materials List */}
+                          {b.items && Array.isArray(b.items) && (
+                            <div style={{ marginTop:12, display:"flex", flexWrap:"wrap", gap:6 }}>
+                              {b.items.map((item, idx) => (
+                                <span key={idx} style={{ background:"#f0fdf4", padding:"4px 10px", borderRadius:8, fontSize:"0.78rem", border:"1px solid #bbf7d0", color:"#166534", fontWeight:"600" }}>
+                                  <strong>{item.material_name}</strong>: {item.estimated_weight} kg
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Right side: Dates & Scheduling Slot */}
+                        <div style={{ textAlign:"right", minWidth:"200px" }}>
+                          <p style={{ margin:0, color:"#94a3b8", fontSize:"0.75rem", textTransform:"uppercase", fontWeight:"700" }}>Booked On</p>
+                          <p style={{ margin:"2px 0 8px", fontWeight:"800", color:"#0f172a", fontSize:"0.88rem" }}>{formatDate(b.created_at)}</p>
+
+                          {b.pickup_timing && (
+                            <div style={{ background:"#ecfdf5", color:"#059669", padding:"6px 12px", borderRadius:"10px", fontSize:"0.8rem", fontWeight:"800", border:"1px solid #a7f3d0" }}>
+                              ⏰ Slot: {b.pickup_timing}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Confirmation / Slot Scheduling Area */}
+                      {isPending ? (
+                        <div style={{ marginTop:"18px", background:"#fefce8", border:"1px solid #fef08a", padding:"16px 20px", borderRadius:"14px" }}>
+                          <p style={{ margin:"0 0 10px", fontSize:"0.85rem", fontWeight:"800", color:"#854d0e" }}>
+                            ⏰ Action Required: Assign Pickup Timing Slot for Confirmation
+                          </p>
+                          <div style={{ display:"flex", gap:"10px", alignItems:"center", flexWrap:"wrap" }}>
+                            <input 
+                              type="text" 
+                              placeholder="e.g., Today 2:30 PM - 4:00 PM" 
+                              style={{ flex:1, minWidth:"200px", padding:"10px 14px", borderRadius:"10px", border:"1.5px solid #fde68a", outline:"none", fontSize:"0.9rem", background:"white" }}
+                              value={pickupInput[b.id] || ""}
+                              onChange={(e) => setPickupInput({...pickupInput, [b.id]: e.target.value})}
+                            />
+                            <button 
+                              onClick={() => handleConfirm(b.id)}
+                              disabled={confirming === b.id}
+                              style={{ background:"#16a34a", color:"white", border:"none", padding:"10px 22px", borderRadius:"10px", fontWeight:"800", cursor:"pointer", fontSize:"0.88rem" }}
+                            >
+                              {confirming === b.id ? "Confirming..." : "Approve & Confirm"}
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div style={{ marginTop:"16px", paddingTop:"14px", borderTop:"1px solid #f1f5f9", display:"flex", justifyContent:"space-between", alignItems:"center", flexWrap:"wrap", gap:"10px" }}>
+                          <div style={{ display:"flex", alignItems:"center", gap:"8px" }}>
+                            <span style={{ fontSize:"0.82rem", color:"#64748b", fontWeight:"700" }}>Update Status:</span>
+                            <select 
+                              style={{ padding:"6px 12px", borderRadius:"8px", border:"1px solid #cbd5e1", outline:"none", fontSize:"0.82rem", fontWeight:"600", background:"white" }}
+                              value={b.status}
+                              onChange={(e) => handleUpdateStatus(b.id, e.target.value)}
+                            >
+                              {Object.keys(STATUS_COLORS).map(statusKey => (
+                                <option key={statusKey} value={statusKey}>{STATUS_COLORS[statusKey].label}</option>
+                              ))}
+                            </select>
+                          </div>
+
+                          <div style={{ display:"flex", gap:"8px" }}>
+                            {b.phone_number && (
+                              <a 
+                                href={`https://wa.me/91${b.phone_number.replace(/[^0-9]/g, "").slice(-10)}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="adm-action-btn green"
+                              >
+                                <MessageCircle size={14} /> WhatsApp
+                              </a>
+                            )}
+                            <button 
+                              onClick={() => handleDeleteDoc("scrap_bookings", b.id)}
+                              className="adm-action-btn delete"
+                              title="Delete Booking"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </div>
+                        </div>
+                      )}
+
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </section>
+        )}
+
+        {/* =========================================================================
+            TAB 3: GREEN CLUB VOLUNTEERS & PHOTO MANAGEMENT
+           ========================================================================= */}
+        {(activeTab === "green_club" || activeTab === "overview") && (
+          <section className="adm-card animate-fade-in">
+            <div className="adm-card-header">
+              <div>
+                <h2 className="adm-card-title">
+                  <Leaf size={24} color="#059669" /> Green Club Volunteers & Member Photos ({clubRegistrations.length})
+                </h2>
+                <p style={{ margin:"4px 0 0", fontSize:"0.85rem", color:"#64748b" }}>
+                  Direct access to volunteer identification photos uploaded during registration with 1-click JPG export.
+                </p>
+              </div>
+            </div>
+
+            {/* Search & Photo Filter Toolbar */}
+            <div className="adm-toolbar">
+              <div className="adm-search-box">
+                <Search size={16} className="adm-search-icon" />
+                <input
+                  type="text"
+                  className="adm-search-input"
+                  placeholder="Search volunteer by name, email, phone, event, or address..."
+                  value={gcSearchTerm}
+                  onChange={(e) => setGcSearchTerm(e.target.value)}
+                />
+              </div>
+
+              <div className="adm-chip-group">
+                <button
+                  className={`adm-chip ${!gcFilterPhotoOnly ? "active" : ""}`}
+                  onClick={() => setGcFilterPhotoOnly(false)}
+                >
+                  All Volunteers ({clubRegistrations.length})
+                </button>
+                <button
+                  className={`adm-chip ${gcFilterPhotoOnly ? "active" : ""}`}
+                  onClick={() => setGcFilterPhotoOnly(true)}
+                >
+                  📷 Uploaded Photos Only ({photoCount})
+                </button>
+              </div>
+            </div>
+
+            {/* Volunteer Table */}
+            <div className="adm-table-wrap">
+              <table className="adm-table">
+                <thead>
                   <tr>
-                    <th style={{ padding:"18px 20px", textAlign:"left", fontSize:"0.75rem", color:"#94a3b8", textTransform:"uppercase", width:"90px" }}>Member Photo</th>
-                    <th style={{ padding:"18px 20px", textAlign:"left", fontSize:"0.75rem", color:"#94a3b8", textTransform:"uppercase" }}>Volunteer Details</th>
-                    <th style={{ padding:"18px 20px", textAlign:"left", fontSize:"0.75rem", color:"#94a3b8", textTransform:"uppercase" }}>Contact Info</th>
-                    <th style={{ padding:"18px 20px", textAlign:"left", fontSize:"0.75rem", color:"#94a3b8", textTransform:"uppercase" }}>Weekend Task</th>
-                    <th style={{ padding:"18px 20px", textAlign:"left", fontSize:"0.75rem", color:"#94a3b8", textTransform:"uppercase" }}>Date & Payment</th>
-                    <th style={{ padding:"18px 20px", textAlign:"right", fontSize:"0.75rem", color:"#94a3b8", textTransform:"uppercase" }}>Actions</th>
+                    <th>Member Photo</th>
+                    <th>Volunteer Name</th>
+                    <th>Contact Info</th>
+                    <th>Adopted Task</th>
+                    <th>Registered Date</th>
+                    <th style={{ textAlign:"right" }}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredClubRegistrations.length === 0 ? (
                     <tr>
                       <td colSpan={6} style={{ padding:"40px", textAlign:"center", color:"#94a3b8" }}>
-                        {clubRegistrations.length === 0 ? "No green club registrations yet." : "No registrations match your search criteria."}
+                        No volunteer registrations found matching search criteria.
                       </td>
                     </tr>
                   ) : (
-                    filteredClubRegistrations.map(r => {
+                    filteredClubRegistrations.map((r) => {
                       const photo = r.photo_url || r.photo_base64 || r.photo;
                       const hasCustomPhoto = !!photo && !photo.includes("unsplash.com/photo-1535713875002");
-                      const cleanPhone = r.phone ? r.phone.replace(/[^0-9]/g, "") : "";
 
                       return (
-                        <tr key={r.id} style={{ borderBottom:"1px solid #f1f5f9" }}>
-                          {/* Member Photo Thumbnail */}
-                          <td style={{ padding:"16px 20px", verticalAlign:"middle" }}>
+                        <tr key={r.id}>
+                          {/* Member Photo Avatar */}
+                          <td>
                             <div 
+                              className="adm-avatar-thumb" 
                               onClick={() => setSelectedPhotoVolunteer(r)}
-                              style={{ 
-                                position:"relative", 
-                                width:"52px", 
-                                height:"52px", 
-                                borderRadius:"14px", 
-                                overflow:"hidden", 
-                                cursor:"pointer", 
-                                border: hasCustomPhoto ? "2px solid #10b981" : "2px dashed #cbd5e1",
-                                background:"#f1f5f9",
-                                display:"flex",
-                                alignItems:"center",
-                                justifyContent:"center",
-                                boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
-                                transition:"transform 0.2s"
-                              }}
-                              title="Click to view & download photo"
+                              title="Click to inspect photo in high-resolution"
                             >
-                              {photo ? (
-                                <img 
-                                  src={photo} 
-                                  alt={r.user_name || "Volunteer"} 
-                                  style={{ width:"100%", height:"100%", objectFit:"cover" }}
-                                  onError={(e) => {
-                                    e.target.style.display = "none";
-                                    e.target.parentNode.innerHTML = `<span style="font-size:1.1rem;font-weight:800;color:#10b981;">${(r.user_name || "V").charAt(0).toUpperCase()}</span>`;
-                                  }}
-                                />
+                              {hasCustomPhoto ? (
+                                <img src={photo} alt={r.user_name} />
                               ) : (
-                                <span style={{ fontSize:"1.1rem", fontWeight:"800", color:"#64748b" }}>
-                                  {(r.user_name || "V").charAt(0).toUpperCase()}
-                                </span>
+                                <ImageIcon size={20} color="#94a3b8" />
                               )}
-                              <div style={{ position:"absolute", bottom:0, left:0, right:0, background:"rgba(0,0,0,0.6)", color:"white", fontSize:"0.55rem", textAlign:"center", padding:"1px 0", fontWeight:"700" }}>
-                                PHOTO
-                              </div>
                             </div>
                           </td>
 
-                          {/* Volunteer Details */}
-                          <td style={{ padding:"16px 20px", verticalAlign:"middle" }}>
-                            <div style={{ fontWeight:"800", fontSize:"0.98rem", color:"#0f172a", marginBottom:"3px" }}>
+                          {/* Name & Address */}
+                          <td>
+                            <div style={{ fontWeight:"800", color:"#0f172a", fontSize:"0.95rem" }}>
                               {r.user_name}
                             </div>
-                            {r.address ? (
-                              <div style={{ fontSize:"0.8rem", color:"#64748b", display:"flex", alignItems:"flex-start", gap:"4px", maxWidth:"260px" }}>
-                                <MapPin size={13} style={{ flexShrink:0, marginTop:"2px", color:"#94a3b8" }} />
-                                <span>{r.address}</span>
-                              </div>
-                            ) : (
-                              <div style={{ fontSize:"0.75rem", color:"#94a3b8" }}>No address provided</div>
-                            )}
-                            <div style={{ fontSize:"0.7rem", color:"#cbd5e1", marginTop:"2px" }}>
-                              ID: {r.id.substring(0, 8)}...
+                            <div style={{ fontSize:"0.78rem", color:"#64748b", marginTop:"2px", display:"flex", alignItems:"center", gap:"4px" }}>
+                              <MapPin size={12} color="#ef4444" /> {r.address ? r.address.substring(0, 30) + "..." : "No address"}
                             </div>
                           </td>
 
                           {/* Contact Info */}
-                          <td style={{ padding:"16px 20px", verticalAlign:"middle" }}>
-                            <div style={{ fontSize:"0.85rem", color:"#334155" }}>
-                              <a href={`mailto:${r.email}`} style={{ color:"#0284c7", textDecoration:"none", display:"flex", alignItems:"center", gap:"6px", fontWeight:"600" }}>
-                                <Mail size={13} /> {r.email}
-                              </a>
+                          <td>
+                            <div style={{ fontSize:"0.85rem", color:"#0284c7", fontWeight:"700" }}>
+                              <a href={`tel:${r.phone}`} style={{ color:"inherit", textDecoration:"none" }}>{r.phone}</a>
                             </div>
-                            <div style={{ fontSize:"0.85rem", color:"#334155", marginTop:"6px", display:"flex", alignItems:"center", gap:"8px" }}>
-                              <a href={`tel:${r.phone}`} style={{ color:"#334155", textDecoration:"none", display:"flex", alignItems:"center", gap:"6px", fontWeight:"600" }}>
-                                <Phone size={13} style={{ color:"#10b981" }} /> {r.phone}
-                              </a>
-                              {cleanPhone && (
-                                <a 
-                                  href={`https://wa.me/91${cleanPhone.slice(-10)}`}
-                                  target="_blank" 
-                                  rel="noopener noreferrer"
-                                  style={{ background:"#dcfce7", color:"#16a34a", padding:"2px 6px", borderRadius:"6px", fontSize:"0.7rem", textDecoration:"none", fontWeight:"700", display:"inline-flex", alignItems:"center", gap:"3px" }}
-                                  title="Chat on WhatsApp"
-                                >
-                                  <MessageCircle size={11} /> WA
-                                </a>
-                              )}
-                            </div>
+                            <div style={{ fontSize:"0.75rem", color:"#64748b" }}>{r.email}</div>
                           </td>
 
                           {/* Selected Task */}
-                          <td style={{ padding:"16px 20px", verticalAlign:"middle" }}>
-                            <span style={{ background:"#e6fcf5", color:"#0ca678", padding:"4px 10px", borderRadius:"12px", fontSize:"0.75rem", fontWeight:"700", display:"inline-block" }}>
-                              {r.event_title || "Lifetime Membership"}
+                          <td>
+                            <span style={{ background:"#ecfdf5", color:"#059669", padding:"4px 10px", borderRadius:"12px", fontSize:"0.75rem", fontWeight:"800" }}>
+                              {r.event_title || "Lifetime Member"}
                             </span>
-                            <div style={{ fontSize:"0.7rem", color:"#94a3b8", marginTop:4 }}>
-                              Event ID: {r.event_id || "N/A"}
-                            </div>
                           </td>
 
-                          {/* Registration Date & Payment */}
-                          <td style={{ padding:"16px 20px", verticalAlign:"middle" }}>
-                            <div style={{ fontSize:"0.85rem", color:"#334155", fontWeight:"600" }}>
+                          {/* Date */}
+                          <td>
+                            <div style={{ fontSize:"0.82rem", color:"#475569", fontWeight:"600" }}>
                               {formatDate(r.created_at)}
                             </div>
-                            <div style={{ marginTop:"4px" }}>
-                              <span style={{ 
-                                padding:"2px 8px", 
-                                borderRadius:"10px", 
-                                fontSize:"0.7rem", 
-                                fontWeight:"800",
-                                background: r.payment_status === "completed" ? "#dcfce7" : "#fef3c7",
-                                color: r.payment_status === "completed" ? "#16a34a" : "#d97706"
-                              }}>
-                                {r.payment_status === "completed" ? "✅ ₹500 Paid" : "⏳ Pending ₹500"}
-                              </span>
-                            </div>
+                            <span style={{ 
+                              padding:"2px 8px", 
+                              borderRadius:"10px", 
+                              fontSize:"0.7rem", 
+                              fontWeight:"800",
+                              background: r.payment_status === "completed" ? "#dcfce7" : "#fef3c7",
+                              color: r.payment_status === "completed" ? "#16a34a" : "#d97706"
+                            }}>
+                              {r.payment_status === "completed" ? "✅ ₹500 Paid" : "⏳ Pending ₹500"}
+                            </span>
                           </td>
 
-                          {/* Direct Actions */}
-                          <td style={{ padding:"16px 20px", textAlign:"right", verticalAlign:"middle" }}>
-                            <div style={{ display:"inline-flex", alignItems:"center", gap:"6px" }}>
+                          {/* Actions */}
+                          <td style={{ textAlign:"right" }}>
+                            <div style={{ display:"inline-flex", gap:"6px", alignItems:"center" }}>
                               <button 
                                 onClick={() => setSelectedPhotoVolunteer(r)}
-                                style={{ 
-                                  display:"flex", 
-                                  alignItems:"center", 
-                                  gap:"4px", 
-                                  background:"#ecfdf5", 
-                                  color:"#059669", 
-                                  border:"1px solid #a7f3d0", 
-                                  padding:"6px 12px", 
-                                  borderRadius:"8px", 
-                                  fontSize:"0.78rem", 
-                                  fontWeight:"700", 
-                                  cursor:"pointer" 
-                                }}
-                                title="View Member Photo & Full Profile"
+                                className="adm-action-btn view"
+                                title="Inspect Full Photo & Profile"
                               >
-                                <Eye size={14} /> View Photo
+                                <Eye size={13} /> View Photo
                               </button>
 
                               {photo && (
                                 <button 
                                   onClick={() => handleDownloadPhoto(photo, r.user_name)}
-                                  style={{ 
-                                    background:"#f0f9ff", 
-                                    color:"#0284c7", 
-                                    border:"1px solid #bae6fd", 
-                                    padding:"6px 10px", 
-                                    borderRadius:"8px", 
-                                    fontSize:"0.78rem", 
-                                    fontWeight:"700", 
-                                    cursor:"pointer" 
-                                  }}
+                                  className="adm-action-btn green"
                                   title="Download Member Photo"
                                 >
-                                  <Download size={14} />
+                                  <Download size={13} /> JPG
                                 </button>
                               )}
 
                               <button 
                                 onClick={() => handleDeleteDoc("green_club_registrations", r.id)}
-                                style={{ 
-                                  background:"#fee2e2", 
-                                  color:"#ef4444", 
-                                  border:"none", 
-                                  padding:"6px 8px", 
-                                  borderRadius:"8px", 
-                                  cursor:"pointer" 
-                                }}
-                                title="Delete Registration"
+                                className="adm-action-btn delete"
+                                title="Delete Volunteer Record"
                               >
-                                <Trash2 size={14} />
+                                <Trash2 size={13} />
                               </button>
                             </div>
                           </td>
@@ -1075,739 +1261,802 @@ const Admin = () => {
                 </tbody>
               </table>
             </div>
-          </div>
-        </section>
+          </section>
+        )}
 
-        {/* --- WEEKLY NEWS & SOCIETY GAZETTE STUDIO SECTION --- */}
-        <section style={{ marginBottom: "50px" }}>
-          {/* Header Banner & Controls */}
-          <div style={{ 
-            background: "linear-gradient(135deg, #009ee3 0%, #0369a1 100%)", 
-            padding: "26px 30px", 
-            borderRadius: "24px", 
-            color: "white", 
-            marginBottom: "25px", 
-            boxShadow: "0 10px 30px rgba(0, 158, 227, 0.15)" 
-          }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "16px" }}>
-              <div>
-                <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "rgba(255,255,255,0.2)", padding: "4px 12px", borderRadius: "20px", fontSize: "0.75rem", fontWeight: "800", textTransform: "uppercase", letterSpacing: "0.5px" }}>
-                  <Sparkles size={14} /> Society Newsroom Dispatch Studio
+        {/* =========================================================================
+            TAB 4: WEEKLY NEWS & SOCIETY GAZETTE STUDIO
+           ========================================================================= */}
+        {(activeTab === "weekly_news" || activeTab === "overview") && (
+          <section className="adm-card animate-fade-in">
+            
+            {/* Header Banner */}
+            <div style={{ 
+              background: "linear-gradient(135deg, #009ee3 0%, #0369a1 100%)", 
+              padding: "26px 30px", 
+              borderRadius: "20px", 
+              color: "white", 
+              marginBottom: "24px", 
+              boxShadow: "0 8px 24px rgba(0, 158, 227, 0.2)" 
+            }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "16px" }}>
+                <div>
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "rgba(255,255,255,0.2)", padding: "4px 12px", borderRadius: "20px", fontSize: "0.75rem", fontWeight: "800", textTransform: "uppercase" }}>
+                    <Sparkles size={14} /> Society Newsroom Dispatch Studio
+                  </span>
+                  <h2 style={{ color: "white", margin: "8px 0 4px", fontSize: "1.5rem", fontWeight: "900", display: "flex", alignItems: "center", gap: "8px" }}>
+                    <Newspaper size={24} color="white" /> Weekly News & Society Gazette Management
+                  </h2>
+                  <p style={{ color: "rgba(255,255,255,0.85)", margin: 0, fontSize: "0.88rem" }}>
+                    Compose weekly bulletins covering all fields in society with cover photos, multi-image field galleries, and structured takeaways.
+                  </p>
                 </div>
-                <h2 style={{ color: "white", margin: "8px 0 4px", fontSize: "1.6rem", fontWeight: "800", display: "flex", alignItems: "center", gap: "10px" }}>
-                  <Newspaper size={26} color="white" /> Weekly News & Society Gazette Management
-                </h2>
-                <p style={{ color: "rgba(255,255,255,0.85)", margin: 0, fontSize: "0.88rem" }}>
-                  Compose and publish weekly bulletins covering all fields in society with cover photos, multi-image field galleries, and detailed breakdowns.
-                </p>
-              </div>
 
-              {/* View / Studio Toggle Buttons */}
-              <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
-                <button
-                  onClick={() => setNewsStudioTab("publish")}
-                  style={{
-                    background: newsStudioTab === "publish" ? "white" : "rgba(255,255,255,0.15)",
-                    color: newsStudioTab === "publish" ? "#0369a1" : "white",
-                    border: "none",
-                    padding: "10px 18px",
-                    borderRadius: "12px",
-                    fontWeight: "800",
-                    fontSize: "0.85rem",
-                    cursor: "pointer",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "6px",
-                    transition: "0.2s"
-                  }}
-                >
-                  <Plus size={16} /> Publish New Bulletin
-                </button>
-                <button
-                  onClick={() => setNewsStudioTab("manage")}
-                  style={{
-                    background: newsStudioTab === "manage" ? "white" : "rgba(255,255,255,0.15)",
-                    color: newsStudioTab === "manage" ? "#0369a1" : "white",
-                    border: "none",
-                    padding: "10px 18px",
-                    borderRadius: "12px",
-                    fontWeight: "800",
-                    fontSize: "0.85rem",
-                    cursor: "pointer",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "6px",
-                    transition: "0.2s"
-                  }}
-                >
-                  <Layers size={16} /> Gazette Archive ({weeklyNewsList.length})
-                </button>
-                <a
-                  href="/weekly-news"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{
-                    background: "rgba(0,0,0,0.25)",
-                    color: "white",
-                    textDecoration: "none",
-                    padding: "10px 18px",
-                    borderRadius: "12px",
-                    fontWeight: "700",
-                    fontSize: "0.85rem",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "6px"
-                  }}
-                >
-                  <Globe size={16} /> Live Hub ↗
-                </a>
+                <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+                  <button
+                    onClick={() => setNewsStudioTab("publish")}
+                    style={{
+                      background: newsStudioTab === "publish" ? "white" : "rgba(255,255,255,0.15)",
+                      color: newsStudioTab === "publish" ? "#0369a1" : "white",
+                      border: "none",
+                      padding: "10px 18px",
+                      borderRadius: "12px",
+                      fontWeight: "800",
+                      fontSize: "0.85rem",
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "6px"
+                    }}
+                  >
+                    <Plus size={16} /> Compose Bulletin
+                  </button>
+                  <button
+                    onClick={() => setNewsStudioTab("manage")}
+                    style={{
+                      background: newsStudioTab === "manage" ? "white" : "rgba(255,255,255,0.15)",
+                      color: newsStudioTab === "manage" ? "#0369a1" : "white",
+                      border: "none",
+                      padding: "10px 18px",
+                      borderRadius: "12px",
+                      fontWeight: "800",
+                      fontSize: "0.85rem",
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "6px"
+                    }}
+                  >
+                    <Layers size={16} /> Gazette Archive ({weeklyNewsList.length})
+                  </button>
+                  <a
+                    href="/weekly-news"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      background: "rgba(0,0,0,0.25)",
+                      color: "white",
+                      textDecoration: "none",
+                      padding: "10px 18px",
+                      borderRadius: "12px",
+                      fontWeight: "700",
+                      fontSize: "0.85rem",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "6px"
+                    }}
+                  >
+                    <Globe size={16} /> Live Gazette ↗
+                  </a>
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* TAB 1: PUBLISH STUDIO FORM */}
-          {newsStudioTab === "publish" && (
-            <div style={{ background: "white", padding: "32px", borderRadius: "24px", boxShadow: "0 10px 40px rgba(0,0,0,0.05)", border: "1px solid #e2e8f0" }}>
-              <h3 style={{ margin: "0 0 20px", fontSize: "1.25rem", fontWeight: "800", color: "#0f172a", display: "flex", alignItems: "center", gap: "8px" }}>
-                <FileText size={20} color="#009ee3" /> Weekly News Composer Studio
-              </h3>
+            {/* TAB 1: PUBLISH STUDIO FORM */}
+            {newsStudioTab === "publish" && (
+              <div style={{ background: "#f8fafc", padding: "28px", borderRadius: "18px", border: "1.5px solid #e2e8f0" }}>
+                <h3 style={{ margin: "0 0 20px", fontSize: "1.2rem", fontWeight: "900", color: "#0f172a", display: "flex", alignItems: "center", gap: "8px" }}>
+                  <FileText size={18} color="#009ee3" /> News Composer & Field Visuals Builder
+                </h3>
 
-              <form onSubmit={handleNewsSubmit}>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "25px" }}>
-                  
-                  {/* Left Column: Article Metadata & Body */}
-                  <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                <form onSubmit={handleNewsSubmit}>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "25px" }}>
                     
-                    {/* Headline */}
-                    <div>
-                      <label style={{ display: "block", fontSize: "0.75rem", fontWeight: "800", color: "#475569", marginBottom: "6px", textTransform: "uppercase" }}>
-                        Article Headline / News Title *
-                      </label>
-                      <input
-                        type="text"
-                        placeholder="e.g. Mega Clean City Drive & Smart Segregation Launched in Bengaluru"
-                        required
-                        value={newsTitle}
-                        onChange={(e) => setNewsTitle(e.target.value)}
-                        style={{ width: "100%", padding: "12px 14px", border: "1px solid #cbd5e1", borderRadius: "12px", outline: "none", fontSize: "0.95rem", fontWeight: "600" }}
-                      />
-                    </div>
-
-                    {/* Category Selector & Edition */}
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                    {/* Left Column */}
+                    <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
                       <div>
                         <label style={{ display: "block", fontSize: "0.75rem", fontWeight: "800", color: "#475569", marginBottom: "6px", textTransform: "uppercase" }}>
-                          Field in Society *
-                        </label>
-                        <select
-                          value={newsCategory}
-                          onChange={(e) => setNewsCategory(e.target.value)}
-                          style={{ width: "100%", padding: "12px 14px", border: "1px solid #cbd5e1", borderRadius: "12px", outline: "none", fontSize: "0.9rem", fontWeight: "600", background: "white" }}
-                        >
-                          <option value="environment">🌳 Environment & Ecology</option>
-                          <option value="tech">⚡ Clean-Tech & Innovation</option>
-                          <option value="society">🏛️ Society & Civic Welfare</option>
-                          <option value="health">🩺 Health & Sanitation</option>
-                          <option value="urban">🏙️ Urban Living & Sustainability</option>
-                          <option value="economy">📈 Policy & Green Economy</option>
-                        </select>
-                      </div>
-
-                      <div>
-                        <label style={{ display: "block", fontSize: "0.75rem", fontWeight: "800", color: "#475569", marginBottom: "6px", textTransform: "uppercase" }}>
-                          Edition Week *
+                          Article Headline / Title *
                         </label>
                         <input
                           type="text"
-                          placeholder="e.g. Week 3, August 2026"
+                          className="adm-input"
+                          placeholder="e.g. Karnataka Launches Urban Micro-Forestry Mission"
                           required
-                          value={newsEdition}
-                          onChange={(e) => setNewsEdition(e.target.value)}
-                          style={{ width: "100%", padding: "12px 14px", border: "1px solid #cbd5e1", borderRadius: "12px", outline: "none", fontSize: "0.9rem" }}
-                        />
-                      </div>
-                    </div>
-
-                    {/* Author, Date, Read Time */}
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "10px" }}>
-                      <div>
-                        <label style={{ display: "block", fontSize: "0.72rem", fontWeight: "800", color: "#475569", marginBottom: "6px", textTransform: "uppercase" }}>Author/Source</label>
-                        <input
-                          type="text"
-                          placeholder="Editorial Team"
-                          value={newsAuthor}
-                          onChange={(e) => setNewsAuthor(e.target.value)}
-                          style={{ width: "100%", padding: "10px 12px", border: "1px solid #cbd5e1", borderRadius: "10px", outline: "none", fontSize: "0.85rem" }}
+                          value={newsTitle}
+                          onChange={(e) => setNewsTitle(e.target.value)}
                         />
                       </div>
 
-                      <div>
-                        <label style={{ display: "block", fontSize: "0.72rem", fontWeight: "800", color: "#475569", marginBottom: "6px", textTransform: "uppercase" }}>Publication Date</label>
-                        <input
-                          type="text"
-                          placeholder="Aug 20, 2026"
-                          value={newsDate}
-                          onChange={(e) => setNewsDate(e.target.value)}
-                          style={{ width: "100%", padding: "10px 12px", border: "1px solid #cbd5e1", borderRadius: "10px", outline: "none", fontSize: "0.85rem" }}
-                        />
-                      </div>
-
-                      <div>
-                        <label style={{ display: "block", fontSize: "0.72rem", fontWeight: "800", color: "#475569", marginBottom: "6px", textTransform: "uppercase" }}>Read Time</label>
-                        <input
-                          type="text"
-                          placeholder="4 min read"
-                          value={newsReadTime}
-                          onChange={(e) => setNewsReadTime(e.target.value)}
-                          style={{ width: "100%", padding: "10px 12px", border: "1px solid #cbd5e1", borderRadius: "10px", outline: "none", fontSize: "0.85rem" }}
-                        />
-                      </div>
-                    </div>
-
-                    {/* Lead Summary */}
-                    <div>
-                      <label style={{ display: "block", fontSize: "0.75rem", fontWeight: "800", color: "#475569", marginBottom: "6px", textTransform: "uppercase" }}>
-                        Lead Summary / Executive Abstract *
-                      </label>
-                      <textarea
-                        placeholder="Provide a concise 1-2 sentence lead overview highlighting the core news development..."
-                        required
-                        value={newsSummary}
-                        onChange={(e) => setNewsSummary(e.target.value)}
-                        style={{ width: "100%", height: "85px", padding: "12px 14px", border: "1px solid #cbd5e1", borderRadius: "12px", outline: "none", fontSize: "0.9rem", fontFamily: "inherit" }}
-                      />
-                    </div>
-
-                    {/* Full Content */}
-                    <div>
-                      <label style={{ display: "block", fontSize: "0.75rem", fontWeight: "800", color: "#475569", marginBottom: "6px", textTransform: "uppercase" }}>
-                        Full News Article Body * (Separate paragraphs with double Enter)
-                      </label>
-                      <textarea
-                        placeholder="Write the comprehensive news story here with detailed facts, background context, quotes, impact data, and civic outcomes..."
-                        required
-                        value={newsContent}
-                        onChange={(e) => setNewsContent(e.target.value)}
-                        style={{ width: "100%", height: "180px", padding: "14px", border: "1px solid #cbd5e1", borderRadius: "12px", outline: "none", fontSize: "0.92rem", fontFamily: "inherit", lineHeight: "1.6" }}
-                      />
-                    </div>
-
-                  </div>
-
-                  {/* Right Column: Visuals & Relevant Images & Takeaways */}
-                  <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-                    
-                    {/* Primary Cover Image */}
-                    <div style={{ background: "#f8fafc", padding: "18px", borderRadius: "16px", border: "1px solid #e2e8f0" }}>
-                      <label style={{ display: "block", fontSize: "0.75rem", fontWeight: "800", color: "#0f172a", marginBottom: "6px", textTransform: "uppercase" }}>
-                        📷 1. Primary Feature Cover Image
-                      </label>
-                      
-                      <div style={{ border: "2px dashed #cbd5e1", padding: "14px", borderRadius: "12px", textAlign: "center", background: "white", cursor: "pointer", position: "relative", marginBottom: "10px" }}>
-                        <UploadCloud size={24} style={{ color: "#009ee3", marginBottom: "4px" }} />
-                        <p style={{ margin: 0, fontSize: "0.8rem", color: "#475569", fontWeight: "600" }}>
-                          {newsCoverFile ? newsCoverFile.name : "Choose Cover JPG / PNG file"}
-                        </p>
-                        <input
-                          type="file"
-                          accept="image/*"
-                          onChange={(e) => setNewsCoverFile(e.target.files[0])}
-                          style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, opacity: 0, cursor: "pointer" }}
-                        />
-                      </div>
-
-                      <input
-                        type="text"
-                        placeholder="Or paste Direct Image URL Fallback (https://...)"
-                        value={newsCoverUrl}
-                        onChange={(e) => setNewsCoverUrl(e.target.value)}
-                        style={{ width: "100%", padding: "8px 12px", border: "1px solid #cbd5e1", borderRadius: "8px", outline: "none", fontSize: "0.82rem" }}
-                      />
-                    </div>
-
-                    {/* Relevant Images Gallery (Multiple Uploads) */}
-                    <div style={{ background: "#f8fafc", padding: "18px", borderRadius: "16px", border: "1px solid #e2e8f0" }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
-                        <label style={{ fontSize: "0.75rem", fontWeight: "800", color: "#0f172a", textTransform: "uppercase" }}>
-                          🖼️ 2. Relevant Field Images Gallery ({newsGalleryFiles.length} Selected)
-                        </label>
-                        {newsGalleryFiles.length > 0 && (
-                          <button
-                            type="button"
-                            onClick={() => setNewsGalleryFiles([])}
-                            style={{ background: "none", border: "none", color: "#ef4444", fontSize: "0.75rem", fontWeight: "700", cursor: "pointer" }}
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+                        <div>
+                          <label style={{ display: "block", fontSize: "0.75rem", fontWeight: "800", color: "#475569", marginBottom: "6px", textTransform: "uppercase" }}>
+                            Field in Society *
+                          </label>
+                          <select
+                            className="adm-input"
+                            value={newsCategory}
+                            onChange={(e) => setNewsCategory(e.target.value)}
                           >
-                            Clear All
-                          </button>
-                        )}
+                            <option value="environment">🌳 Environment & Ecology</option>
+                            <option value="tech">⚡ Clean-Tech & Innovation</option>
+                            <option value="society">🏛️ Society & Civic Welfare</option>
+                            <option value="health">🩺 Health & Sanitation</option>
+                            <option value="urban">🏙️ Urban Living & Sustainability</option>
+                            <option value="economy">📈 Policy & Green Economy</option>
+                          </select>
+                        </div>
+
+                        <div>
+                          <label style={{ display: "block", fontSize: "0.75rem", fontWeight: "800", color: "#475569", marginBottom: "6px", textTransform: "uppercase" }}>
+                            Edition Week *
+                          </label>
+                          <input
+                            type="text"
+                            className="adm-input"
+                            placeholder="e.g. Week 3, August 2026"
+                            required
+                            value={newsEdition}
+                            onChange={(e) => setNewsEdition(e.target.value)}
+                          />
+                        </div>
                       </div>
-                      
-                      <div style={{ border: "2px dashed #93c5fd", padding: "14px", borderRadius: "12px", textAlign: "center", background: "#f0f9ff", cursor: "pointer", position: "relative", marginBottom: "10px" }}>
-                        <Images size={24} style={{ color: "#0284c7", marginBottom: "4px" }} />
-                        <p style={{ margin: 0, fontSize: "0.8rem", color: "#0369a1", fontWeight: "700" }}>
-                          Upload Multiple Relevant Images (Select 1 to 5 photos)
-                        </p>
-                        <input
-                          type="file"
-                          accept="image/*"
-                          multiple
-                          onChange={(e) => {
-                            const files = Array.from(e.target.files);
-                            setNewsGalleryFiles(prev => [...prev, ...files]);
-                          }}
-                          style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, opacity: 0, cursor: "pointer" }}
+
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "10px" }}>
+                        <div>
+                          <label style={{ display: "block", fontSize: "0.72rem", fontWeight: "800", color: "#475569", marginBottom: "6px", textTransform: "uppercase" }}>Author/Source</label>
+                          <input
+                            type="text"
+                            className="adm-input"
+                            value={newsAuthor}
+                            onChange={(e) => setNewsAuthor(e.target.value)}
+                          />
+                        </div>
+
+                        <div>
+                          <label style={{ display: "block", fontSize: "0.72rem", fontWeight: "800", color: "#475569", marginBottom: "6px", textTransform: "uppercase" }}>Date</label>
+                          <input
+                            type="text"
+                            className="adm-input"
+                            value={newsDate}
+                            onChange={(e) => setNewsDate(e.target.value)}
+                          />
+                        </div>
+
+                        <div>
+                          <label style={{ display: "block", fontSize: "0.72rem", fontWeight: "800", color: "#475569", marginBottom: "6px", textTransform: "uppercase" }}>Read Time</label>
+                          <input
+                            type="text"
+                            className="adm-input"
+                            value={newsReadTime}
+                            onChange={(e) => setNewsReadTime(e.target.value)}
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label style={{ display: "block", fontSize: "0.75rem", fontWeight: "800", color: "#475569", marginBottom: "6px", textTransform: "uppercase" }}>
+                          Lead Summary / Executive Abstract *
+                        </label>
+                        <textarea
+                          className="adm-input"
+                          placeholder="Provide a concise 1-2 sentence lead overview..."
+                          required
+                          style={{ height: "80px" }}
+                          value={newsSummary}
+                          onChange={(e) => setNewsSummary(e.target.value)}
                         />
                       </div>
 
-                      {/* Selected Gallery Files Thumbnails */}
-                      {newsGalleryFiles.length > 0 && (
-                        <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginBottom: "10px" }}>
-                          {newsGalleryFiles.map((f, idx) => (
-                            <span key={idx} style={{ background: "white", padding: "4px 8px", borderRadius: "6px", fontSize: "0.72rem", border: "1px solid #cbd5e1", display: "inline-flex", alignItems: "center", gap: "4px" }}>
-                              {f.name.substring(0, 14)}...
-                            </span>
-                          ))}
-                        </div>
-                      )}
-
-                      <textarea
-                        placeholder="Or enter additional Image URLs (one per line or separated by comma)..."
-                        value={newsGalleryUrls}
-                        onChange={(e) => setNewsGalleryUrls(e.target.value)}
-                        style={{ width: "100%", height: "60px", padding: "8px 12px", border: "1px solid #cbd5e1", borderRadius: "8px", outline: "none", fontSize: "0.82rem", fontFamily: "inherit" }}
-                      />
-                    </div>
-
-                    {/* Key Highlights / Takeaways */}
-                    <div>
-                      <label style={{ display: "block", fontSize: "0.75rem", fontWeight: "800", color: "#475569", marginBottom: "6px", textTransform: "uppercase" }}>
-                        📌 Key Highlights / Takeaways (One per line)
-                      </label>
-                      <textarea
-                        placeholder="• Over 25,000 volunteers adopted green corridors&#10;• Smart real-time water quality sensors deployed&#10;• Significant reduction in municipal landfill waste"
-                        value={newsTakeaways}
-                        onChange={(e) => setNewsTakeaways(e.target.value)}
-                        style={{ width: "100%", height: "80px", padding: "10px 12px", border: "1px solid #cbd5e1", borderRadius: "10px", outline: "none", fontSize: "0.85rem", fontFamily: "inherit" }}
-                      />
-                    </div>
-
-                    {/* Tags & Featured Checkbox */}
-                    <div style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr", gap: "10px", alignItems: "center" }}>
                       <div>
-                        <label style={{ display: "block", fontSize: "0.72rem", fontWeight: "800", color: "#475569", marginBottom: "4px", textTransform: "uppercase" }}>
-                          Topic Tags (Comma Separated)
+                        <label style={{ display: "block", fontSize: "0.75rem", fontWeight: "800", color: "#475569", marginBottom: "6px", textTransform: "uppercase" }}>
+                          Full Article Body * (Separate paragraphs with double Enter)
                         </label>
+                        <textarea
+                          className="adm-input"
+                          placeholder="Write the full comprehensive news story..."
+                          required
+                          style={{ height: "160px", lineHeight: "1.6" }}
+                          value={newsContent}
+                          onChange={(e) => setNewsContent(e.target.value)}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Right Column: Visuals */}
+                    <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+                      
+                      {/* Cover Image */}
+                      <div style={{ background: "white", padding: "16px", borderRadius: "14px", border: "1px solid #cbd5e1" }}>
+                        <label style={{ display: "block", fontSize: "0.75rem", fontWeight: "800", color: "#0f172a", marginBottom: "6px", textTransform: "uppercase" }}>
+                          📷 Primary Cover Image
+                        </label>
+                        <div className="adm-dropzone" style={{ marginBottom: "8px" }}>
+                          <UploadCloud size={22} color="#009ee3" />
+                          <p style={{ margin: "4px 0 0", fontSize: "0.8rem", color: "#475569", fontWeight: "700" }}>
+                            {newsCoverFile ? newsCoverFile.name : "Select Cover JPG / PNG file"}
+                          </p>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => setNewsCoverFile(e.target.files[0])}
+                            style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, opacity: 0, cursor: "pointer" }}
+                          />
+                        </div>
                         <input
                           type="text"
-                          placeholder="Ecology, MicroForest, Bengaluru"
-                          value={newsTags}
-                          onChange={(e) => setNewsTags(e.target.value)}
-                          style={{ width: "100%", padding: "10px 12px", border: "1px solid #cbd5e1", borderRadius: "10px", outline: "none", fontSize: "0.85rem" }}
+                          className="adm-input"
+                          placeholder="Or Image URL Fallback (https://...)"
+                          value={newsCoverUrl}
+                          onChange={(e) => setNewsCoverUrl(e.target.value)}
                         />
                       </div>
 
-                      <div style={{ background: "#f8fafc", padding: "10px 12px", borderRadius: "10px", border: "1px solid #e2e8f0", marginTop: "16px" }}>
-                        <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer", fontSize: "0.82rem", fontWeight: "700", color: "#0f172a", margin: 0 }}>
-                          <input
-                            type="checkbox"
-                            checked={newsIsFeatured}
-                            onChange={(e) => setNewsIsFeatured(e.target.checked)}
-                            style={{ width: "16px", height: "16px", accentColor: "#009ee3" }}
-                          />
-                          ⭐ Spotlight Story
-                        </label>
-                      </div>
-                    </div>
-
-                    {/* Submit Button */}
-                    <button
-                      type="submit"
-                      disabled={newsUploading}
-                      style={{
-                        width: "100%",
-                        background: "linear-gradient(135deg, #009ee3 0%, #0284c7 100%)",
-                        color: "white",
-                        border: "none",
-                        padding: "15px 24px",
-                        borderRadius: "14px",
-                        fontWeight: "800",
-                        fontSize: "1rem",
-                        cursor: "pointer",
-                        boxShadow: "0 8px 24px rgba(0, 158, 227, 0.3)",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        gap: "8px",
-                        marginTop: "10px"
-                      }}
-                    >
-                      <Newspaper size={18} />
-                      {newsUploading ? "Publishing Bulletin & Processing Visuals..." : "Publish Weekly News Bulletin"}
-                    </button>
-
-                  </div>
-
-                </div>
-              </form>
-            </div>
-          )}
-
-          {/* TAB 2: GAZETTE ARCHIVE & RELEVANT IMAGES MANAGEMENT */}
-          {newsStudioTab === "manage" && (
-            <div style={{ background: "white", borderRadius: "24px", padding: "28px", boxShadow: "0 10px 40px rgba(0,0,0,0.05)", border: "1px solid #e2e8f0" }}>
-              
-              {/* Archive Search & Filter Bar */}
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "14px", marginBottom: "24px" }}>
-                <div style={{ position: "relative", minWidth: "260px" }}>
-                  <Search size={16} style={{ position: "absolute", left: "14px", top: "12px", color: "#94a3b8" }} />
-                  <input
-                    type="text"
-                    placeholder="Search archive by title, author, tag..."
-                    value={newsSearchTerm}
-                    onChange={(e) => setNewsSearchTerm(e.target.value)}
-                    style={{ width: "100%", padding: "10px 14px 10px 38px", borderRadius: "12px", border: "1px solid #cbd5e1", outline: "none", fontSize: "0.85rem" }}
-                  />
-                </div>
-
-                <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
-                  {["all", "environment", "tech", "society", "health", "urban", "economy"].map(catKey => (
-                    <button
-                      key={catKey}
-                      onClick={() => setNewsCategoryFilter(catKey)}
-                      style={{
-                        padding: "6px 14px",
-                        borderRadius: "20px",
-                        border: newsCategoryFilter === catKey ? "1px solid #009ee3" : "1px solid #e2e8f0",
-                        background: newsCategoryFilter === catKey ? "#e0f2fe" : "white",
-                        color: newsCategoryFilter === catKey ? "#0369a1" : "#64748b",
-                        fontSize: "0.75rem",
-                        fontWeight: "700",
-                        cursor: "pointer"
-                      }}
-                    >
-                      {catKey.charAt(0).toUpperCase() + catKey.slice(1)}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Archive Grid */}
-              {filteredWeeklyNews.length === 0 ? (
-                <div style={{ textAlign: "center", padding: "40px", color: "#94a3b8" }}>
-                  <Newspaper size={40} style={{ margin: "0 auto 10px" }} />
-                  <p style={{ margin: 0 }}>No news bulletins match your criteria.</p>
-                </div>
-              ) : (
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: "20px" }}>
-                  {filteredWeeklyNews.map(item => (
-                    <div
-                      key={item.id}
-                      style={{
-                        background: "#f8fafc",
-                        borderRadius: "18px",
-                        border: "1px solid #e2e8f0",
-                        overflow: "hidden",
-                        display: "flex",
-                        flexDirection: "column",
-                        justifyContent: "space-between",
-                        boxShadow: "0 2px 10px rgba(0,0,0,0.02)"
-                      }}
-                    >
-                      <div>
-                        {/* Cover Image */}
-                        <div style={{ height: "160px", position: "relative", overflow: "hidden", background: "#e2e8f0" }}>
-                          <img
-                            src={item.cover_image || "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&w=800&q=80"}
-                            alt={item.title}
-                            style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                          />
-                          <span style={{ position: "absolute", top: "10px", left: "10px", background: "rgba(15, 23, 42, 0.8)", color: "white", padding: "3px 10px", borderRadius: "10px", fontSize: "0.68rem", fontWeight: "800", textTransform: "uppercase" }}>
-                            {item.categoryLabel || item.category}
-                          </span>
-                          {item.gallery_images && item.gallery_images.length > 0 && (
-                            <span style={{ position: "absolute", top: "10px", right: "10px", background: "rgba(0, 158, 227, 0.9)", color: "white", padding: "3px 8px", borderRadius: "8px", fontSize: "0.68rem", fontWeight: "700", display: "flex", alignItems: "center", gap: "4px" }}>
-                              <Images size={11} /> +{item.gallery_images.length}
-                            </span>
+                      {/* Multi-Image Relevant Gallery */}
+                      <div style={{ background: "white", padding: "16px", borderRadius: "14px", border: "1px solid #cbd5e1" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
+                          <label style={{ fontSize: "0.75rem", fontWeight: "800", color: "#0f172a", textTransform: "uppercase" }}>
+                            🖼️ Relevant Field Images Gallery ({newsGalleryFiles.length} Selected)
+                          </label>
+                          {newsGalleryFiles.length > 0 && (
+                            <button
+                              type="button"
+                              onClick={() => setNewsGalleryFiles([])}
+                              style={{ background: "none", border: "none", color: "#ef4444", fontSize: "0.75rem", fontWeight: "700", cursor: "pointer" }}
+                            >
+                              Clear
+                            </button>
                           )}
                         </div>
 
-                        {/* Card Content */}
-                        <div style={{ padding: "16px" }}>
-                          <div style={{ fontSize: "0.72rem", color: "#94a3b8", fontWeight: "700", marginBottom: "4px" }}>
-                            {item.edition || "Weekly"} • {item.date}
-                          </div>
-                          <h4 style={{ margin: "0 0 8px", fontSize: "1rem", fontWeight: "800", color: "#0f172a", lineHeight: "1.35", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
-                            {item.title}
-                          </h4>
-                          <p style={{ margin: 0, fontSize: "0.82rem", color: "#64748b", lineHeight: "1.5", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
-                            {item.summary}
+                        <div className="adm-dropzone" style={{ marginBottom: "8px" }}>
+                          <Images size={22} color="#0284c7" />
+                          <p style={{ margin: "4px 0 0", fontSize: "0.8rem", color: "#0284c7", fontWeight: "700" }}>
+                            Upload Multiple Field Photos (Select 1 to 5 images)
                           </p>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            multiple
+                            onChange={(e) => {
+                              const files = Array.from(e.target.files);
+                              setNewsGalleryFiles(prev => [...prev, ...files]);
+                            }}
+                            style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, opacity: 0, cursor: "pointer" }}
+                          />
+                        </div>
+
+                        {newsGalleryFiles.length > 0 && (
+                          <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginBottom: "8px" }}>
+                            {newsGalleryFiles.map((f, idx) => (
+                              <span key={idx} style={{ background: "#f1f5f9", padding: "3px 8px", borderRadius: "6px", fontSize: "0.72rem", border: "1px solid #cbd5e1" }}>
+                                {f.name.substring(0, 12)}...
+                              </span>
+                            ))}
+                          </div>
+                        )}
+
+                        <textarea
+                          className="adm-input"
+                          placeholder="Or enter additional Image URLs (separated by comma or new lines)..."
+                          style={{ height: "55px" }}
+                          value={newsGalleryUrls}
+                          onChange={(e) => setNewsGalleryUrls(e.target.value)}
+                        />
+                      </div>
+
+                      {/* Takeaways & Tags */}
+                      <div>
+                        <label style={{ display: "block", fontSize: "0.75rem", fontWeight: "800", color: "#475569", marginBottom: "6px", textTransform: "uppercase" }}>
+                          📌 Key Highlights & Takeaways (One per line)
+                        </label>
+                        <textarea
+                          className="adm-input"
+                          placeholder="• Key development point 1&#10;• Key development point 2"
+                          style={{ height: "70px" }}
+                          value={newsTakeaways}
+                          onChange={(e) => setNewsTakeaways(e.target.value)}
+                        />
+                      </div>
+
+                      <div style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr", gap: "10px", alignItems: "center" }}>
+                        <div>
+                          <label style={{ display: "block", fontSize: "0.72rem", fontWeight: "800", color: "#475569", marginBottom: "4px", textTransform: "uppercase" }}>
+                            Topic Tags
+                          </label>
+                          <input
+                            type="text"
+                            className="adm-input"
+                            placeholder="Ecology, MicroForest, GreenPolicy"
+                            value={newsTags}
+                            onChange={(e) => setNewsTags(e.target.value)}
+                          />
+                        </div>
+
+                        <div style={{ background: "white", padding: "10px 12px", borderRadius: "10px", border: "1px solid #cbd5e1", marginTop: "16px" }}>
+                          <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer", fontSize: "0.82rem", fontWeight: "700", color: "#0f172a", margin: 0 }}>
+                            <input
+                              type="checkbox"
+                              checked={newsIsFeatured}
+                              onChange={(e) => setNewsIsFeatured(e.target.checked)}
+                              style={{ width: "16px", height: "16px", accentColor: "#009ee3" }}
+                            />
+                            ⭐ Spotlight
+                          </label>
                         </div>
                       </div>
 
-                      {/* Card Actions Footer */}
-                      <div style={{ padding: "12px 16px", background: "white", borderTop: "1px solid #f1f5f9", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                        <button
-                          onClick={() => setSelectedNewsPreview(item)}
-                          style={{
-                            background: "#e0f2fe",
-                            color: "#0369a1",
-                            border: "none",
-                            padding: "6px 12px",
-                            borderRadius: "8px",
-                            fontSize: "0.78rem",
-                            fontWeight: "700",
-                            cursor: "pointer",
-                            display: "inline-flex",
-                            alignItems: "center",
-                            gap: "4px"
-                          }}
-                        >
-                          <Eye size={13} /> Preview
-                        </button>
-
-                        <div style={{ display: "flex", gap: "6px" }}>
-                          <a
-                            href={`/weekly-news/${item.id}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            style={{
-                              background: "#f1f5f9",
-                              color: "#475569",
-                              textDecoration: "none",
-                              padding: "6px 10px",
-                              borderRadius: "8px",
-                              fontSize: "0.78rem",
-                              fontWeight: "700",
-                              display: "inline-flex",
-                              alignItems: "center",
-                              gap: "4px"
-                            }}
-                            title="Open in Public Gazette"
-                          >
-                            <ExternalLink size={13} />
-                          </a>
-
-                          <button
-                            onClick={() => handleDeleteDoc("weekly_news", item.id)}
-                            style={{
-                              background: "#fee2e2",
-                              color: "#ef4444",
-                              border: "none",
-                              padding: "6px 10px",
-                              borderRadius: "8px",
-                              cursor: "pointer"
-                            }}
-                            title="Delete Article"
-                          >
-                            <Trash2 size={13} />
-                          </button>
-                        </div>
-                      </div>
+                      {/* Submit */}
+                      <button
+                        type="submit"
+                        disabled={newsUploading}
+                        style={{
+                          width: "100%",
+                          background: "linear-gradient(135deg, #009ee3 0%, #0284c7 100%)",
+                          color: "white",
+                          border: "none",
+                          padding: "14px 20px",
+                          borderRadius: "12px",
+                          fontWeight: "800",
+                          fontSize: "0.95rem",
+                          cursor: "pointer",
+                          boxShadow: "0 6px 20px rgba(0, 158, 227, 0.3)",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          gap: "8px",
+                          marginTop: "6px"
+                        }}
+                      >
+                        <Newspaper size={18} />
+                        {newsUploading ? "Publishing Bulletin..." : "Publish Weekly News Bulletin"}
+                      </button>
 
                     </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-        </section>
 
-        {/* --- GREEN CLUB EVENT & BLOGS UPLOAD MANAGEMENT --- */}
-        <section style={{ marginBottom:"50px" }}>
-          <h2 style={{ marginBottom:"20px", display:"flex", alignItems:"center", gap:"10px" }}><PlusCircle color="#10b981" /> Green Club Content Uploads</h2>
-          
-          <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit, minmax(350px, 1fr))", gap:"30px" }}>
-            {/* Upload Forms (Left Col) */}
-            <div style={{ display:"flex", flexDirection:"column", gap:"30px" }}>
+                  </div>
+                </form>
+              </div>
+            )}
+
+            {/* TAB 2: GAZETTE ARCHIVE GRID */}
+            {newsStudioTab === "manage" && (
+              <div>
+                <div className="adm-toolbar">
+                  <div className="adm-search-box">
+                    <Search size={16} className="adm-search-icon" />
+                    <input
+                      type="text"
+                      className="adm-search-input"
+                      placeholder="Search news archive by headline, author, tag..."
+                      value={newsSearchTerm}
+                      onChange={(e) => setNewsSearchTerm(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="adm-chip-group">
+                    {["all", "environment", "tech", "society", "health", "urban", "economy"].map(catKey => (
+                      <button
+                        key={catKey}
+                        className={`adm-chip ${newsCategoryFilter === catKey ? "active" : ""}`}
+                        onClick={() => setNewsCategoryFilter(catKey)}
+                      >
+                        {catKey.charAt(0).toUpperCase() + catKey.slice(1)}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {filteredWeeklyNews.length === 0 ? (
+                  <div style={{ textAlign: "center", padding: "40px", color: "#94a3b8" }}>
+                    <Newspaper size={40} style={{ margin: "0 auto 10px" }} />
+                    <p>No published news bulletins match your criteria.</p>
+                  </div>
+                ) : (
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: "20px" }}>
+                    {filteredWeeklyNews.map(item => (
+                      <div
+                        key={item.id}
+                        style={{
+                          background: "#ffffff",
+                          borderRadius: "16px",
+                          border: "1.5px solid #e2e8f0",
+                          overflow: "hidden",
+                          display: "flex",
+                          flexDirection: "column",
+                          justifyContent: "space-between",
+                          boxShadow: "0 4px 14px rgba(0,0,0,0.03)"
+                        }}
+                      >
+                        <div>
+                          <div style={{ height: "160px", position: "relative", overflow: "hidden", background: "#e2e8f0" }}>
+                            <img
+                              src={item.cover_image || "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&w=800&q=80"}
+                              alt={item.title}
+                              style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                            />
+                            <span style={{ position: "absolute", top: "10px", left: "10px", background: "rgba(15, 23, 42, 0.8)", color: "white", padding: "3px 10px", borderRadius: "10px", fontSize: "0.68rem", fontWeight: "800", textTransform: "uppercase" }}>
+                              {item.categoryLabel || item.category}
+                            </span>
+                            {item.gallery_images && item.gallery_images.length > 0 && (
+                              <span style={{ position: "absolute", top: "10px", right: "10px", background: "rgba(0, 158, 227, 0.9)", color: "white", padding: "3px 8px", borderRadius: "8px", fontSize: "0.68rem", fontWeight: "700", display: "flex", alignItems: "center", gap: "4px" }}>
+                                <Images size={11} /> +{item.gallery_images.length}
+                              </span>
+                            )}
+                          </div>
+
+                          <div style={{ padding: "16px" }}>
+                            <div style={{ fontSize: "0.72rem", color: "#94a3b8", fontWeight: "700", marginBottom: "4px" }}>
+                              {item.edition || "Weekly"} • {item.date}
+                            </div>
+                            <h4 style={{ margin: "0 0 8px", fontSize: "1rem", fontWeight: "800", color: "#0f172a", lineHeight: "1.35", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+                              {item.title}
+                            </h4>
+                            <p style={{ margin: 0, fontSize: "0.82rem", color: "#64748b", lineHeight: "1.5", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+                              {item.summary}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div style={{ padding: "12px 16px", background: "#f8fafc", borderTop: "1px solid #f1f5f9", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                          <button
+                            onClick={() => setSelectedNewsPreview(item)}
+                            className="adm-action-btn view"
+                          >
+                            <Eye size={13} /> Preview
+                          </button>
+
+                          <div style={{ display: "flex", gap: "6px" }}>
+                            <a
+                              href={`/weekly-news/${item.id}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="adm-action-btn green"
+                              title="Open Live Gazette Article"
+                            >
+                              <ExternalLink size={13} />
+                            </a>
+
+                            <button
+                              onClick={() => handleDeleteDoc("weekly_news", item.id)}
+                              className="adm-action-btn delete"
+                              title="Delete Bulletin"
+                            >
+                              <Trash2 size={13} />
+                            </button>
+                          </div>
+                        </div>
+
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </section>
+        )}
+
+        {/* =========================================================================
+            TAB 5: PARTNER ENROLLMENTS
+           ========================================================================= */}
+        {(activeTab === "partners" || activeTab === "overview") && (
+          <section className="adm-card animate-fade-in">
+            <div className="adm-card-header">
+              <h2 className="adm-card-title">
+                <Handshake size={24} color="#8b5cf6" /> Professional Partner Applications ({partners.length})
+              </h2>
+            </div>
+
+            <div className="adm-toolbar">
+              <div className="adm-search-box">
+                <Search size={16} className="adm-search-icon" />
+                <input
+                  type="text"
+                  className="adm-search-input"
+                  placeholder="Search partners by name, service, location, or phone..."
+                  value={partnerSearch}
+                  onChange={(e) => setPartnerSearch(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div className="adm-table-wrap">
+              <table className="adm-table">
+                <thead>
+                  <tr>
+                    <th>Partner Name</th>
+                    <th>Service Domain</th>
+                    <th>Experience</th>
+                    <th>Operating Location</th>
+                    <th style={{ textAlign:"right" }}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredPartners.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} style={{ padding:"40px", textAlign:"center", color:"#94a3b8" }}>
+                        No partner enrollments found matching search criteria.
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredPartners.map(p => (
+                      <tr key={p.id}>
+                        <td>
+                          <div style={{ fontWeight:"800", color:"#0f172a" }}>{p.fullName}</div>
+                          <div style={{ fontSize:"0.78rem", color:"#0284c7", fontWeight:"700" }}>{p.phone}</div>
+                          <div style={{ fontSize:"0.7rem", color:"#94a3b8" }}>{formatDate(p.created_at)}</div>
+                        </td>
+                        <td>
+                          <span style={{ background:"#f5f3ff", color:"#7c3aed", padding:"4px 10px", borderRadius:"12px", fontSize:"0.75rem", fontWeight:"800" }}>
+                            {p.serviceType || "Service Professional"}
+                          </span>
+                        </td>
+                        <td>
+                          <span style={{ color:"#16a34a", fontWeight:"700", fontSize:"0.85rem" }}>{p.experience || "1+"} Years</span>
+                        </td>
+                        <td>
+                          <span style={{ fontSize:"0.85rem", color:"#475569" }}><MapPin size={12} color="#ef4444" style={{ display:"inline", marginRight:4 }} />{p.location || "Bengaluru"}</span>
+                        </td>
+                        <td style={{ textAlign:"right" }}>
+                          <div style={{ display:"inline-flex", gap:"6px" }}>
+                            {p.phone && (
+                              <a 
+                                href={`https://wa.me/91${p.phone.replace(/[^0-9]/g, "").slice(-10)}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="adm-action-btn green"
+                              >
+                                <MessageCircle size={13} /> WhatsApp
+                              </a>
+                            )}
+                            <button
+                              onClick={() => handleDeleteDoc("partner_registrations", p.id)}
+                              className="adm-action-btn delete"
+                              title="Delete Partner Application"
+                            >
+                              <Trash2 size={13} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        )}
+
+        {/* =========================================================================
+            TAB 6: WEEKEND TASKS (EVENTS) & GREEN CLUB BLOGS STUDIO
+           ========================================================================= */}
+        {(activeTab === "content_studio" || activeTab === "overview") && (
+          <section className="adm-card animate-fade-in">
+            <div className="adm-card-header">
+              <h2 className="adm-card-title">
+                <Calendar size={24} color="#10b981" /> Green Club Weekend Tasks & Blogs Studio
+              </h2>
+            </div>
+
+            <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit, minmax(340px, 1fr))", gap:"25px" }}>
               
               {/* Add Event Form */}
-              <div style={{ background:"white", padding:"28px", borderRadius:"24px", boxShadow:"0 4px 20px rgba(0,0,0,0.03)" }}>
-                <h3 style={{ marginBottom:"20px", display:"flex", alignItems:"center", gap:"8px", fontSize:"1.2rem", fontWeight:"800", color:"#1e293b" }}>
+              <div style={{ background:"#f8fafc", padding:"24px", borderRadius:"18px", border:"1.5px solid #e2e8f0" }}>
+                <h3 style={{ margin:"0 0 16px", fontSize:"1.15rem", fontWeight:"900", color:"#0f172a", display:"flex", alignItems:"center", gap:"8px" }}>
                   <Calendar size={18} color="#10b981" /> Schedule Weekend Task (Event)
                 </h3>
                 <form onSubmit={handleEventSubmit}>
-                  <div style={{ marginBottom:"14px" }}>
-                    <label style={{ display:"block", fontSize:"0.75rem", fontWeight:"800", color:"#475569", marginBottom:"6px", textTransform:"uppercase" }}>Task Title</label>
-                    <input type="text" placeholder="e.g. Lake Sanitation & Eco-Cleanup" required style={{ width:"100%", padding:"10px 14px", border:"1px solid #cbd5e1", borderRadius:"10px", outline:"none" }} value={eventTitle} onChange={(e) => setEventTitle(e.target.value)} />
+                  <div style={{ marginBottom:"12px" }}>
+                    <label style={{ display:"block", fontSize:"0.72rem", fontWeight:"800", color:"#475569", marginBottom:"4px", textTransform:"uppercase" }}>Task Title</label>
+                    <input type="text" className="adm-input" placeholder="e.g. Lake Sanitation & Micro-Forestry Drive" required value={eventTitle} onChange={(e) => setEventTitle(e.target.value)} />
                   </div>
-                  <div style={{ marginBottom:"14px" }}>
-                    <label style={{ display:"block", fontSize:"0.75rem", fontWeight:"800", color:"#475569", marginBottom:"6px", textTransform:"uppercase" }}>Description</label>
-                    <textarea placeholder="Outline task goals, tools provided..." required style={{ width:"100%", padding:"10px 14px", border:"1px solid #cbd5e1", borderRadius:"10px", outline:"none", height:"80px", fontFamily:"inherit" }} value={eventDescription} onChange={(e) => setEventDescription(e.target.value)} />
+                  <div style={{ marginBottom:"12px" }}>
+                    <label style={{ display:"block", fontSize:"0.72rem", fontWeight:"800", color:"#475569", marginBottom:"4px", textTransform:"uppercase" }}>Description</label>
+                    <textarea className="adm-input" placeholder="Outline task goals, tools provided..." required style={{ height:"70px" }} value={eventDescription} onChange={(e) => setEventDescription(e.target.value)} />
                   </div>
-                  <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"10px", marginBottom:"14px" }}>
+                  <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"10px", marginBottom:"12px" }}>
                     <div>
-                      <label style={{ display:"block", fontSize:"0.75rem", fontWeight:"800", color:"#475569", marginBottom:"6px", textTransform:"uppercase" }}>Date/Timing</label>
-                      <input type="text" placeholder="e.g. Saturday, June 27" required style={{ width:"100%", padding:"10px 14px", border:"1px solid #cbd5e1", borderRadius:"10px", outline:"none" }} value={eventDate} onChange={(e) => setEventDate(e.target.value)} />
+                      <label style={{ display:"block", fontSize:"0.72rem", fontWeight:"800", color:"#475569", marginBottom:"4px", textTransform:"uppercase" }}>Date / Timing</label>
+                      <input type="text" className="adm-input" placeholder="Saturday, 7:00 AM" required value={eventDate} onChange={(e) => setEventDate(e.target.value)} />
                     </div>
                     <div>
-                      <label style={{ display:"block", fontSize:"0.75rem", fontWeight:"800", color:"#475569", marginBottom:"6px", textTransform:"uppercase" }}>Tag</label>
-                      <input type="text" placeholder="e.g. Lake Clean-Up" style={{ width:"100%", padding:"10px 14px", border:"1px solid #cbd5e1", borderRadius:"10px", outline:"none" }} value={eventTag} onChange={(e) => setEventTag(e.target.value)} />
+                      <label style={{ display:"block", fontSize:"0.72rem", fontWeight:"800", color:"#475569", marginBottom:"4px", textTransform:"uppercase" }}>Tag</label>
+                      <input type="text" className="adm-input" placeholder="Lake Clean-Up" value={eventTag} onChange={(e) => setEventTag(e.target.value)} />
                     </div>
                   </div>
-                  <div style={{ marginBottom:"14px" }}>
-                    <label style={{ display:"block", fontSize:"0.75rem", fontWeight:"800", color:"#475569", marginBottom:"6px", textTransform:"uppercase" }}>Meeting Location</label>
-                    <input type="text" placeholder="e.g. Ulsoor Lake Gate, Bengaluru" required style={{ width:"100%", padding:"10px 14px", border:"1px solid #cbd5e1", borderRadius:"10px", outline:"none" }} value={eventLocation} onChange={(e) => setEventLocation(e.target.value)} />
+                  <div style={{ marginBottom:"12px" }}>
+                    <label style={{ display:"block", fontSize:"0.72rem", fontWeight:"800", color:"#475569", marginBottom:"4px", textTransform:"uppercase" }}>Meeting Location</label>
+                    <input type="text" className="adm-input" placeholder="e.g. Ulsoor Lake Gate, Bengaluru" required value={eventLocation} onChange={(e) => setEventLocation(e.target.value)} />
                   </div>
-                  <div style={{ marginBottom:"14px" }}>
-                    <label style={{ display:"block", fontSize:"0.75rem", fontWeight:"800", color:"#475569", marginBottom:"6px", textTransform:"uppercase" }}>Upload Cover Image</label>
-                    <div style={{ border:"2px dashed #cbd5e1", padding:"14px", borderRadius:"10px", textAlign:"center", background:"#f8fafc", cursor:"pointer", position:"relative" }}>
-                      <UploadCloud size={24} style={{ color:"#94a3b8", marginBottom:"4px" }} />
-                      <p style={{ margin:0, fontSize:"0.8rem", color:"#64748b" }}>{eventImageFile ? eventImageFile.name : "Select JPG/PNG image file"}</p>
+                  <div style={{ marginBottom:"12px" }}>
+                    <label style={{ display:"block", fontSize:"0.72rem", fontWeight:"800", color:"#475569", marginBottom:"4px", textTransform:"uppercase" }}>Cover Photo File</label>
+                    <div className="adm-dropzone">
+                      <UploadCloud size={20} color="#10b981" />
+                      <p style={{ margin:"2px 0 0", fontSize:"0.78rem", color:"#475569", fontWeight:"700" }}>{eventImageFile ? eventImageFile.name : "Select Image JPG / PNG"}</p>
                       <input type="file" accept="image/*" onChange={(e) => setEventImageFile(e.target.files[0])} style={{ position:"absolute", top:0, left:0, right:0, bottom:0, opacity:0, cursor:"pointer" }} />
                     </div>
                   </div>
-                  <div style={{ marginBottom:"20px" }}>
-                    <label style={{ display:"block", fontSize:"0.75rem", fontWeight:"800", color:"#475569", marginBottom:"6px", textTransform:"uppercase" }}>Or Image URL Fallback</label>
-                    <input type="text" placeholder="https://images.unsplash.com/..." style={{ width:"100%", padding:"10px 14px", border:"1px solid #cbd5e1", borderRadius:"10px", outline:"none" }} value={eventImageUrl} onChange={(e) => setEventImageUrl(e.target.value)} />
-                  </div>
-                  <button type="submit" disabled={eventUploading} style={{ width:"100%", background:"linear-gradient(135deg, #10b981, #059669)", color:"white", border:"none", padding:"12px 20px", borderRadius:"10px", fontWeight:"700", cursor:"pointer" }}>
-                    {eventUploading ? "Scheduling Event..." : "Add Weekend Task"}
+                  <button type="submit" disabled={eventUploading} className="adm-btn-light" style={{ width:"100%", background:"#10b981", color:"white", justifyContent:"center" }}>
+                    {eventUploading ? "Scheduling..." : "Schedule Weekend Task"}
                   </button>
                 </form>
               </div>
 
               {/* Add Blog Form */}
-              <div style={{ background:"white", padding:"28px", borderRadius:"24px", boxShadow:"0 4px 20px rgba(0,0,0,0.03)" }}>
-                <h3 style={{ marginBottom:"20px", display:"flex", alignItems:"center", gap:"8px", fontSize:"1.2rem", fontWeight:"800", color:"#1e293b" }}>
-                  <BookOpen size={18} color="#10b981" /> Publish Green Activity Blog
+              <div style={{ background:"#f8fafc", padding:"24px", borderRadius:"18px", border:"1.5px solid #e2e8f0" }}>
+                <h3 style={{ margin:"0 0 16px", fontSize:"1.15rem", fontWeight:"900", color:"#0f172a", display:"flex", alignItems:"center", gap:"8px" }}>
+                  <BookOpen size={18} color="#009ee3" /> Publish Green Club Blog
                 </h3>
                 <form onSubmit={handleBlogSubmit}>
-                  <div style={{ marginBottom:"14px" }}>
-                    <label style={{ display:"block", fontSize:"0.75rem", fontWeight:"800", color:"#475569", marginBottom:"6px", textTransform:"uppercase" }}>Blog Title</label>
-                    <input type="text" placeholder="e.g. Diverting plastic loops at our hubs" required style={{ width:"100%", padding:"10px 14px", border:"1px solid #cbd5e1", borderRadius:"10px", outline:"none" }} value={blogTitle} onChange={(e) => setBlogTitle(e.target.value)} />
+                  <div style={{ marginBottom:"12px" }}>
+                    <label style={{ display:"block", fontSize:"0.72rem", fontWeight:"800", color:"#475569", marginBottom:"4px", textTransform:"uppercase" }}>Blog Title</label>
+                    <input type="text" className="adm-input" placeholder="e.g. 5 Practical Ways to Segregate Plastic at Home" required value={blogTitle} onChange={(e) => setBlogTitle(e.target.value)} />
                   </div>
-                  <div style={{ marginBottom:"14px" }}>
-                    <label style={{ display:"block", fontSize:"0.75rem", fontWeight:"800", color:"#475569", marginBottom:"6px", textTransform:"uppercase" }}>Summary / Subtitle</label>
-                    <input type="text" placeholder="A brief sentence summary..." required style={{ width:"100%", padding:"10px 14px", border:"1px solid #cbd5e1", borderRadius:"10px", outline:"none" }} value={blogSummary} onChange={(e) => setBlogSummary(e.target.value)} />
+                  <div style={{ marginBottom:"12px" }}>
+                    <label style={{ display:"block", fontSize:"0.72rem", fontWeight:"800", color:"#475569", marginBottom:"4px", textTransform:"uppercase" }}>Summary</label>
+                    <textarea className="adm-input" placeholder="A short lead preview of the blog..." required style={{ height:"60px" }} value={blogSummary} onChange={(e) => setBlogSummary(e.target.value)} />
                   </div>
-                  <div style={{ marginBottom:"14px" }}>
-                    <label style={{ display:"block", fontSize:"0.75rem", fontWeight:"800", color:"#475569", marginBottom:"6px", textTransform:"uppercase" }}>Full Article Content</label>
-                    <textarea placeholder="Describe the drive activity, total waste collected, details..." required style={{ width:"100%", padding:"10px 14px", border:"1px solid #cbd5e1", borderRadius:"10px", outline:"none", height:"100px", fontFamily:"inherit" }} value={blogContent} onChange={(e) => setBlogContent(e.target.value)} />
+                  <div style={{ marginBottom:"12px" }}>
+                    <label style={{ display:"block", fontSize:"0.72rem", fontWeight:"800", color:"#475569", marginBottom:"4px", textTransform:"uppercase" }}>Full Article Content</label>
+                    <textarea className="adm-input" placeholder="Write full blog article..." required style={{ height:"90px" }} value={blogContent} onChange={(e) => setBlogContent(e.target.value)} />
                   </div>
-                  <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"10px", marginBottom:"14px" }}>
-                    <div>
-                      <label style={{ display:"block", fontSize:"0.75rem", fontWeight:"800", color:"#475569", marginBottom:"6px", textTransform:"uppercase" }}>Author Name</label>
-                      <input type="text" placeholder="e.g. Arun Kumar" style={{ width:"100%", padding:"10px 14px", border:"1px solid #cbd5e1", borderRadius:"10px", outline:"none" }} value={blogAuthor} onChange={(e) => setBlogAuthor(e.target.value)} />
-                    </div>
-                    <div>
-                      <label style={{ display:"block", fontSize:"0.75rem", fontWeight:"800", color:"#475569", marginBottom:"6px", textTransform:"uppercase" }}>Date Published</label>
-                      <input type="text" placeholder="e.g. June 15, 2026" style={{ width:"100%", padding:"10px 14px", border:"1px solid #cbd5e1", borderRadius:"10px", outline:"none" }} value={blogDate} onChange={(e) => setBlogDate(e.target.value)} />
-                    </div>
-                  </div>
-                  <div style={{ marginBottom:"14px" }}>
-                    <label style={{ display:"block", fontSize:"0.75rem", fontWeight:"800", color:"#475569", marginBottom:"6px", textTransform:"uppercase" }}>Upload Cover Image</label>
-                    <div style={{ border:"2px dashed #cbd5e1", padding:"14px", borderRadius:"10px", textAlign:"center", background:"#f8fafc", cursor:"pointer", position:"relative" }}>
-                      <UploadCloud size={24} style={{ color:"#94a3b8", marginBottom:"4px" }} />
-                      <p style={{ margin:0, fontSize:"0.8rem", color:"#64748b" }}>{blogImageFile ? blogImageFile.name : "Select JPG/PNG image file"}</p>
+                  <div style={{ marginBottom:"12px" }}>
+                    <label style={{ display:"block", fontSize:"0.72rem", fontWeight:"800", color:"#475569", marginBottom:"4px", textTransform:"uppercase" }}>Cover Photo File</label>
+                    <div className="adm-dropzone">
+                      <UploadCloud size={20} color="#009ee3" />
+                      <p style={{ margin:"2px 0 0", fontSize:"0.78rem", color:"#475569", fontWeight:"700" }}>{blogImageFile ? blogImageFile.name : "Select Image JPG / PNG"}</p>
                       <input type="file" accept="image/*" onChange={(e) => setBlogImageFile(e.target.files[0])} style={{ position:"absolute", top:0, left:0, right:0, bottom:0, opacity:0, cursor:"pointer" }} />
                     </div>
                   </div>
-                  <div style={{ marginBottom:"20px" }}>
-                    <label style={{ display:"block", fontSize:"0.75rem", fontWeight:"800", color:"#475569", marginBottom:"6px", textTransform:"uppercase" }}>Or Image URL Fallback</label>
-                    <input type="text" placeholder="https://images.unsplash.com/..." style={{ width:"100%", padding:"10px 14px", border:"1px solid #cbd5e1", borderRadius:"10px", outline:"none" }} value={blogImageUrl} onChange={(e) => setBlogImageUrl(e.target.value)} />
-                  </div>
-                  <button type="submit" disabled={blogUploading} style={{ width:"100%", background:"linear-gradient(135deg, #10b981, #059669)", color:"white", border:"none", padding:"12px 20px", borderRadius:"10px", fontWeight:"700", cursor:"pointer" }}>
-                    {blogUploading ? "Publishing Blog..." : "Publish Green Blog"}
+                  <button type="submit" disabled={blogUploading} className="adm-btn-light" style={{ width:"100%", background:"#009ee3", color:"white", justifyContent:"center" }}>
+                    {blogUploading ? "Publishing..." : "Publish Blog Article"}
                   </button>
                 </form>
               </div>
 
             </div>
 
-            {/* List & Deletion Panels (Right Col) */}
-            <div style={{ display:"flex", flexDirection:"column", gap:"30px" }}>
-              
-              {/* Events Management List */}
-              <div style={{ background:"white", padding:"28px", borderRadius:"24px", boxShadow:"0 4px 20px rgba(0,0,0,0.03)" }}>
-                <h3 style={{ marginBottom:"20px", display:"flex", alignItems:"center", gap:"8px", fontSize:"1.2rem", fontWeight:"800", color:"#1e293b" }}>
-                  <Calendar size={18} color="#10b981" /> Scheduled Events ({clubEvents.length})
-                </h3>
-                <div style={{ display:"flex", flexDirection:"column", gap:"12px", maxHeight:"450px", overflowY:"auto" }}>
-                  {clubEvents.length === 0 ? <p style={{ color:"#94a3b8", fontSize:"0.9rem", textAlign:"center", padding:"20px" }}>No events scheduled in Firestore.</p> :
-                    clubEvents.map(ev => (
-                      <div key={ev.id} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"14px", background:"#f8fafc", borderRadius:"12px", border:"1px solid #f1f5f9" }}>
-                        <div style={{ flex:1, paddingRight:"10px" }}>
-                          <span style={{ background:"#e6fcf5", color:"#0ca678", padding:"2px 8px", borderRadius:"10px", fontSize:"0.65rem", fontWeight:"800", textTransform:"uppercase" }}>{ev.tag}</span>
-                          <h4 style={{ margin:"4px 0", fontSize:"0.95rem", fontWeight:"800" }}>{ev.title}</h4>
-                          <p style={{ margin:0, fontSize:"0.8rem", color:"#64748b" }}>{ev.date} | {ev.location.split(",")[0]}</p>
-                        </div>
-                        <button onClick={() => handleDeleteDoc("green_club_events", ev.id)} style={{ background:"#fee2e2", border:"none", padding:"8px", borderRadius:"8px", cursor:"pointer", color:"#ef4444" }} title="Delete Event">
-                          <Trash2 size={16} />
-                        </button>
+            {/* List of existing events & blogs */}
+            <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit, minmax(300px, 1fr))", gap:"20px", marginTop:"30px" }}>
+              <div>
+                <h4 style={{ margin:"0 0 12px", fontSize:"0.95rem", fontWeight:"800", color:"#0f172a" }}>Scheduled Weekend Tasks ({clubEvents.length})</h4>
+                <div style={{ display:"flex", flexDirection:"column", gap:"10px" }}>
+                  {clubEvents.map(ev => (
+                    <div key={ev.id} style={{ background:"white", padding:"12px 16px", borderRadius:"12px", border:"1px solid #e2e8f0", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+                      <div>
+                        <h5 style={{ margin:"0 0 2px", fontSize:"0.9rem", fontWeight:"800" }}>{ev.title}</h5>
+                        <span style={{ fontSize:"0.75rem", color:"#64748b" }}>{ev.date} • {ev.location}</span>
                       </div>
-                    ))
-                  }
+                      <button onClick={() => handleDeleteDoc("green_club_events", ev.id)} className="adm-action-btn delete" style={{ padding:"6px" }}>
+                        <Trash2 size={13} />
+                      </button>
+                    </div>
+                  ))}
                 </div>
               </div>
 
-              {/* Blogs Management List */}
-              <div style={{ background:"white", padding:"28px", borderRadius:"24px", boxShadow:"0 4px 20px rgba(0,0,0,0.03)" }}>
-                <h3 style={{ marginBottom:"20px", display:"flex", alignItems:"center", gap:"8px", fontSize:"1.2rem", fontWeight:"800", color:"#1e293b" }}>
-                  <BookOpen size={18} color="#10b981" /> Published Blogs ({clubBlogs.length})
-                </h3>
-                <div style={{ display:"flex", flexDirection:"column", gap:"12px", maxHeight:"450px", overflowY:"auto" }}>
-                  {clubBlogs.length === 0 ? <p style={{ color:"#94a3b8", fontSize:"0.9rem", textAlign:"center", padding:"20px" }}>No published blogs in Firestore.</p> :
-                    clubBlogs.map(bl => (
-                      <div key={bl.id} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"14px", background:"#f8fafc", borderRadius:"12px", border:"1px solid #f1f5f9" }}>
-                        <div style={{ flex:1, paddingRight:"10px" }}>
-                          <h4 style={{ margin:"0 0 4px 0", fontSize:"0.95rem", fontWeight:"800" }}>{bl.title}</h4>
-                          <p style={{ margin:0, fontSize:"0.8rem", color:"#64748b" }}>By {bl.author} | {bl.date}</p>
-                        </div>
-                        <button onClick={() => handleDeleteDoc("green_club_blogs", bl.id)} style={{ background:"#fee2e2", border:"none", padding:"8px", borderRadius:"8px", cursor:"pointer", color:"#ef4444" }} title="Delete Blog">
-                          <Trash2 size={16} />
-                        </button>
+              <div>
+                <h4 style={{ margin:"0 0 12px", fontSize:"0.95rem", fontWeight:"800", color:"#0f172a" }}>Published Green Blogs ({clubBlogs.length})</h4>
+                <div style={{ display:"flex", flexDirection:"column", gap:"10px" }}>
+                  {clubBlogs.map(bl => (
+                    <div key={bl.id} style={{ background:"white", padding:"12px 16px", borderRadius:"12px", border:"1px solid #e2e8f0", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+                      <div>
+                        <h5 style={{ margin:"0 0 2px", fontSize:"0.9rem", fontWeight:"800" }}>{bl.title}</h5>
+                        <span style={{ fontSize:"0.75rem", color:"#64748b" }}>{bl.author} • {bl.date}</span>
                       </div>
-                    ))
-                  }
+                      <button onClick={() => handleDeleteDoc("green_club_blogs", bl.id)} className="adm-action-btn delete" style={{ padding:"6px" }}>
+                        <Trash2 size={13} />
+                      </button>
+                    </div>
+                  ))}
                 </div>
               </div>
-
             </div>
-          </div>
 
-        </section>
+          </section>
+        )}
 
-      </div>
+        {/* =========================================================================
+            TAB 7: REGISTERED USERS DIRECTORY
+           ========================================================================= */}
+        {(activeTab === "users" || activeTab === "overview") && (
+          <section className="adm-card animate-fade-in">
+            <div className="adm-card-header">
+              <h2 className="adm-card-title">
+                <Users size={24} color="#009ee3" /> Registered Cloud Users ({users.length})
+              </h2>
+            </div>
 
-      {/* --- PHOTO & VOLUNTEER DETAILS INSPECTION MODAL --- */}
+            <div className="adm-toolbar">
+              <div className="adm-search-box">
+                <Search size={16} className="adm-search-icon" />
+                <input
+                  type="text"
+                  className="adm-search-input"
+                  placeholder="Search users by name, email, phone, or role..."
+                  value={userSearch}
+                  onChange={(e) => setUserSearch(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div className="adm-table-wrap">
+              <table className="adm-table">
+                <thead>
+                  <tr>
+                    <th>User Profile</th>
+                    <th>Email Address</th>
+                    <th>Phone Number</th>
+                    <th>Role</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredUsers.length === 0 ? (
+                    <tr>
+                      <td colSpan={4} style={{ padding:"40px", textAlign:"center", color:"#94a3b8" }}>
+                        No registered users match your search.
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredUsers.map(u => (
+                      <tr key={u.id}>
+                        <td>
+                          <div style={{ display:"flex", alignItems:"center", gap:"10px" }}>
+                            <div style={{ width:34, height:34, borderRadius:"50%", background:"#e0f2fe", color:"#0369a1", display:"flex", alignItems:"center", justifyContent:"center", fontWeight:"800", fontSize:"0.85rem" }}>
+                              {(u.name || u.email || "U").charAt(0).toUpperCase()}
+                            </div>
+                            <div style={{ fontWeight:"800", color:"#0f172a" }}>{u.name || "Customer"}</div>
+                          </div>
+                        </td>
+                        <td>
+                          <span style={{ fontSize:"0.85rem", color:"#0284c7", fontWeight:"600" }}>{u.email || "N/A"}</span>
+                        </td>
+                        <td>
+                          <span style={{ fontSize:"0.85rem", color:"#475569" }}>{u.phone || u.phone_number || "Not provided"}</span>
+                        </td>
+                        <td>
+                          <span style={{ background: u.role === "admin" ? "#fef3c7" : "#f1f5f9", color: u.role === "admin" ? "#d97706" : "#475569", padding:"4px 10px", borderRadius:"12px", fontSize:"0.72rem", fontWeight:"800", textTransform:"uppercase" }}>
+                            {u.role || "Customer"}
+                          </span>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        )}
+
+      </main>
+
+      {/* =========================================================================
+          MODAL 1: PHOTO & VOLUNTEER DETAILS INSPECTION MODAL
+         ========================================================================= */}
       {selectedPhotoVolunteer && (
         <div 
-          className="modal-overlay" 
-          style={{ 
-            position:"fixed", 
-            top:0, 
-            left:0, 
-            right:0, 
-            bottom:0, 
-            background:"rgba(15, 23, 42, 0.75)", 
-            backdropFilter:"blur(6px)", 
-            zIndex:9999, 
-            display:"flex", 
-            alignItems:"center", 
-            justifyContent:"center",
-            padding:"20px"
-          }}
+          className="adm-modal-backdrop"
           onClick={() => setSelectedPhotoVolunteer(null)}
         >
           <div 
-            style={{ 
-              background:"white", 
-              borderRadius:"24px", 
-              maxWidth:"680px", 
-              width:"100%", 
-              boxShadow:"0 25px 60px rgba(0,0,0,0.25)", 
-              overflow:"hidden",
-              position:"relative",
-              animation:"fadeIn 0.2s ease-out"
-            }}
+            className="adm-modal-card"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}
             <div style={{ padding:"20px 24px", background:"linear-gradient(135deg, #10b981, #059669)", color:"white", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
               <div style={{ display:"flex", alignItems:"center", gap:"10px" }}>
                 <Users size={22} color="white" />
-                <h3 style={{ margin:0, fontSize:"1.2rem", fontWeight:"800", color:"white" }}>Green Club Member Photo & Details</h3>
+                <h3 style={{ margin:0, fontSize:"1.2rem", fontWeight:"800", color:"white" }}>Green Club Member Photo & Profile</h3>
               </div>
               <button 
                 onClick={() => setSelectedPhotoVolunteer(null)}
@@ -1820,7 +2069,7 @@ const Admin = () => {
             {/* Modal Body */}
             <div style={{ padding:"28px 24px", display:"grid", gridTemplateColumns:"repeat(auto-fit, minmax(240px, 1fr))", gap:"24px", alignItems:"start" }}>
               
-              {/* Photo Display Card */}
+              {/* Photo Card */}
               <div style={{ textAlign:"center" }}>
                 <div style={{ 
                   width:"100%", 
@@ -1850,7 +2099,7 @@ const Admin = () => {
                   )}
                 </div>
 
-                {/* Photo Action Links */}
+                {/* Photo Actions */}
                 {(selectedPhotoVolunteer.photo_url || selectedPhotoVolunteer.photo_base64 || selectedPhotoVolunteer.photo) && (
                   <div style={{ display:"flex", gap:"8px", justifyContent:"center", marginTop:"14px", flexWrap:"wrap" }}>
                     <button 
@@ -1872,7 +2121,7 @@ const Admin = () => {
                         gap:"6px"
                       }}
                     >
-                      <Download size={14} /> Download Photo
+                      <Download size={14} /> Download Photo (.JPG)
                     </button>
 
                     <button 
@@ -1981,37 +2230,16 @@ const Admin = () => {
         </div>
       )}
 
-      {/* --- WEEKLY NEWS ARTICLE ADMIN PREVIEW MODAL --- */}
+      {/* =========================================================================
+          MODAL 2: WEEKLY NEWS ARTICLE ADMIN PREVIEW MODAL
+         ========================================================================= */}
       {selectedNewsPreview && (
         <div
-          className="modal-overlay"
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: "rgba(15, 23, 42, 0.8)",
-            backdropFilter: "blur(6px)",
-            zIndex: 9999,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: "20px"
-          }}
+          className="adm-modal-backdrop"
           onClick={() => setSelectedNewsPreview(null)}
         >
           <div
-            style={{
-              background: "white",
-              borderRadius: "24px",
-              maxWidth: "760px",
-              width: "100%",
-              maxHeight: "90vh",
-              overflowY: "auto",
-              boxShadow: "0 25px 60px rgba(0,0,0,0.3)",
-              position: "relative"
-            }}
+            className="adm-modal-card"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}
