@@ -175,23 +175,55 @@ const BlinkleanGreenClub = () => {
     fetchClubData();
   }, []);
 
+  const compressImageToBase64 = (file, maxWidth = 500, maxHeight = 500, quality = 0.8) => {
+    return new Promise((resolve) => {
+      if (!file) {
+        resolve("");
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const img = new Image();
+        img.onload = () => {
+          let width = img.width;
+          let height = img.height;
+          if (width > height) {
+            if (width > maxWidth) {
+              height = Math.round((height * maxWidth) / width);
+              width = maxWidth;
+            }
+          } else {
+            if (height > maxHeight) {
+              width = Math.round((width * maxHeight) / height);
+              height = maxHeight;
+            }
+          }
+          const canvas = document.createElement("canvas");
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext("2d");
+          ctx.drawImage(img, 0, 0, width, height);
+          const dataUrl = canvas.toDataURL("image/jpeg", quality);
+          resolve(dataUrl);
+        };
+        img.onerror = () => resolve(event.target.result || "");
+        img.src = event.target.result;
+      };
+      reader.onerror = () => resolve("");
+      reader.readAsDataURL(file);
+    });
+  };
+
   const uploadImage = async (file, folder) => {
     if (!file) return "";
     try {
-      const uploadPromise = async () => {
-        const storageRef = ref(storage, `${folder}/${Date.now()}_${file.name}`);
-        const snapshot = await uploadBytes(storageRef, file);
-        return await getDownloadURL(snapshot.ref);
-      };
-      
-      // Limit Firebase upload hang to 4 seconds, fallback to default avatar if slow
-      return await Promise.race([
-        uploadPromise(),
-        new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 4000))
-      ]);
+      const cleanFileName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+      const storageRef = ref(storage, `${folder}/${Date.now()}_${cleanFileName}`);
+      const snapshot = await uploadBytes(storageRef, file);
+      return await getDownloadURL(snapshot.ref);
     } catch (err) {
-      console.warn("Firebase Storage upload failed or timed out. Falling back to placeholder.", err);
-      return "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80";
+      console.warn("Firebase Storage upload encountered an issue, falling back to embedded photo:", err);
+      return "";
     }
   };
 
@@ -205,10 +237,19 @@ const BlinkleanGreenClub = () => {
 
     setSubmitting(true);
     try {
-      // 1. Upload photo
+      // 1. Process & Upload photo
       let finalPhotoUrl = "";
+      let base64Photo = "";
       if (regPhoto) {
-        finalPhotoUrl = await uploadImage(regPhoto, "green_club_members");
+        base64Photo = await compressImageToBase64(regPhoto);
+        try {
+          finalPhotoUrl = await uploadImage(regPhoto, "green_club_members");
+        } catch (err) {
+          console.warn("Storage upload failed, using base64 image data:", err);
+        }
+        if (!finalPhotoUrl) {
+          finalPhotoUrl = base64Photo;
+        }
       }
 
       const targetPaymentUrl = import.meta.env.VITE_GREEN_CLUB_PAYMENT_URL || "https://rzp.io/rzp/asaLrHv";
@@ -222,7 +263,8 @@ const BlinkleanGreenClub = () => {
         email: regEmail,
         phone: regPhone,
         address: regAddress,
-        photo_url: finalPhotoUrl,
+        photo_url: finalPhotoUrl || base64Photo || "",
+        photo_base64: base64Photo || "",
         terms_accepted: true,
         payment_status: "pending_payment",
         payment_url: targetPaymentUrl,

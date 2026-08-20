@@ -18,7 +18,14 @@ import {
   BookOpen,
   PlusCircle,
   UploadCloud,
-  Trash2
+  Trash2,
+  Eye,
+  Download,
+  ExternalLink,
+  MessageCircle,
+  Search,
+  Image as ImageIcon,
+  X
 } from "lucide-react";
 import "../assets/css/style.css";
 
@@ -43,9 +50,12 @@ const Admin = () => {
   const [pickupInput,  setPickupInput]  = useState({});
   
   // Green Club State
-  const [clubRegistrations, setClubRegistrations] = useState([]);
-  const [clubEvents,        setClubEvents]        = useState([]);
-  const [clubBlogs,         setClubBlogs]         = useState([]);
+  const [clubRegistrations,       setClubRegistrations]       = useState([]);
+  const [clubEvents,              setClubEvents]              = useState([]);
+  const [clubBlogs,               setClubBlogs]               = useState([]);
+  const [selectedPhotoVolunteer,  setSelectedPhotoVolunteer]  = useState(null);
+  const [gcSearchTerm,            setGcSearchTerm]            = useState("");
+  const [gcFilterPhotoOnly,       setGcFilterPhotoOnly]       = useState(false);
 
   // Blog Upload State
   const [blogTitle,     setBlogTitle]     = useState("");
@@ -316,11 +326,64 @@ const Admin = () => {
     }
   };
 
+  const handleDownloadPhoto = async (photoUrl, userName) => {
+    if (!photoUrl) {
+      alert("No photo available for this member.");
+      return;
+    }
+    const cleanName = (userName || "volunteer").replace(/[^a-zA-Z0-9_-]/g, "_");
+    try {
+      if (photoUrl.startsWith("data:")) {
+        const link = document.createElement("a");
+        link.href = photoUrl;
+        link.download = `${cleanName}_green_club_photo.jpg`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      } else {
+        const res = await fetch(photoUrl);
+        const blob = await res.blob();
+        const blobUrl = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = blobUrl;
+        link.download = `${cleanName}_green_club_photo.jpg`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
+      }
+    } catch (err) {
+      console.warn("Direct download fallback to new tab:", err);
+      window.open(photoUrl, "_blank");
+    }
+  };
+
   const formatDate = (ts) => {
     if (!ts) return "N/A";
     const d = ts.toDate ? ts.toDate() : new Date(ts);
     return d.toLocaleString("en-IN", { day:"2-digit", month:"short", year:"numeric", hour:"2-digit", minute:"2-digit" });
   };
+
+  const filteredClubRegistrations = clubRegistrations.filter(r => {
+    const photo = r.photo_url || r.photo_base64 || r.photo;
+    const hasPhoto = !!photo && !photo.includes("unsplash.com/photo-1535713875002");
+    if (gcFilterPhotoOnly && !hasPhoto) return false;
+    
+    if (!gcSearchTerm.trim()) return true;
+    const q = gcSearchTerm.toLowerCase();
+    return (
+      (r.user_name && r.user_name.toLowerCase().includes(q)) ||
+      (r.email && r.email.toLowerCase().includes(q)) ||
+      (r.phone && r.phone.toLowerCase().includes(q)) ||
+      (r.event_title && r.event_title.toLowerCase().includes(q)) ||
+      (r.address && r.address.toLowerCase().includes(q))
+    );
+  });
+
+  const photoCount = clubRegistrations.filter(r => {
+    const photo = r.photo_url || r.photo_base64 || r.photo;
+    return !!photo && !photo.includes("unsplash.com/photo-1535713875002");
+  }).length;
 
   if (loading) return (
     <div style={{ display:"flex", height:"100vh", alignItems:"center", justifyContent:"center", flexDirection:"column", gap:"16px" }}>
@@ -371,6 +434,7 @@ const Admin = () => {
             { label:"Partner Enrollments", value:partners.length, color:"#8b5cf6", bg:"#ede9fe", icon:<Handshake /> },
             { label:"New Requests", value:pendingCount, color:"#f59e0b", bg:"#fef3c7", icon:<Clock /> },
             { label:"Green Registrations", value:clubRegistrations.length, color:"#10b981", bg:"#f0fdf4", icon:<Users /> },
+            { label:"Uploaded Photos", value:photoCount, color:"#059669", bg:"#ecfdf5", icon:<ImageIcon /> },
             { label:"Weekend Tasks", value:clubEvents.length, color:"#10b981", bg:"#f0fdf4", icon:<Calendar /> },
           ].map((stat, i) => (
             <div key={i} style={{ background:"white", borderRadius:"20px", padding:"20px", boxShadow:`0 4px 20px rgba(0,0,0,0.05)`, borderTop:`5px solid ${stat.color}` }}>
@@ -550,40 +614,260 @@ const Admin = () => {
 
         {/* --- GREEN CLUB REGISTRATIONS SECTION --- */}
         <section style={{ marginBottom:"50px", marginTop:"50px" }}>
-          <h2 style={{ marginBottom:"20px", display:"flex", alignItems:"center", gap:"10px" }}><Users color="#10b981" /> Blinklean Green Club Registrations</h2>
+          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", flexWrap:"wrap", gap:"14px", marginBottom:"20px" }}>
+            <div>
+              <h2 style={{ margin:0, display:"flex", alignItems:"center", gap:"10px", fontSize:"1.4rem", fontWeight:"800", color:"#0f172a" }}>
+                <Users color="#10b981" /> Blinklean Green Club Registrations
+              </h2>
+              <p style={{ margin:"4px 0 0", color:"#64748b", fontSize:"0.85rem" }}>
+                Directly access uploaded member photos, contact numbers, residential addresses, and membership details.
+              </p>
+            </div>
+            
+            <div style={{ display:"flex", alignItems:"center", gap:"12px", flexWrap:"wrap" }}>
+              {/* Search Box */}
+              <div style={{ position:"relative", minWidth:"240px" }}>
+                <Search size={16} style={{ position:"absolute", left:"12px", top:"12px", color:"#94a3b8" }} />
+                <input 
+                  type="text" 
+                  placeholder="Search name, phone, email, task..." 
+                  value={gcSearchTerm}
+                  onChange={(e) => setGcSearchTerm(e.target.value)}
+                  style={{ width:"100%", padding:"10px 14px 10px 36px", borderRadius:"12px", border:"1px solid #cbd5e1", outline:"none", fontSize:"0.85rem", background:"white" }}
+                />
+              </div>
+
+              {/* Photo Filter Toggle */}
+              <button 
+                onClick={() => setGcFilterPhotoOnly(!gcFilterPhotoOnly)}
+                style={{
+                  display:"flex",
+                  alignItems:"center",
+                  gap:"6px",
+                  padding:"10px 16px",
+                  borderRadius:"12px",
+                  border: gcFilterPhotoOnly ? "1px solid #10b981" : "1px solid #cbd5e1",
+                  background: gcFilterPhotoOnly ? "#ecfdf5" : "white",
+                  color: gcFilterPhotoOnly ? "#059669" : "#475569",
+                  fontWeight:"700",
+                  fontSize:"0.82rem",
+                  cursor:"pointer",
+                  transition:"0.2s"
+                }}
+              >
+                <ImageIcon size={16} color={gcFilterPhotoOnly ? "#059669" : "#94a3b8"} />
+                {gcFilterPhotoOnly ? `Photos Only (${filteredClubRegistrations.length})` : `All Members (${clubRegistrations.length})`}
+              </button>
+            </div>
+          </div>
+
           <div style={{ background:"white", borderRadius:"24px", overflow:"hidden", boxShadow:"0 10px 40px rgba(0,0,0,0.05)" }}>
-            <table style={{ width:"100%", borderCollapse:"collapse" }}>
-              <thead style={{ background:"#f8fafc" }}>
-                <tr>
-                  <th style={{ padding:"18px 24px", textAlign:"left", fontSize:"0.75rem", color:"#94a3b8", textTransform:"uppercase" }}>Volunteer Details</th>
-                  <th style={{ padding:"18px 24px", textAlign:"left", fontSize:"0.75rem", color:"#94a3b8", textTransform:"uppercase" }}>Contact Info</th>
-                  <th style={{ padding:"18px 24px", textAlign:"left", fontSize:"0.75rem", color:"#94a3b8", textTransform:"uppercase" }}>Selected Weekend Task</th>
-                  <th style={{ padding:"18px 24px", textAlign:"left", fontSize:"0.75rem", color:"#94a3b8", textTransform:"uppercase" }}>Registration Date</th>
-                </tr>
-              </thead>
-              <tbody>
-                {clubRegistrations.length === 0 ? <tr><td colSpan={4} style={{ padding:"40px", textAlign:"center", color:"#94a3b8" }}>No green club registrations yet.</td></tr> : 
-                  clubRegistrations.map(r => (
-                    <tr key={r.id} style={{ borderBottom:"1px solid #f1f5f9" }}>
-                      <td style={{ padding:"18px 24px" }}>
-                        <div style={{ fontWeight:"700" }}>{r.user_name}</div>
-                      </td>
-                      <td style={{ padding:"18px 24px" }}>
-                        <div style={{ fontSize:"0.9rem", color:"#475569" }}><Mail size={14} style={{ display:"inline", marginRight:6 }} /> {r.email}</div>
-                        <div style={{ fontSize:"0.85rem", color:"#94a3b8", marginTop:4 }}><Phone size={14} style={{ display:"inline", marginRight:6 }} /> {r.phone}</div>
-                      </td>
-                      <td style={{ padding:"18px 24px" }}>
-                        <span style={{ background:"#e6fcf5", color:"#0ca678", padding:"4px 10px", borderRadius:"12px", fontSize:"0.75rem", fontWeight:"700" }}>{r.event_title}</span>
-                        <div style={{ fontSize:"0.7rem", color:"#94a3b8", marginTop:4 }}>ID: {r.event_id}</div>
-                      </td>
-                      <td style={{ padding:"18px 24px", fontSize:"0.85rem", color:"#64748b" }}>
-                        {formatDate(r.created_at)}
+            <div style={{ overflowX:"auto" }}>
+              <table style={{ width:"100%", borderCollapse:"collapse", minWidth:"920px" }}>
+                <thead style={{ background:"#f8fafc" }}>
+                  <tr>
+                    <th style={{ padding:"18px 20px", textAlign:"left", fontSize:"0.75rem", color:"#94a3b8", textTransform:"uppercase", width:"90px" }}>Member Photo</th>
+                    <th style={{ padding:"18px 20px", textAlign:"left", fontSize:"0.75rem", color:"#94a3b8", textTransform:"uppercase" }}>Volunteer Details</th>
+                    <th style={{ padding:"18px 20px", textAlign:"left", fontSize:"0.75rem", color:"#94a3b8", textTransform:"uppercase" }}>Contact Info</th>
+                    <th style={{ padding:"18px 20px", textAlign:"left", fontSize:"0.75rem", color:"#94a3b8", textTransform:"uppercase" }}>Weekend Task</th>
+                    <th style={{ padding:"18px 20px", textAlign:"left", fontSize:"0.75rem", color:"#94a3b8", textTransform:"uppercase" }}>Date & Payment</th>
+                    <th style={{ padding:"18px 20px", textAlign:"right", fontSize:"0.75rem", color:"#94a3b8", textTransform:"uppercase" }}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredClubRegistrations.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} style={{ padding:"40px", textAlign:"center", color:"#94a3b8" }}>
+                        {clubRegistrations.length === 0 ? "No green club registrations yet." : "No registrations match your search criteria."}
                       </td>
                     </tr>
-                  ))
-                }
-              </tbody>
-            </table>
+                  ) : (
+                    filteredClubRegistrations.map(r => {
+                      const photo = r.photo_url || r.photo_base64 || r.photo;
+                      const hasCustomPhoto = !!photo && !photo.includes("unsplash.com/photo-1535713875002");
+                      const cleanPhone = r.phone ? r.phone.replace(/[^0-9]/g, "") : "";
+
+                      return (
+                        <tr key={r.id} style={{ borderBottom:"1px solid #f1f5f9" }}>
+                          {/* Member Photo Thumbnail */}
+                          <td style={{ padding:"16px 20px", verticalAlign:"middle" }}>
+                            <div 
+                              onClick={() => setSelectedPhotoVolunteer(r)}
+                              style={{ 
+                                position:"relative", 
+                                width:"52px", 
+                                height:"52px", 
+                                borderRadius:"14px", 
+                                overflow:"hidden", 
+                                cursor:"pointer", 
+                                border: hasCustomPhoto ? "2px solid #10b981" : "2px dashed #cbd5e1",
+                                background:"#f1f5f9",
+                                display:"flex",
+                                alignItems:"center",
+                                justifyContent:"center",
+                                boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+                                transition:"transform 0.2s"
+                              }}
+                              title="Click to view & download photo"
+                            >
+                              {photo ? (
+                                <img 
+                                  src={photo} 
+                                  alt={r.user_name || "Volunteer"} 
+                                  style={{ width:"100%", height:"100%", objectFit:"cover" }}
+                                  onError={(e) => {
+                                    e.target.style.display = "none";
+                                    e.target.parentNode.innerHTML = `<span style="font-size:1.1rem;font-weight:800;color:#10b981;">${(r.user_name || "V").charAt(0).toUpperCase()}</span>`;
+                                  }}
+                                />
+                              ) : (
+                                <span style={{ fontSize:"1.1rem", fontWeight:"800", color:"#64748b" }}>
+                                  {(r.user_name || "V").charAt(0).toUpperCase()}
+                                </span>
+                              )}
+                              <div style={{ position:"absolute", bottom:0, left:0, right:0, background:"rgba(0,0,0,0.6)", color:"white", fontSize:"0.55rem", textAlign:"center", padding:"1px 0", fontWeight:"700" }}>
+                                PHOTO
+                              </div>
+                            </div>
+                          </td>
+
+                          {/* Volunteer Details */}
+                          <td style={{ padding:"16px 20px", verticalAlign:"middle" }}>
+                            <div style={{ fontWeight:"800", fontSize:"0.98rem", color:"#0f172a", marginBottom:"3px" }}>
+                              {r.user_name}
+                            </div>
+                            {r.address ? (
+                              <div style={{ fontSize:"0.8rem", color:"#64748b", display:"flex", alignItems:"flex-start", gap:"4px", maxWidth:"260px" }}>
+                                <MapPin size={13} style={{ flexShrink:0, marginTop:"2px", color:"#94a3b8" }} />
+                                <span>{r.address}</span>
+                              </div>
+                            ) : (
+                              <div style={{ fontSize:"0.75rem", color:"#94a3b8" }}>No address provided</div>
+                            )}
+                            <div style={{ fontSize:"0.7rem", color:"#cbd5e1", marginTop:"2px" }}>
+                              ID: {r.id.substring(0, 8)}...
+                            </div>
+                          </td>
+
+                          {/* Contact Info */}
+                          <td style={{ padding:"16px 20px", verticalAlign:"middle" }}>
+                            <div style={{ fontSize:"0.85rem", color:"#334155" }}>
+                              <a href={`mailto:${r.email}`} style={{ color:"#0284c7", textDecoration:"none", display:"flex", alignItems:"center", gap:"6px", fontWeight:"600" }}>
+                                <Mail size={13} /> {r.email}
+                              </a>
+                            </div>
+                            <div style={{ fontSize:"0.85rem", color:"#334155", marginTop:"6px", display:"flex", alignItems:"center", gap:"8px" }}>
+                              <a href={`tel:${r.phone}`} style={{ color:"#334155", textDecoration:"none", display:"flex", alignItems:"center", gap:"6px", fontWeight:"600" }}>
+                                <Phone size={13} style={{ color:"#10b981" }} /> {r.phone}
+                              </a>
+                              {cleanPhone && (
+                                <a 
+                                  href={`https://wa.me/91${cleanPhone.slice(-10)}`}
+                                  target="_blank" 
+                                  rel="noopener noreferrer"
+                                  style={{ background:"#dcfce7", color:"#16a34a", padding:"2px 6px", borderRadius:"6px", fontSize:"0.7rem", textDecoration:"none", fontWeight:"700", display:"inline-flex", alignItems:"center", gap:"3px" }}
+                                  title="Chat on WhatsApp"
+                                >
+                                  <MessageCircle size={11} /> WA
+                                </a>
+                              )}
+                            </div>
+                          </td>
+
+                          {/* Selected Task */}
+                          <td style={{ padding:"16px 20px", verticalAlign:"middle" }}>
+                            <span style={{ background:"#e6fcf5", color:"#0ca678", padding:"4px 10px", borderRadius:"12px", fontSize:"0.75rem", fontWeight:"700", display:"inline-block" }}>
+                              {r.event_title || "Lifetime Membership"}
+                            </span>
+                            <div style={{ fontSize:"0.7rem", color:"#94a3b8", marginTop:4 }}>
+                              Event ID: {r.event_id || "N/A"}
+                            </div>
+                          </td>
+
+                          {/* Registration Date & Payment */}
+                          <td style={{ padding:"16px 20px", verticalAlign:"middle" }}>
+                            <div style={{ fontSize:"0.85rem", color:"#334155", fontWeight:"600" }}>
+                              {formatDate(r.created_at)}
+                            </div>
+                            <div style={{ marginTop:"4px" }}>
+                              <span style={{ 
+                                padding:"2px 8px", 
+                                borderRadius:"10px", 
+                                fontSize:"0.7rem", 
+                                fontWeight:"800",
+                                background: r.payment_status === "completed" ? "#dcfce7" : "#fef3c7",
+                                color: r.payment_status === "completed" ? "#16a34a" : "#d97706"
+                              }}>
+                                {r.payment_status === "completed" ? "✅ ₹500 Paid" : "⏳ Pending ₹500"}
+                              </span>
+                            </div>
+                          </td>
+
+                          {/* Direct Actions */}
+                          <td style={{ padding:"16px 20px", textAlign:"right", verticalAlign:"middle" }}>
+                            <div style={{ display:"inline-flex", alignItems:"center", gap:"6px" }}>
+                              <button 
+                                onClick={() => setSelectedPhotoVolunteer(r)}
+                                style={{ 
+                                  display:"flex", 
+                                  alignItems:"center", 
+                                  gap:"4px", 
+                                  background:"#ecfdf5", 
+                                  color:"#059669", 
+                                  border:"1px solid #a7f3d0", 
+                                  padding:"6px 12px", 
+                                  borderRadius:"8px", 
+                                  fontSize:"0.78rem", 
+                                  fontWeight:"700", 
+                                  cursor:"pointer" 
+                                }}
+                                title="View Member Photo & Full Profile"
+                              >
+                                <Eye size={14} /> View Photo
+                              </button>
+
+                              {photo && (
+                                <button 
+                                  onClick={() => handleDownloadPhoto(photo, r.user_name)}
+                                  style={{ 
+                                    background:"#f0f9ff", 
+                                    color:"#0284c7", 
+                                    border:"1px solid #bae6fd", 
+                                    padding:"6px 10px", 
+                                    borderRadius:"8px", 
+                                    fontSize:"0.78rem", 
+                                    fontWeight:"700", 
+                                    cursor:"pointer" 
+                                  }}
+                                  title="Download Member Photo"
+                                >
+                                  <Download size={14} />
+                                </button>
+                              )}
+
+                              <button 
+                                onClick={() => handleDeleteDoc("green_club_registrations", r.id)}
+                                style={{ 
+                                  background:"#fee2e2", 
+                                  color:"#ef4444", 
+                                  border:"none", 
+                                  padding:"6px 8px", 
+                                  borderRadius:"8px", 
+                                  cursor:"pointer" 
+                                }}
+                                title="Delete Registration"
+                              >
+                                <Trash2 size={14} />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         </section>
 
@@ -743,6 +1027,218 @@ const Admin = () => {
         </section>
 
       </div>
+
+      {/* --- PHOTO & VOLUNTEER DETAILS INSPECTION MODAL --- */}
+      {selectedPhotoVolunteer && (
+        <div 
+          className="modal-overlay" 
+          style={{ 
+            position:"fixed", 
+            top:0, 
+            left:0, 
+            right:0, 
+            bottom:0, 
+            background:"rgba(15, 23, 42, 0.75)", 
+            backdropFilter:"blur(6px)", 
+            zIndex:9999, 
+            display:"flex", 
+            alignItems:"center", 
+            justifyContent:"center",
+            padding:"20px"
+          }}
+          onClick={() => setSelectedPhotoVolunteer(null)}
+        >
+          <div 
+            style={{ 
+              background:"white", 
+              borderRadius:"24px", 
+              maxWidth:"680px", 
+              width:"100%", 
+              boxShadow:"0 25px 60px rgba(0,0,0,0.25)", 
+              overflow:"hidden",
+              position:"relative",
+              animation:"fadeIn 0.2s ease-out"
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div style={{ padding:"20px 24px", background:"linear-gradient(135deg, #10b981, #059669)", color:"white", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+              <div style={{ display:"flex", alignItems:"center", gap:"10px" }}>
+                <Users size={22} color="white" />
+                <h3 style={{ margin:0, fontSize:"1.2rem", fontWeight:"800", color:"white" }}>Green Club Member Photo & Details</h3>
+              </div>
+              <button 
+                onClick={() => setSelectedPhotoVolunteer(null)}
+                style={{ background:"rgba(255,255,255,0.2)", border:"none", borderRadius:"50%", width:"32px", height:"32px", display:"flex", alignItems:"center", justifyContent:"center", color:"white", cursor:"pointer" }}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div style={{ padding:"28px 24px", display:"grid", gridTemplateColumns:"repeat(auto-fit, minmax(240px, 1fr))", gap:"24px", alignItems:"start" }}>
+              
+              {/* Photo Display Card */}
+              <div style={{ textAlign:"center" }}>
+                <div style={{ 
+                  width:"100%", 
+                  maxWidth:"260px", 
+                  height:"280px", 
+                  margin:"0 auto", 
+                  borderRadius:"18px", 
+                  overflow:"hidden", 
+                  border:"3px solid #10b981", 
+                  boxShadow:"0 8px 24px rgba(16, 185, 129, 0.15)",
+                  background:"#f8fafc",
+                  display:"flex",
+                  alignItems:"center",
+                  justifyContent:"center"
+                }}>
+                  {(selectedPhotoVolunteer.photo_url || selectedPhotoVolunteer.photo_base64 || selectedPhotoVolunteer.photo) ? (
+                    <img 
+                      src={selectedPhotoVolunteer.photo_url || selectedPhotoVolunteer.photo_base64 || selectedPhotoVolunteer.photo} 
+                      alt={selectedPhotoVolunteer.user_name}
+                      style={{ width:"100%", height:"100%", objectFit:"cover" }}
+                    />
+                  ) : (
+                    <div style={{ textAlign:"center", padding:"20px", color:"#94a3b8" }}>
+                      <ImageIcon size={48} style={{ margin:"0 auto 8px" }} />
+                      <p style={{ margin:0, fontSize:"0.85rem", fontWeight:"600" }}>No custom photo uploaded</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Photo Action Links */}
+                {(selectedPhotoVolunteer.photo_url || selectedPhotoVolunteer.photo_base64 || selectedPhotoVolunteer.photo) && (
+                  <div style={{ display:"flex", gap:"8px", justifyContent:"center", marginTop:"14px", flexWrap:"wrap" }}>
+                    <button 
+                      onClick={() => handleDownloadPhoto(
+                        selectedPhotoVolunteer.photo_url || selectedPhotoVolunteer.photo_base64 || selectedPhotoVolunteer.photo,
+                        selectedPhotoVolunteer.user_name
+                      )}
+                      style={{ 
+                        background:"#10b981", 
+                        color:"white", 
+                        border:"none", 
+                        padding:"8px 14px", 
+                        borderRadius:"10px", 
+                        fontWeight:"700", 
+                        fontSize:"0.82rem", 
+                        cursor:"pointer",
+                        display:"inline-flex",
+                        alignItems:"center",
+                        gap:"6px"
+                      }}
+                    >
+                      <Download size={14} /> Download Photo
+                    </button>
+
+                    <button 
+                      onClick={() => {
+                        const url = selectedPhotoVolunteer.photo_url || selectedPhotoVolunteer.photo_base64 || selectedPhotoVolunteer.photo;
+                        if (url.startsWith("data:")) {
+                          const w = window.open("");
+                          w.document.write(`<img src="${url}" style="max-width:100%;height:auto;" />`);
+                        } else {
+                          window.open(url, "_blank");
+                        }
+                      }}
+                      style={{ 
+                        background:"#f1f5f9", 
+                        color:"#334155", 
+                        border:"1px solid #cbd5e1", 
+                        padding:"8px 12px", 
+                        borderRadius:"10px", 
+                        fontWeight:"700", 
+                        fontSize:"0.82rem", 
+                        cursor:"pointer",
+                        display:"inline-flex",
+                        alignItems:"center",
+                        gap:"6px"
+                      }}
+                    >
+                      <ExternalLink size={14} /> Open Full
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Volunteer Details Card */}
+              <div style={{ display:"flex", flexDirection:"column", gap:"14px" }}>
+                <div>
+                  <span style={{ fontSize:"0.72rem", textTransform:"uppercase", color:"#94a3b8", fontWeight:"800", letterSpacing:"0.5px" }}>VOLUNTEER NAME</span>
+                  <h4 style={{ margin:"2px 0 0", fontSize:"1.25rem", fontWeight:"800", color:"#0f172a" }}>{selectedPhotoVolunteer.user_name}</h4>
+                </div>
+
+                <div style={{ background:"#f8fafc", padding:"12px 16px", borderRadius:"12px", border:"1px solid #e2e8f0" }}>
+                  <div style={{ fontSize:"0.72rem", textTransform:"uppercase", color:"#94a3b8", fontWeight:"800", marginBottom:"4px" }}>CONTACT INFORMATION</div>
+                  <div style={{ fontSize:"0.9rem", color:"#334155", marginBottom:"6px", display:"flex", alignItems:"center", gap:"6px" }}>
+                    <Mail size={15} color="#0284c7" /> <a href={`mailto:${selectedPhotoVolunteer.email}`} style={{ color:"#0284c7", textDecoration:"none", fontWeight:"600" }}>{selectedPhotoVolunteer.email}</a>
+                  </div>
+                  <div style={{ fontSize:"0.9rem", color:"#334155", display:"flex", alignItems:"center", gap:"6px" }}>
+                    <Phone size={15} color="#10b981" /> <a href={`tel:${selectedPhotoVolunteer.phone}`} style={{ color:"#334155", textDecoration:"none", fontWeight:"600" }}>{selectedPhotoVolunteer.phone}</a>
+                  </div>
+                </div>
+
+                <div style={{ background:"#f8fafc", padding:"12px 16px", borderRadius:"12px", border:"1px solid #e2e8f0" }}>
+                  <div style={{ fontSize:"0.72rem", textTransform:"uppercase", color:"#94a3b8", fontWeight:"800", marginBottom:"4px" }}>RESIDENTIAL ADDRESS</div>
+                  <div style={{ fontSize:"0.88rem", color:"#334155", lineHeight:"1.5", display:"flex", alignItems:"flex-start", gap:"6px" }}>
+                    <MapPin size={15} color="#ef4444" style={{ flexShrink:0, marginTop:"3px" }} />
+                    <span>{selectedPhotoVolunteer.address || "No complete address provided"}</span>
+                  </div>
+                </div>
+
+                <div style={{ background:"#f0fdf4", padding:"12px 16px", borderRadius:"12px", border:"1px solid #bbf7d0" }}>
+                  <div style={{ fontSize:"0.72rem", textTransform:"uppercase", color:"#166534", fontWeight:"800", marginBottom:"4px" }}>EVENT & REGISTRATION</div>
+                  <div style={{ fontSize:"0.9rem", color:"#166534", fontWeight:"700" }}>
+                    {selectedPhotoVolunteer.event_title || "Lifetime Membership"}
+                  </div>
+                  <div style={{ fontSize:"0.78rem", color:"#15803d", marginTop:"2px" }}>
+                    Registered on: {formatDate(selectedPhotoVolunteer.created_at)}
+                  </div>
+                </div>
+
+                {selectedPhotoVolunteer.phone && (
+                  <a 
+                    href={`https://wa.me/91${selectedPhotoVolunteer.phone.replace(/[^0-9]/g, "").slice(-10)}`}
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    style={{ 
+                      background:"#15803d", 
+                      color:"white", 
+                      padding:"10px 16px", 
+                      borderRadius:"12px", 
+                      fontWeight:"700", 
+                      fontSize:"0.85rem", 
+                      textDecoration:"none", 
+                      display:"flex", 
+                      alignItems:"center", 
+                      justifyContent:"center", 
+                      gap:"8px",
+                      boxShadow:"0 4px 14px rgba(21, 128, 61, 0.25)" 
+                    }}
+                  >
+                    <MessageCircle size={16} /> Open WhatsApp Chat with Volunteer
+                  </a>
+                )}
+              </div>
+
+            </div>
+
+            {/* Modal Footer */}
+            <div style={{ padding:"16px 24px", background:"#f8fafc", borderTop:"1px solid #f1f5f9", display:"flex", justifyContent:"flex-end" }}>
+              <button 
+                onClick={() => setSelectedPhotoVolunteer(null)}
+                style={{ background:"#e2e8f0", color:"#475569", border:"none", padding:"10px 20px", borderRadius:"10px", fontWeight:"700", cursor:"pointer" }}
+              >
+                Close Profile
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };

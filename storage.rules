@@ -1,0 +1,42 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // Helper: check if user is signed in
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // Helper: check if user is admin
+    function isAdmin() {
+      return isSignedIn() && (
+        request.auth.token.email in ['sunilmaharaj1991@gmail.com', 'jeevithgowdasr@gmail.com', 'rohithlakshman1@gmail.com', 'sushmitha157@gmail.com']
+      );
+    }
+
+    // Green club member registration photos (allow public upload on registration, public read)
+    match /green_club_members/{allPaths=**} {
+      allow read: if true;
+      allow create, write: if request.resource.size < 10 * 1024 * 1024
+                           && request.resource.contentType.matches('image/.*');
+      allow delete: if isAdmin();
+    }
+
+    // Green club blog & event images
+    match /green_club_blogs/{allPaths=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /green_club_events/{allPaths=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Default catch-all for authorized storage access
+    match /{allPaths=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+  }
+}
