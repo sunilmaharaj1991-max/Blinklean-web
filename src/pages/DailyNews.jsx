@@ -113,7 +113,7 @@ const DailyNews = () => {
                 className={`wn-cat-btn ${selectedCategory === cat.id ? "active" : ""}`}
                 onClick={() => setSelectedCategory(cat.id)}
               >
-                {typeof IconComp === "function" ? <IconComp size={15} /> : IconComp}
+                {IconComp && <IconComp size={15} />}
                 <span>{cat.label}</span>
               </button>
             );
