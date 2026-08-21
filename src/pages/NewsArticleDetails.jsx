@@ -6,7 +6,7 @@ import Header from "../components/Header";
 import Footer from "../components/Footer";
 import BottomNav from "../components/BottomNav";
 import FloatingWhatsApp from "../components/FloatingWhatsApp";
-import { DEFAULT_WEEKLY_NEWS } from "./WeeklyNews";
+import { DEFAULT_DAILY_NEWS } from "../data/newsData";
 import { 
   ArrowLeft, 
   Calendar, 
@@ -44,7 +44,7 @@ const NewsArticleDetails = () => {
           setArticle({ id: snap.id, ...snap.data() });
         } else {
           // 2. Fall back to default seeds
-          const found = DEFAULT_WEEKLY_NEWS.find(n => n.id === id);
+          const found = DEFAULT_DAILY_NEWS.find(n => n.id === id);
           setArticle(found || null);
         }
 
@@ -56,17 +56,17 @@ const NewsArticleDetails = () => {
           if (list.length > 0) {
             setRelatedNews(list);
           } else {
-            setRelatedNews(DEFAULT_WEEKLY_NEWS.filter(n => n.id !== id).slice(0, 3));
+            setRelatedNews(DEFAULT_DAILY_NEWS.filter(n => n.id !== id).slice(0, 3));
           }
         } catch {
-          setRelatedNews(DEFAULT_WEEKLY_NEWS.filter(n => n.id !== id).slice(0, 3));
+          setRelatedNews(DEFAULT_DAILY_NEWS.filter(n => n.id !== id).slice(0, 3));
         }
 
       } catch (err) {
         console.warn("Failed to fetch article from Firestore, falling back to local dataset.", err);
-        const found = DEFAULT_WEEKLY_NEWS.find(n => n.id === id);
+        const found = DEFAULT_DAILY_NEWS.find(n => n.id === id);
         setArticle(found || null);
-        setRelatedNews(DEFAULT_WEEKLY_NEWS.filter(n => n.id !== id).slice(0, 3));
+        setRelatedNews(DEFAULT_DAILY_NEWS.filter(n => n.id !== id).slice(0, 3));
       } finally {
         setLoading(false);
       }
@@ -83,7 +83,7 @@ const NewsArticleDetails = () => {
   };
 
   const handleShareWhatsApp = () => {
-    const text = `📰 *${article?.title}*\n\nRead this weekly news bulletin on Blinklean:\n${window.location.href}`;
+    const text = `📰 *${article?.title}*\n\nRead this daily news bulletin on Blinklean:\n${window.location.href}`;
     window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, "_blank");
   };
 
@@ -93,7 +93,7 @@ const NewsArticleDetails = () => {
         <Header />
         <div className="container" style={{ padding: "140px 20px 80px", textAlign: "center" }}>
           <div style={{ width: "45px", height: "45px", border: "4px solid #e0f2fe", borderTopColor: "#009ee3", borderRadius: "50%", animation: "spin 0.8s linear infinite", margin: "0 auto 20px" }} />
-          <p style={{ color: "var(--wn-text-muted)", fontWeight: "600" }}>Loading News Story...</p>
+          <p style={{ color: "var(--wn-text-muted)", fontWeight: "600" }}>Loading Daily Story...</p>
           <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
         </div>
         <Footer />
@@ -109,23 +109,16 @@ const NewsArticleDetails = () => {
           <BookOpen size={52} style={{ color: "var(--wn-text-muted)", marginBottom: "20px" }} />
           <h2 style={{ fontSize: "1.8rem", color: "#0f172a", marginBottom: "10px" }}>News Article Not Found</h2>
           <p style={{ color: "#64748b", maxWidth: "500px", margin: "0 auto 30px" }}>
-            The weekly news article you requested might have been archived or removed.
+            The daily news article you requested might have been archived or removed.
           </p>
-          <Link to="/weekly-news" style={{ display: "inline-flex", alignItems: "center", gap: "8px", background: "#009ee3", color: "white", textDecoration: "none", padding: "12px 24px", borderRadius: "14px", fontWeight: "700" }}>
-            <ArrowLeft size={16} /> Back to Weekly News Hub
+          <Link to="/daily-news" style={{ display: "inline-flex", alignItems: "center", gap: "8px", background: "#009ee3", color: "white", textDecoration: "none", padding: "12px 24px", borderRadius: "14px", fontWeight: "700" }}>
+            <ArrowLeft size={16} /> Back to Daily News Hub
           </Link>
         </div>
         <Footer />
       </div>
     );
   }
-
-  const allImages = [
-    ...(article.cover_image ? [{ url: article.cover_image, caption: "Main Feature Cover" }] : []),
-    ...(article.gallery_images && Array.isArray(article.gallery_images) 
-        ? article.gallery_images.map((img, idx) => ({ url: typeof img === "string" ? img : img.url, caption: `Field Image #${idx + 1}` })) 
-        : [])
-  ];
 
   return (
     <div className="weekly-news-wrapper">
@@ -136,7 +129,7 @@ const NewsArticleDetails = () => {
         {/* Back Link */}
         <div style={{ marginBottom: "25px" }}>
           <Link 
-            to="/weekly-news" 
+            to="/daily-news" 
             style={{ 
               display: "inline-flex", 
               alignItems: "center", 
@@ -151,7 +144,7 @@ const NewsArticleDetails = () => {
               boxShadow: "0 2px 10px rgba(0,0,0,0.04)"
             }}
           >
-            <ArrowLeft size={16} /> Back to Weekly News Gazette
+            <ArrowLeft size={16} /> Back to Daily News Gazette
           </Link>
         </div>
 
@@ -165,7 +158,7 @@ const NewsArticleDetails = () => {
                 {article.categoryLabel || article.category || "Society Bulletin"}
               </span>
               <span style={{ background: "#f1f5f9", color: "#475569", padding: "4px 12px", borderRadius: "20px", fontSize: "0.75rem", fontWeight: "800" }}>
-                {article.edition || "Weekly Edition"}
+                {article.edition || "Daily Edition"}
               </span>
             </div>
 
@@ -274,17 +267,17 @@ const NewsArticleDetails = () => {
 
         </article>
 
-        {/* Related Weekly Stories */}
+        {/* Related Daily Stories */}
         {relatedNews.length > 0 && (
           <section style={{ marginTop: "60px" }}>
             <h3 style={{ fontSize: "1.3rem", fontWeight: "800", color: "#0f172a", marginBottom: "20px" }}>
-              More from This Week's Society Gazette
+              More from Today's & Recent Daily Gazettes
             </h3>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "20px" }}>
               {relatedNews.map((rel) => (
                 <Link 
                   key={rel.id} 
-                  to={`/weekly-news/${rel.id}`} 
+                  to={`/daily-news/${rel.id}`} 
                   style={{ 
                     background: "white", 
                     borderRadius: "16px", 

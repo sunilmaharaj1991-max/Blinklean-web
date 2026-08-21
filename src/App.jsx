@@ -28,6 +28,7 @@ const Services                    = lazy(() => import("./pages/Services"));
 const TermsAndConditions          = lazy(() => import("./pages/TermsAndConditions"));
 const VehicleCleaning             = lazy(() => import("./pages/VehicleCleaning"));
 const VulnerabilityDisclosurePolicy = lazy(() => import("./pages/VulnerabilityDisclosurePolicy"));
+const DailyNews                   = lazy(() => import("./pages/DailyNews"));
 const WeeklyNews                  = lazy(() => import("./pages/WeeklyNews"));
 const NewsArticleDetails          = lazy(() => import("./pages/NewsArticleDetails"));
 
@@ -67,9 +68,11 @@ const App = () => (
         <Route path="/admin"                         element={<Admin />} />
         <Route path="/green-club"                    element={<BlinkleanGreenClub />} />
         <Route path="/blog/:id"                      element={<BlogDetails />} />
-        <Route path="/weekly-news"                   element={<WeeklyNews />} />
+        <Route path="/daily-news"                    element={<DailyNews />} />
+        <Route path="/daily-news/:id"                element={<NewsArticleDetails />} />
+        <Route path="/weekly-news"                   element={<DailyNews />} />
         <Route path="/weekly-news/:id"               element={<NewsArticleDetails />} />
-        <Route path="/news"                          element={<WeeklyNews />} />
+        <Route path="/news"                          element={<DailyNews />} />
         <Route path="/news/:id"                      element={<NewsArticleDetails />} />
         <Route path="/contact"                       element={<Contact />} />
         <Route path="/equal-opportunity-policy"      element={<EqualOpportunityPolicy />} />

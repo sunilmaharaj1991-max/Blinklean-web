@@ -50,6 +50,7 @@ import {
   ChevronRight,
   LogIn
 } from "lucide-react";
+import { generateAutoDraftNews } from "../data/newsData";
 import "../assets/css/admin-premium.css";
 
 const STATUS_COLORS = {
@@ -89,11 +90,11 @@ const Admin = () => {
   const [gcSearchTerm,            setGcSearchTerm]            = useState("");
   const [gcFilterPhotoOnly,       setGcFilterPhotoOnly]       = useState(false);
 
-  // Weekly News State
+  // Daily News State
   const [weeklyNewsList,          setWeeklyNewsList]          = useState([]);
   const [newsTitle,               setNewsTitle]               = useState("");
   const [newsCategory,            setNewsCategory]            = useState("environment");
-  const [newsEdition,             setNewsEdition]             = useState("Week 3, August 2026");
+  const [newsEdition,             setNewsEdition]             = useState(`Daily Edition • ${new Date().toLocaleDateString("en-IN", { day:"2-digit", month:"short", year:"numeric" })}`);
   const [newsDate,                setNewsDate]                = useState(new Date().toLocaleDateString("en-IN", { day:"2-digit", month:"short", year:"numeric" }));
   const [newsAuthor,              setNewsAuthor]              = useState("Blinklean News Bureau");
   const [newsReadTime,            setNewsReadTime]            = useState("4 min read");
@@ -345,6 +346,27 @@ const Admin = () => {
     }
   };
 
+  const handleAutoDraftNews = () => {
+    const draft = generateAutoDraftNews();
+    setNewsTitle(draft.title);
+    setNewsCategory(draft.category);
+    setNewsEdition(draft.edition);
+    setNewsDate(draft.date);
+    setNewsAuthor(draft.author);
+    setNewsReadTime(draft.readTime);
+    setNewsSummary(draft.summary);
+    setNewsContent(draft.content);
+    setNewsCoverUrl(draft.coverImage);
+    setNewsCoverFile(null);
+    setNewsGalleryUrls(draft.galleryUrls);
+    setNewsGalleryFiles([]);
+    setNewsTakeaways(draft.takeaways);
+    setNewsTags(draft.tags);
+    setNewsIsFeatured(true);
+    setNewsStudioTab("publish");
+    alert("✨ Auto-generated today's news bulletin! You can review or customize the fields below and click Publish.");
+  };
+
   const handleNewsSubmit = async (e) => {
     e.preventDefault();
     if (!newsTitle.trim() || !newsSummary.trim() || !newsContent.trim()) {
@@ -393,7 +415,7 @@ const Admin = () => {
 
       const takeawaysList = newsTakeaways
         .split("\n")
-        .map(t => t.replace(/^[•\-\*\d\.]+\s*/, "").trim())
+        .map(t => t.replace(/^[•\-*\d.]+\s*/, "").trim())
         .filter(Boolean);
 
       const tagsList = newsTags
@@ -414,7 +436,7 @@ const Admin = () => {
         title: newsTitle.trim(),
         category: newsCategory,
         categoryLabel: categoryLabels[newsCategory] || "Society News",
-        edition: newsEdition.trim() || "Weekly Edition",
+        edition: newsEdition.trim() || "Daily Edition",
         date: newsDate.trim() || new Date().toLocaleDateString("en-IN", { day:"2-digit", month:"short", year:"numeric" }),
         author: newsAuthor.trim() || "Blinklean News Bureau",
         read_time: newsReadTime.trim() || "4 min read",
@@ -429,7 +451,7 @@ const Admin = () => {
       };
 
       await addDoc(collection(db, "weekly_news"), payload);
-      alert("🎉 Weekly News Bulletin published successfully to live Gazette!");
+      alert("🎉 Daily News Bulletin published successfully to live Gazette!");
 
       setNewsTitle("");
       setNewsSummary("");
@@ -784,7 +806,7 @@ const Admin = () => {
             onClick={() => setActiveTab("weekly_news")}
           >
             <Newspaper size={16} />
-            <span>Weekly News Gazette</span>
+            <span>Daily News Gazette</span>
             <span className="adm-tab-badge">{weeklyNewsList.length}</span>
           </button>
 
@@ -833,7 +855,7 @@ const Admin = () => {
                   Blinklean Unified Control Center
                 </h2>
                 <p style={{ color:"#94a3b8", fontSize:"0.9rem", margin:0, maxWidth:"600px" }}>
-                  Real-time synchronization for doorstep scrap requests, green club registrations with direct member photo inspection, and weekly society gazette publications.
+                  Real-time synchronization for doorstep scrap requests, green club registrations with direct member photo inspection, and daily society gazette publications.
                 </p>
               </div>
 
@@ -861,7 +883,7 @@ const Admin = () => {
                 { label:"Pending Pickups", value:pendingCount, color:"#f59e0b", bg:"#fef3c7", icon:<Clock size={22} />, tab:"bookings" },
                 { label:"Green Registrations", value:clubRegistrations.length, color:"#059669", bg:"#ecfdf5", icon:<Leaf size={22} />, tab:"green_club" },
                 { label:"Uploaded Photos", value:photoCount, color:"#0d9488", bg:"#ccfbf1", icon:<ImageIcon size={22} />, tab:"green_club" },
-                { label:"Weekly News", value:weeklyNewsList.length, color:"#0284c7", bg:"#e0f2fe", icon:<Newspaper size={22} />, tab:"weekly_news" },
+                { label:"Daily News", value:weeklyNewsList.length, color:"#0284c7", bg:"#e0f2fe", icon:<Newspaper size={22} />, tab:"weekly_news" },
                 { label:"Partner Enrollments", value:partners.length, color:"#8b5cf6", bg:"#ede9fe", icon:<Handshake size={22} />, tab:"partners" },
                 { label:"Weekend Tasks", value:clubEvents.length, color:"#ec4899", bg:"#fce7f3", icon:<Calendar size={22} />, tab:"content_studio" },
               ].map((stat, i) => (
@@ -1296,7 +1318,7 @@ const Admin = () => {
           </section>
         )}
 
-        {/* TAB 4: WEEKLY NEWS & SOCIETY GAZETTE */}
+        {/* TAB 4: DAILY NEWS & SOCIETY GAZETTE */}
         {activeTab === "weekly_news" && (
           <section className="adm-card animate-fade-in">
             
@@ -1314,14 +1336,34 @@ const Admin = () => {
                     <Sparkles size={14} /> Society Newsroom Dispatch Studio
                   </span>
                   <h2 style={{ color: "white", margin: "8px 0 4px", fontSize: "1.5rem", fontWeight: "900", display: "flex", alignItems: "center", gap: "8px" }}>
-                    <Newspaper size={24} color="white" /> Weekly News & Society Gazette Management
+                    <Newspaper size={24} color="white" /> Daily News & Society Gazette Management
                   </h2>
                   <p style={{ color: "rgba(255,255,255,0.85)", margin: 0, fontSize: "0.88rem" }}>
-                    Compose weekly bulletins covering all fields in society with cover photos, multi-image field galleries, and structured takeaways.
+                    Compose daily bulletins covering all fields in society with cover photos, multi-image field galleries, and structured takeaways.
                   </p>
                 </div>
 
                 <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+                  <button
+                    onClick={handleAutoDraftNews}
+                    style={{
+                      background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
+                      color: "white",
+                      border: "none",
+                      padding: "10px 18px",
+                      borderRadius: "12px",
+                      fontWeight: "800",
+                      fontSize: "0.85rem",
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "6px",
+                      boxShadow: "0 4px 12px rgba(16, 185, 129, 0.3)"
+                    }}
+                    title="Generate a ready-to-publish daily bulletin with one click"
+                  >
+                    <Sparkles size={16} /> Auto-Draft Today's News
+                  </button>
                   <button
                     onClick={() => setNewsStudioTab("publish")}
                     style={{
@@ -1359,7 +1401,7 @@ const Admin = () => {
                     <Layers size={16} /> Gazette Archive ({weeklyNewsList.length})
                   </button>
                   <a
-                    href="/weekly-news"
+                    href="/daily-news"
                     target="_blank"
                     rel="noopener noreferrer"
                     style={{
@@ -1428,12 +1470,12 @@ const Admin = () => {
 
                         <div>
                           <label style={{ display: "block", fontSize: "0.75rem", fontWeight: "800", color: "#475569", marginBottom: "6px", textTransform: "uppercase" }}>
-                            Edition Week *
+                            Daily Edition / Issue *
                           </label>
                           <input
                             type="text"
                             className="adm-input"
-                            placeholder="e.g. Week 3, August 2026"
+                            placeholder="e.g. Daily Edition • 21 Aug 2026"
                             required
                             value={newsEdition}
                             onChange={(e) => setNewsEdition(e.target.value)}
@@ -1648,7 +1690,7 @@ const Admin = () => {
                         }}
                       >
                         <Newspaper size={18} />
-                        {newsUploading ? "Publishing Bulletin..." : "Publish Weekly News Bulletin"}
+                        {newsUploading ? "Publishing Bulletin..." : "Publish Daily News Bulletin"}
                       </button>
 
                     </div>
@@ -1726,7 +1768,7 @@ const Admin = () => {
 
                           <div style={{ padding: "16px" }}>
                             <div style={{ fontSize: "0.72rem", color: "#94a3b8", fontWeight: "700", marginBottom: "4px" }}>
-                              {item.edition || "Weekly"} • {item.date}
+                              {item.edition || "Daily Edition"} • {item.date}
                             </div>
                             <h4 style={{ margin: "0 0 8px", fontSize: "1rem", fontWeight: "800", color: "#0f172a", lineHeight: "1.35", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
                               {item.title}
@@ -1747,7 +1789,7 @@ const Admin = () => {
 
                           <div style={{ display: "flex", gap: "6px" }}>
                             <a
-                              href={`/weekly-news/${item.id}`}
+                              href={`/daily-news/${item.id}`}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="adm-action-btn green"
@@ -2269,7 +2311,7 @@ const Admin = () => {
             <div style={{ padding: "20px 24px", background: "linear-gradient(135deg, #009ee3 0%, #0369a1 100%)", color: "white", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                 <Newspaper size={22} color="white" />
-                <h3 style={{ margin: 0, fontSize: "1.2rem", fontWeight: "800", color: "white" }}>Weekly News Story Preview</h3>
+                <h3 style={{ margin: 0, fontSize: "1.2rem", fontWeight: "800", color: "white" }}>Daily News Story Preview</h3>
               </div>
               <button
                 onClick={() => setSelectedNewsPreview(null)}
@@ -2332,7 +2374,7 @@ const Admin = () => {
               {/* Footer Actions */}
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid #f1f5f9", paddingTop: "18px" }}>
                 <a
-                  href={`/weekly-news/${selectedNewsPreview.id}`}
+                  href={`/daily-news/${selectedNewsPreview.id}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   style={{ background: "#009ee3", color: "white", textDecoration: "none", padding: "10px 18px", borderRadius: "10px", fontWeight: "700", fontSize: "0.85rem", display: "inline-flex", alignItems: "center", gap: "6px" }}

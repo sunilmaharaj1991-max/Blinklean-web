@@ -32,7 +32,7 @@ const Footer = () => {
         <div className="footer-col">
           <h4>Quick Links</h4>
           <ul className="footer-links-list">
-            <li><Link to="/weekly-news">Weekly News Gazette</Link></li>
+            <li><Link to="/daily-news">Daily News Gazette</Link></li>
             <li><Link to="/green-club">Green Club</Link></li>
             <li><Link to="/about">About Us</Link></li>
             <li><Link to="/contact">Contact Us</Link></li>
