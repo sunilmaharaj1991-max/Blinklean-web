@@ -47,7 +47,7 @@ const Footer = () => {
           <div className="footer-contact-info">
             <div className="contact-item">
               <i data-lucide="map-pin"></i>
-              <span>Bengaluru | Jharkhand | Bihar</span>
+              <span>Bengaluru | Hassan | Amaravathi</span>
             </div>
             <div className="contact-item">
               <i data-lucide="mail"></i>
